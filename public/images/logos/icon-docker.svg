@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64px" height="64px" viewBox="0 0 64 64" version="1.1">
+<g id="surface1">
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(9.019608%,58.039216%,83.137255%);fill-opacity:1;" d="M 60 32 C 60 47.464844 47.464844 60 32 60 C 16.535156 60 4 47.464844 4 32 C 4 16.535156 16.535156 4 32 4 C 47.464844 4 60 16.535156 60 32 Z M 60 32 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 36 14 L 32 14 L 32 18 L 36 18 Z M 36 14 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 20 20 L 24 20 L 24 24 L 20 24 Z M 20 20 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 12.003906 33.882812 C 12.34375 39.683594 15.800781 48 28 48 C 41.601562 48 47.667969 38 49 33 C 50.667969 33 54.398438 32 56 28 C 55 27 51 27 49 28 C 49 26.398438 48 23 46 22 C 44.667969 23.332031 42.601562 26.800781 45 30 C 44 32 41.332031 32 40 32 L 13.886719 32 C 12.828125 32 11.941406 32.824219 12.003906 33.882812 Z M 12.003906 33.882812 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 18 26 L 14 26 L 14 30 L 18 30 Z M 18 26 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 20 26 L 24 26 L 24 30 L 20 30 Z M 20 26 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 30 26 L 26 26 L 26 30 L 30 30 Z M 30 26 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 32 26 L 36 26 L 36 30 L 32 30 Z M 32 26 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 42 26 L 38 26 L 38 30 L 42 30 Z M 42 26 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 30 20 L 26 20 L 26 24 L 30 24 Z M 30 20 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 32 20 L 36 20 L 36 24 L 32 24 Z M 32 20 "/>
+</g>
+</svg>
