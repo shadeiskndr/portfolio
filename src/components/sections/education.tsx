@@ -11,7 +11,7 @@ import { EXTERNAL_LINKS } from '@/lib/data';
 
 const EducationSection = () => {
   return (
-    <Container className="" id="about">
+    <Container className="" id="education">
       <div className="self-center">
         <Tag label="Education" />
       </div>

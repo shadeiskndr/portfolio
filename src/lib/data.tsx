@@ -61,11 +61,11 @@ import ProjectCatalogd from '/public/images/project-catalogd.png';
 import ProjectShahathirme from '/public/images/project-shahathirme.jpg';
 import ProjectEduCafe from '/public/images/project-educafe.jpg';
 
-import CertificateGPM from '/public/images/certificate-gpm.png';
-import CertificateITAP from '/public/images/certificate-itap.png';
-import CertificateITS from '/public/images/certificate-its.png';
-import CertificateSEC from '/public/images/certificate-sec.png';
-import CertificateUXD from '/public/images/certificate-uxd.png';
+import CertificateGPM from '/public/images/certificate-GPM.png';
+import CertificateITAP from '/public/images/certificate-ITAP.png';
+import CertificateITS from '/public/images/certificate-ITS.png';
+import CertificateSEC from '/public/images/certificate-SEC.png';
+import CertificateUXD from '/public/images/certificate-UXD.png';
 
 import AvatarKrisztian from '/public/images/avatar-krisztian.png';
 import AvatarEugen from '/public/images/avatar-eugen.png';
@@ -92,11 +92,11 @@ export const NAV_LINKS = [
   },
   {
     label: 'Education',
-    href: '#projects',
+    href: '#education',
   },
   {
     label: 'Skills',
-    href: '#testimonials',
+    href: '#skills',
   },
   {
     label: 'Projects',
@@ -104,11 +104,11 @@ export const NAV_LINKS = [
   },
   {
     label: 'Experience',
-    href: '#testimonials',
+    href: '#experience',
   },
   {
     label: 'Certificates',
-    href: '#testimonials',
+    href: '#certificates',
   },
   {
     label: 'Contact',
@@ -166,27 +166,27 @@ export const LANGUAGES: TechDetails[] = [
   {
     label: 'Dart',
     logo: LogoDart,
-    url: 'https://www.mongodb.com/',
+    url: 'https://dart.dev/guides',
   },
   {
     label: 'PHP',
     logo: LogoPHP,
-    url: 'https://tailwindcss.com/',
+    url: 'https://www.php.net/manual/en/index.php',
   },
   {
     label: 'Python',
     logo: LogoPython,
-    url: 'https://www.figma.com/',
+    url: 'https://www.python.org/doc/',
   },
   {
     label: 'HTML',
     logo: LogoHTML,
-    url: 'https://git-scm.com/',
+    url: 'https://developer.mozilla.org/en-US/docs/Web/HTML',
   },
   {
     label: 'CSS',
     logo: LogoCSS,
-    url: 'https://git-scm.com/',
+    url: 'https://developer.mozilla.org/en-US/docs/Web/CSS',
   },
 ];
 
@@ -204,22 +204,22 @@ export const FRAMEWORKS: TechDetails[] = [
   {
     label: 'Astro',
     logo: LogoAstro,
-    url: 'https://react.dev/',
+    url: 'https://docs.astro.build/en/getting-started/',
   },
   {
     label: 'Node.js',
     logo: LogoNodejs,
-    url: 'https://nodejs.org/en',
+    url: 'https://nodejs.org/docs/latest/api/',
   },
   {
     label: 'Java EE',
     logo: LogoJakarta,
-    url: 'https://www.figma.com/',
+    url: 'https://jakarta.ee/learn/docs/jakartaee-tutorial/current/index.html',
   },
   {
     label: 'Flutter',
     logo: LogoFlutter,
-    url: 'https://git-scm.com/',
+    url: 'https://docs.flutter.dev/',
   },
   {
     label: 'Tailwindcss',
@@ -229,27 +229,27 @@ export const FRAMEWORKS: TechDetails[] = [
   {
     label: 'Java Ant',
     logo: LogoAnt,
-    url: 'https://git-scm.com/',
+    url: 'https://ant.apache.org/manual/',
   },
   {
     label: 'React Native',
     logo: LogoReactNative,
-    url: 'https://git-scm.com/',
+    url: 'https://reactnative.dev/docs/getting-started',
   },
   {
     label: 'Laravel',
     logo: LogoLaravel,
-    url: 'https://git-scm.com/',
+    url: 'https://laravel.com/docs/11.x/installation',
   },
   {
     label: 'XAMPP',
     logo: LogoXAMPP,
-    url: 'https://git-scm.com/',
+    url: 'https://www.apachefriends.org/docs/',
   },
   {
     label: 'Glassfish',
     logo: LogoGlassfish,
-    url: 'https://git-scm.com/',
+    url: 'https://glassfish.org/docs/',
   },
 ];
 
@@ -257,37 +257,37 @@ export const DATABASES: TechDetails[] = [
   {
     label: 'MySQL',
     logo: LogoMySQL,
-    url: 'https://www.figma.com/',
+    url: 'https://dev.mysql.com/doc/',
   },
   {
     label: 'SQLite',
     logo: LogoSqlite,
-    url: 'https://git-scm.com/',
+    url: 'https://www.sqlite.org/docs.html',
   },
   {
     label: 'Appwrite',
     logo: LogoAppwrite,
-    url: 'https://git-scm.com/',
+    url: 'https://appwrite.io/docs',
   },
   {
     label: 'Firebase',
     logo: LogoFirebase,
-    url: 'https://git-scm.com/',
+    url: 'https://firebase.google.com/docs',
   },
   {
     label: 'MongoDB',
     logo: LogoMongoDB,
-    url: 'https://git-scm.com/',
+    url: 'https://www.mongodb.com/',
   },
   {
     label: 'PrismaDB',
     logo: LogoPrisma,
-    url: 'https://git-scm.com/',
+    url: 'https://www.prisma.io/docs',
   },
   {
     label: 'MariaDB',
     logo: LogoMariaDB,
-    url: 'https://git-scm.com/',
+    url: 'https://mariadb.com/kb/en/documentation/',
   },
 ];
 
@@ -300,37 +300,37 @@ export const CLOUDDEVOPS: TechDetails[] = [
   {
     label: 'Docker',
     logo: LogoDocker,
-    url: 'https://www.figma.com/',
+    url: 'https://docs.docker.com/',
   },
   {
     label: 'AWS',
     logo: LogoAWS,
-    url: 'https://git-scm.com/',
+    url: 'https://docs.aws.amazon.com/',
   },
   {
     label: 'Vercel',
     logo: LogoVercel,
-    url: 'https://git-scm.com/',
+    url: 'https://vercel.com/docs',
   },
   {
     label: 'Netlify',
     logo: LogoNetlify,
-    url: 'https://git-scm.com/',
+    url: 'https://docs.netlify.com/',
   },
   {
     label: 'Heroku',
     logo: LogoHeroku,
-    url: 'https://git-scm.com/',
+    url: 'https://devcenter.heroku.com/categories/reference',
   },
   {
     label: 'DigitalOcean',
     logo: LogoDigitalOcean,
-    url: 'https://git-scm.com/',
+    url: 'https://docs.digitalocean.com/',
   },
   {
     label: 'Google Cloud',
     logo: LogoGoogleCloud,
-    url: 'https://git-scm.com/',
+    url: 'https://cloud.google.com/docs',
   },
 ];
 
@@ -338,27 +338,27 @@ export const EDITOR: TechDetails[] = [
   {
     label: 'VS Code',
     logo: LogoVSCode,
-    url: 'https://www.figma.com/',
+    url: 'https://code.visualstudio.com/docs',
   },
   {
     label: 'Netbeans',
     logo: LogoNetbeans,
-    url: 'https://git-scm.com/',
+    url: 'https://netbeans.apache.org/tutorial/main/kb/',
   },
   {
     label: 'Eclipse',
     logo: LogoEclipse,
-    url: 'https://git-scm.com/',
+    url: 'https://www.eclipse.org/documentation/',
   },
   {
     label: 'Sublime Text',
     logo: LogoSublimeText,
-    url: 'https://git-scm.com/',
+    url: 'https://www.sublimetext.com/docs/',
   },
   {
     label: 'IntelliJ',
     logo: LogoIntelliJ,
-    url: 'https://git-scm.com/',
+    url: 'https://www.jetbrains.com/help/idea/getting-started.html',
   },
 ];
 
@@ -371,22 +371,22 @@ export const DESIGNTOOLS: TechDetails[] = [
   {
     label: 'Photoshop',
     logo: LogoPhotoshop,
-    url: 'https://git-scm.com/',
+    url: 'https://helpx.adobe.com/photoshop/user-guide.html',
   },
   {
     label: 'Illustrator',
     logo: LogoIllustrator,
-    url: 'https://git-scm.com/',
+    url: 'https://helpx.adobe.com/illustrator/user-guide.html',
   },
   {
     label: 'Canva',
     logo: LogoCanva,
-    url: 'https://git-scm.com/',
+    url: 'https://www.canva.com',
   },
   {
     label: 'Powerpoint',
     logo: LogoPowerpoint,
-    url: 'https://git-scm.com/',
+    url: 'https://www.microsoft.com/en-my/microsoft-365/powerpoint',
   },
 ];
 
@@ -394,17 +394,17 @@ export const DOCTOOLS: TechDetails[] = [
   {
     label: 'Word',
     logo: LogoWord,
-    url: 'https://www.figma.com/',
+    url: 'https://www.microsoft.com/en-my/microsoft-365/word',
   },
   {
     label: 'Excel',
     logo: LogoExcel,
-    url: 'https://git-scm.com/',
+    url: 'https://www.microsoft.com/en-my/microsoft-365/excel',
   },
   {
     label: 'Overleaf (LaTeX)',
     logo: LogoOverleaf,
-    url: 'https://git-scm.com/',
+    url: 'https://www.overleaf.com/',
   },
 ];
 
