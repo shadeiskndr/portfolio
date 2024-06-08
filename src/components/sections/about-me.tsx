@@ -34,7 +34,7 @@ const AboutMeSection = () => {
             Get to know me 😉
           </Typography>
           <Typography>
-          I'm a final-year Software Engineering student at the{' '}
+          I&apos;m a final-year Software Engineering student at the{' '}
             <Link
               noCustomization
               externalLink
@@ -50,13 +50,13 @@ const AboutMeSection = () => {
           </Typography>
           <Typography>
           I started my journey into the world of programming at 15, taking computer science 
-          classes during my high school years. I don't imagine myself doing anything 
-          else as seriously. Since then, I've continued to grow and evolve as a developer, 
+          classes during my high school years. I don&apos;t imagine myself doing anything 
+          else as seriously. Since then, I&apos;ve continued to grow and evolve as a developer, 
           always looking for new challenges and opportunities to learn the latest technologies.
           </Typography>
           <Typography>
-          I'm someone who plans ahead, always thinking of proper solutions for my projects 
-          or assignments. I'm a dedicated team player with a strong work ethic. Also, I'm 
+          I&apos;m someone who plans ahead, always thinking of proper solutions for my projects 
+          or assignments. I&apos;m a dedicated team player with a strong work ethic. Also, I&apos;m 
           certainly someone who you can fully trust to get a job done well.
           </Typography>
           <Typography>
