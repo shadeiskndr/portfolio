@@ -2,7 +2,9 @@
   shahathir.me
 </h1>
 <p align="center">
-  My portfolio website built with <a href="https://nextjs.org" target="_blank">Next.js</a>, <a href="https://tailwindcss.com" target="_blank">Tailwind CSS</a>, <a href="https://www.radix-ui.com" target="_blank">Radix UI</a> and deployed on <a href="https://www.netlify.com/" target="_blank">Vercel</a>.⚡
+A portfolio website created to showcase information about me, my technical skills, the projects that I have done and my experiences. Used various CSS classes and UI libraries to make the website beautiful.
+
+Built with <a href="https://nextjs.org" target="_blank">Next.js</a>, <a href="https://tailwindcss.com" target="_blank">Tailwind CSS</a>, <a href="https://www.radix-ui.com" target="_blank">Radix UI</a> and deployed on <a href="https://www.netlify.com/" target="_blank">Vercel</a>.⚡
 </p>
 
 ## Tech Stack
