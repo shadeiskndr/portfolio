@@ -60,16 +60,16 @@ const AboutMeSection = () => {
           certainly someone who you can fully trust to get a job done well.
           </Typography>
           <Typography>
-          Whenever there is leisure time, I like to spend it by watching TV shows and movies, 
-          playing video games, browsing social media, or following new programming tutorials.
+          Whenever I am not coding or programming, I like to spend that leisure time by watching new TV shows or movies, 
+          reading blogs or social posts, or following new programming tutorials.
           </Typography>
           <Typography>Here are some interesting facts about me:</Typography>
           <div className="flex flex-col gap-2 md:flex-row md:gap-6">
             <ul className="flex list-inside list-disc flex-col gap-2">
               <Typography component="li">
-                Loves the LRT & MRT 🚇
+                Appreciates the LRT & MRT 🚇
               </Typography>
-              <Typography component="li">Punk & rock listener 🎧🎸</Typography>
+              <Typography component="li">Music lover 🎧</Typography>
             </ul>
             <ul className="flex list-inside list-disc flex-col gap-2">
               <Typography component="li">Free & open software advocate 🙌🏻</Typography>
