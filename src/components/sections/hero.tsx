@@ -54,7 +54,7 @@ const HeroSection = () => {
                   <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500"></span>
                 </span>
               </div>
-              <Typography>Looking for internship opportunities & available starting on 30th July 2024 </Typography>
+              <Typography>Looking for internship opportunities & available starting on 1st August 2024 </Typography>
             </div>
           </div>
           <SocialIcons />

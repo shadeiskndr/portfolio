@@ -24,7 +24,9 @@ export type ProjectDetails = {
   url: string;
   previewImage: string | StaticImageData;
   technologies: string[];
+  gifUrl?: string; // Add this line
 };
+
 
 export type TestimonialDetails = {
   personName: string;

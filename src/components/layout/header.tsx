@@ -1,5 +1,4 @@
-'use client';
-
+"use client"
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
@@ -18,6 +17,7 @@ import ThemeSwitcher from '@/components/general/theme-switcher';
 import IconButton from '@/components/general/icon-button';
 import DownloadCV from '@/components/general/download-cv';
 import Typography from '@/components/general/typography';
+import DropdownMenu from '@/components/navigation/dropdown-menu'; // Import the DropdownMenu component
 
 const Logo = () => (
   <Typography variant="h3" className="font-bold">
@@ -32,10 +32,14 @@ const Header = () => {
 
   // close sidebar if open in screen size < 768px
   useEffect(() => {
-    if (size?.width && size?.width > 767 && isOpen) {
+    if (size?.width && size?.width > 1024 && isOpen) {
       setIsOpen(false);
     }
   }, [size, isOpen]);
+
+  // Split NAV_LINKS into two groups
+  const mainLinks = NAV_LINKS.slice(0, 4);
+  const moreLinks = size?.width && size.width < 1024 ? NAV_LINKS.slice(4, 6) : NAV_LINKS.slice(4);
 
   return (
     <header
@@ -48,13 +52,17 @@ const Header = () => {
         <Link href="/" noCustomization>
           <Logo />
         </Link>
+        {/* Navigation links visible on large screens */}
         <div className="hidden items-center gap-6 lg:flex">
           <ul className="flex list-none items-center gap-6">
-            {NAV_LINKS.map((link, index) => (
+            {mainLinks.map((link, index) => (
               <li key={index}>
                 <Link href={link.href}>{link.label}</Link>
               </li>
             ))}
+            <li >
+              <DropdownMenu label="More" links={moreLinks} />
+            </li>
           </ul>
           <div className="h-6 w-0.5 bg-gray-100"></div>
           <div className="flex items-center gap-4">
@@ -63,6 +71,7 @@ const Header = () => {
           </div>
         </div>
 
+        {/* Drawer trigger visible on small screens */}
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
           <DrawerTrigger asChild className="flex lg:hidden">
             <IconButton>

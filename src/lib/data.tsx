@@ -58,8 +58,10 @@ import LogoOverleaf from '/public/images/logos/icon-overleaf.png';
 import Logo99 from '/public/images/logos/logo-99.png';
 
 import ProjectCatalogd from '/public/images/project-catalogd.png';
+import ProjectAIGame from '/public/images/project-aigamerecommender.jpg';
 import ProjectShahathirme from '/public/images/project-shahathirme.jpg';
 import ProjectEduCafe from '/public/images/project-educafe.jpg';
+import ProjectPHPDocker from '/public/images/project-phpdocker.jpg';
 
 import CertificateGPM from '/public/images/certificate-GPM.png';
 import CertificateITAP from '/public/images/certificate-ITAP.png';
@@ -95,12 +97,12 @@ export const NAV_LINKS = [
     href: '#education',
   },
   {
-    label: 'Skills',
-    href: '#skills',
-  },
-  {
     label: 'Projects',
     href: '#projects',
+  },
+  {
+    label: 'Skills',
+    href: '#skills',
   },
   {
     label: 'Experience',
@@ -448,6 +450,52 @@ export const PROJECTS: ProjectDetails[] = [
     ],
   },
   {
+    name: 'AI Game Recommender',
+    description:
+      'A web application that leverages AI through vector embedding to provide personalized video game recommendations through prompts & vector search. Over 1500 video game titles recognized for vector search recommendations integrated into Catalogd. Integrated Mistral AI with DataStax to calculate vector embedding for each video game title data.',
+    url: 'https://ai-game-recommender.netlify.app',
+    previewImage: ProjectAIGame,
+    technologies: [
+      'Next.js',
+      'Typescript',
+      'Tailwind CSS',
+      'DataStax',
+      'Mistral AI',
+    ],
+  },
+  {
+    name: 'EduCafe Booking',
+    description:
+      'EduCafe Booking is a school cafeteria service web-app that allows students to order their meals remotely, enables staff to manage food bookings, and improves the manager’s workflow. Developed using JSP, Servlets, and Tailwind CSS for the UI, implemented business logic with Enterprise Java Beans (EJBs) from Java EE, and integrated a MySQL database for data storage. This is a university project for the ISB37804 Reuse and Component Based Development class.',
+    url: 'https://github.com/shadeiskndr/EduCafe-Booking',
+    previewImage: ProjectEduCafe,
+    technologies: [
+      'Java',
+      'Java EE',
+      'MySQL',
+      'Tailwind CSS',
+      'JSP',
+      'Servlet',
+    ],
+    gifUrl: 'https://raw.githubusercontent.com/shadeiskndr/shadeiskndr.github.io/main/uploads/EduCafe%20Demo.gif',
+  },
+  {
+    name: 'My PHP Docker',
+    description:
+      'A full-stack web application to show my past PHP university projects for Internet Programming class. Projects include: vehicle rental management system, my movies, cars database & fun calculators.',
+    url: 'https://github.com/shadeiskndr/PHP-Docker-WebApps',
+    previewImage: ProjectPHPDocker,
+    technologies: [
+      'Vanilla PHP',
+      'Apache Web',
+      'MySQL',
+      'Tailwind CSS',
+      'Linux (Ubuntu VM)',
+      'DigitalOcean',
+      'Docker',
+    ],
+  },
+  {
     name: 'Shahathir.me',
     description:
       'A portfolio website created to showcase information about me, my technical skills, the projects that I have done and my experiences. Used various NextJS UI libraries to make the website beautiful.',
@@ -458,21 +506,6 @@ export const PROJECTS: ProjectDetails[] = [
       'React',
       'Typescript',
       'Tailwind CSS',
-    ],
-  },
-  {
-    name: 'EduCafe Booking',
-    description:
-      'EduCafe Booking is a school cafeteria service web-app that allows students to order their meals remotely, enables staff to manage food bookings, and improves the manager’s workflow. Developed using JSP, Servlets, and Tailwind CSS for the UI, implemented business logic with Enterprise Java Beans (EJBs) from Java EE, and integrated a MySQL database for data storage. This is a university project for the ISB37804 Reuse and Component Based Development class.',
-    url: 'https://github.com/shadeiskndr?tab=repositories',
-    previewImage: ProjectEduCafe,
-    technologies: [
-      'Java',
-      'Java EE',
-      'MySQL',
-      'Tailwind CSS',
-      'JSP',
-      'Servlet',
     ],
   },
 ];

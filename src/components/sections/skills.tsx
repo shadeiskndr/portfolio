@@ -6,12 +6,12 @@ import Container from '@/components/layout/container';
 
 const SkillsSection = () => {
   return (
-    <Container className="bg-gray-50" id="skills">
+    <Container id="skills">
       <div className="flex flex-col items-center gap-4">
         <div className="self-center">
           <Tag label="Technical Skills" />
         </div>
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Programming Languages:
         </Typography>
       </div>
@@ -23,7 +23,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Frameworks, Libraries and Runtime Environments:
         </Typography>
       </div>
@@ -35,7 +35,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Databases:
         </Typography>
       </div>
@@ -47,7 +47,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Cloud Services and DevOps:
         </Typography>
       </div>
@@ -59,7 +59,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Code Editor and IDE:
         </Typography>
       </div>
@@ -71,7 +71,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Design Tools:
         </Typography>
       </div>
@@ -83,7 +83,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitle" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center ">
           Documentation Tools:
         </Typography>
       </div>

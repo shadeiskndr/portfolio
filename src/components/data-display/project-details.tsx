@@ -18,6 +18,7 @@ const ProjectDetails = ({
   technologies,
   url,
   previewImage,
+  gifUrl, // Add this line
   layoutType = 'default',
 }: ProjectDetailsProps) => {
   return (
@@ -32,12 +33,21 @@ const ProjectDetails = ({
         )}
       >
         <Link noCustomization href={url} externalLink>
-          <Image
-            src={previewImage}
-            alt={`${name} preview`}
-            className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
-            style={{ objectFit: 'cover' }}
-          />
+          {gifUrl ? (
+            <img
+              src={gifUrl}
+              alt={`${name} preview`}
+              className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
+              style={{ objectFit: 'cover' }}
+            />
+          ) : (
+            <Image
+              src={previewImage}
+              alt={`${name} preview`}
+              className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
+              style={{ objectFit: 'cover' }}
+            />
+          )}
         </Link>
       </div>
 

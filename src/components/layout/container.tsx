@@ -1,3 +1,14 @@
+/**
+ * A React component that renders a full-width container with a gray background and vertical padding.
+ * 
+ * The container has a maximum width of 7xl (1920px) and centers its content horizontally.
+ * The content inside the container is wrapped in a div with vertical spacing.
+ * 
+ * @param className - Additional CSS classes to apply to the container
+ * @param children - The content to render inside the container
+ * @param props - Additional HTML attributes to apply to the container
+ * @returns A React element representing the container
+ */
 import * as React from 'react';
 
 import { mergeClasses } from '@/lib/utils';

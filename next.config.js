@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
-
-module.exports = nextConfig
+const nextConfig = {
+    images: {
+      domains: ['raw.githubusercontent.com'], // Add your CDN domain here
+    },
+  };
+  
+  module.exports = nextConfig;
+  
