@@ -56,6 +56,8 @@ import LogoExcel from '/public/images/logos/icon-excel.svg';
 import LogoOverleaf from '/public/images/logos/icon-overleaf.png';
 
 import Logo99 from '/public/images/logos/logo-99.png';
+import LogoEstee from '/public/images/logos/logo-estee.png';
+import LogoEsteeDark from '/public/images/logos/logo-estee-dark.png';
 
 import ProjectCatalogd from '/public/images/project-catalogd.png';
 import ProjectAIGame from '/public/images/project-aigamerecommender.jpg';
@@ -412,9 +414,24 @@ export const DOCTOOLS: TechDetails[] = [
 
 export const EXPERIENCES: ExperienceDetails[] = [
   {
+    logo: LogoEstee,
+    darkModeLogo: LogoEsteeDark,
+    logoAlt: 'The Estee Lauder Companies logo',
+    position: 'Software Engineer Intern',
+    startDate: new Date(2024, 8),
+    endDate: new Date(2025, 2),
+    summary: [
+      'Contributed to the development and maintenance of a large-scale point-of-sale (POS) system for retail operations.',
+      'Collaborated with cross-functional teams to implement new features and optimize existing functionalities.',
+      'Gained hands-on experience with retail software architecture and best practices in a production environment.',
+      'Assisted in troubleshooting and resolving critical issues to ensure smooth operations for retail clients.',
+      'Participated in code reviews and implemented improvements to enhance system performance and reliability.'
+    ],
+  },
+  {
     logo: Logo99,
     logoAlt: '99 Speedmart logo',
-    position: 'Storekeeper',
+    position: 'Logistics Associate',
     startDate: new Date(2020, 1),
     endDate: new Date(2020, 5),
     //currentlyWorkHere: true,
@@ -423,15 +440,6 @@ export const EXPERIENCES: ExperienceDetails[] = [
       'Organized the store area for ease of access and optimal space utilization.',
     ],
   },
-/*{
-    logo: LogoDotnpixel,
-    darkModeLogo: LogoDotnpixelLight,
-    logoAlt: 'Dotnpixel logo',
-    position: 'Full Stack Developer',
-    startDate: new Date(2015, 11),
-    endDate: new Date(2017, 4),
-    summary: ['Worked as a full stack developer (React / Laravel).'],
-  },*/
 ];
 
 export const PROJECTS: ProjectDetails[] = [
