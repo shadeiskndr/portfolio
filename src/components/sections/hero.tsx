@@ -8,6 +8,7 @@ import ShahathirHeadshot4 from '/public/images/flipped-transparent-selfie.png';
 import SocialIcons from '@/components/data-display/social-icons';
 import Typography from '@/components/general/typography';
 import Container from '@/components/layout/container';
+import DownloadCV from '@/components/general/download-cv';
 
 const HeroSection = () => {
   return (
@@ -55,10 +56,13 @@ const HeroSection = () => {
                 </span>
               </div>
               <Typography>Currently interning as a Software Engineer at The Estee Lauder Companies Inc.</Typography>
-
             </div>
+
           </div>
-          <SocialIcons />
+          <div className="flex flex-row gap-10">
+            <SocialIcons />
+            <DownloadCV />
+          </div>
         </div>
       </div>
     </Container>

@@ -31,7 +31,7 @@ const AboutMeSection = () => {
         {/* Content */}
         <div className="flex max-w-xl flex-col gap-6">
           <Typography variant="h3">
-            Get to know me 😉
+            Get to know me 😀
           </Typography>
           <Typography>
           I&apos;m a final-year Software Engineering student at the{' '}
