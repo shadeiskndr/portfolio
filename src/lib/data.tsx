@@ -1,79 +1,76 @@
-import { Github, Linkedin, Mail, MessageCircle, Twitter, Instagram, Facebook } from 'lucide-react';
+import { Github, Linkedin, Mail, MessageCircle } from "lucide-react";
 
-import LogoJava from '/public/images/logos/icon-java.svg';
-import LogoJavascript from '/public/images/logos/icon-javascript.svg';
-import LogoTypescript from '/public/images/logos/icon-typescript.svg';
-import LogoHTML from '/public/images/logos/icon-html.svg';
-import LogoPython from '/public/images/logos/icon-python.svg';
-import LogoDart from '/public/images/logos/icon-dart.svg';
-import LogoCSS from '/public/images/logos/icon-css.svg';
-import LogoPHP from '/public/images/logos/icon-php.svg';
+import LogoJava from "/public/images/logos/icon-java.svg";
+import LogoJavascript from "/public/images/logos/icon-javascript.svg";
+import LogoTypescript from "/public/images/logos/icon-typescript.svg";
+import LogoHTML from "/public/images/logos/icon-html.svg";
+import LogoPython from "/public/images/logos/icon-python.svg";
+import LogoCSS from "/public/images/logos/icon-css.svg";
+import LogoPHP from "/public/images/logos/icon-php.svg";
 
-import LogoReact from '/public/images/logos/icon-react.svg';
-import LogoNextjs from '/public/images/logos/icon-nextjs.svg';
-import LogoAstro from '/public/images/logos/icon-astro.svg';
-import LogoNodejs from '/public/images/logos/icon-nodejs.svg';
-import LogoJakarta from '/public/images/logos/icon-jakarta.svg';
-import LogoFlutter from '/public/images/logos/icon-flutter.svg';
-import LogoAnt from '/public/images/logos/icon-ant.svg';
-import LogoTailwindcss from '/public/images/logos/icon-tailwindcss.svg';
-import LogoReactNative from '/public/images/logos/icon-reactnative.svg';
-import LogoLaravel from '/public/images/logos/icon-laravel.svg';
-import LogoXAMPP from '/public/images/logos/icon-xampp.svg';
-import LogoGlassfish from '/public/images/logos/icon-glassfish.svg';
+import LogoReact from "/public/images/logos/icon-react.svg";
+import LogoNextjs from "/public/images/logos/icon-nextjs.svg";
+import LogoNodejs from "/public/images/logos/icon-nodejs.svg";
+import LogoJakarta from "/public/images/logos/icon-jakarta.svg";
+import LogoTailwindcss from "/public/images/logos/icon-tailwindcss.svg";
+import LogoSpring from "/public/images/logos/logo-springboot.svg";
+import LogoVite from "/public/images/logos/logo-vite.svg";
+import LogoRedux from "/public/images/logos/logo-redux.svg";
+import LogoReactRouter from "/public/images/logos/logo-reactrouter.svg";
+import LogoBootstrap from "/public/images/logos/logo-bootstrap.svg";
+import LogoSCSS from "/public/images/logos/logo-scss.svg";
+import LogoExpress from "/public/images/logos/logo-express.svg";
+import LogoNginx from "/public/images/logos/logo-nginx.svg";
+import LogoMSSQL from "/public/images/logos/logo-mssql.svg";
+import LogoDBeaver from "/public/images/logos/logo-dbeaver.svg";
+import LogoPostman from "/public/images/logos/logo-postman.svg";
+import LogoMUI from "/public/images/logos/logo-mui.svg";
+import LogoReactNative from "/public/images/logos/icon-reactnative.svg";
 
-import LogoMySQL from '/public/images/logos/icon-mysql.svg';
-import LogoSqlite from '/public/images/logos/icon-sqlite.svg';
-import LogoAppwrite from '/public/images/logos/icon-appwrite.svg';
-import LogoFirebase from '/public/images/logos/icon-firebase.svg';
-import LogoMongoDB from '/public/images/logos/icon-mongodb.svg';
-import LogoPrisma from '/public/images/logos/icon-prisma.svg';
-import LogoMariaDB from '/public/images/logos/icon-mariadb.svg';
+import LogoMySQL from "/public/images/logos/icon-mysql.svg";
+import LogoSqlite from "/public/images/logos/icon-sqlite.svg";
+import LogoAppwrite from "/public/images/logos/icon-appwrite.svg";
 
-import LogoGit from '/public/images/logos/icon-git.svg';
-import LogoDocker from '/public/images/logos/icon-docker.svg';
-import LogoAWS from '/public/images/logos/icon-aws.svg';
-import LogoVercel from '/public/images/logos/icon-vercel.png';
-import LogoNetlify from '/public/images/logos/icon-netlify.svg';
-import LogoHeroku from '/public/images/logos/icon-heroku.svg';
-import LogoDigitalOcean from '/public/images/logos/icon-digitalocean.svg';
-import LogoGoogleCloud from '/public/images/logos/icon-googlecloud.svg';
+import LogoGit from "/public/images/logos/icon-git.svg";
+import LogoDocker from "/public/images/logos/icon-docker.svg";
+import LogoVercel from "/public/images/logos/icon-vercel.png";
+import LogoNetlify from "/public/images/logos/icon-netlify.svg";
+import LogoDigitalOcean from "/public/images/logos/icon-digitalocean.svg";
 
-import LogoVSCode from '/public/images/logos/icon-vscode.svg';
-import LogoNetbeans from '/public/images/logos/icon-netbeans.png';
-import LogoEclipse from '/public/images/logos/icon-eclipse.svg';
-import LogoIntelliJ from '/public/images/logos/icon-intellij.svg';
-import LogoSublimeText from '/public/images/logos/icon-sublimetext.svg';
+import LogoVSCode from "/public/images/logos/icon-vscode.svg";
+import LogoNetbeans from "/public/images/logos/icon-netbeans.png";
+import LogoIntelliJ from "/public/images/logos/icon-intellij.svg";
+import LogoSublimeText from "/public/images/logos/icon-sublimetext.svg";
 
-import LogoFigma from '/public/images/logos/icon-figma.svg';
-import LogoPhotoshop from '/public/images/logos/icon-photoshop.svg';
-import LogoIllustrator from '/public/images/logos/icon-illustrator.svg';
-import LogoCanva from '/public/images/logos/icon-canva.svg';
-import LogoPowerpoint from '/public/images/logos/icon-powerpoint.svg';
+import LogoFigma from "/public/images/logos/icon-figma.svg";
+import LogoPhotoshop from "/public/images/logos/icon-photoshop.svg";
+import LogoIllustrator from "/public/images/logos/icon-illustrator.svg";
+import LogoCanva from "/public/images/logos/icon-canva.svg";
+import LogoPowerpoint from "/public/images/logos/icon-powerpoint.svg";
 
-import LogoWord from '/public/images/logos/icon-word.svg';
-import LogoExcel from '/public/images/logos/icon-excel.svg';
-import LogoOverleaf from '/public/images/logos/icon-overleaf.png';
+import LogoWord from "/public/images/logos/icon-word.svg";
+import LogoExcel from "/public/images/logos/icon-excel.svg";
+import LogoOverleaf from "/public/images/logos/icon-overleaf.png";
 
-import Logo99 from '/public/images/logos/logo-99.png';
-import LogoEstee from '/public/images/logos/logo-estee.png';
-import LogoEsteeDark from '/public/images/logos/logo-estee-dark.png';
+import Logo99 from "/public/images/logos/logo-99.png";
+import LogoEstee from "/public/images/logos/logo-estee.png";
+import LogoEsteeDark from "/public/images/logos/logo-estee-dark.png";
 
-import ProjectCatalogd from '/public/images/project-catalogd.png';
-import ProjectAIGame from '/public/images/project-aigamerecommender.jpg';
-import ProjectShahathirme from '/public/images/project-shahathirme.jpg';
-import ProjectEduCafe from '/public/images/project-educafe.jpg';
-import ProjectPHPDocker from '/public/images/project-phpdocker.jpg';
+import ProjectCatalogd from "/public/images/project-catalogd.png";
+import ProjectAIGame from "/public/images/project-aigamerecommender.jpg";
+import ProjectShahathirme from "/public/images/project-shahathirme.jpg";
+import ProjectEduCafe from "/public/images/project-educafe.jpg";
+import ProjectPHPDocker from "/public/images/project-phpdocker.png";
 
-import CertificateGPM from '/public/images/certificate-GPM.png';
-import CertificateITAP from '/public/images/certificate-ITAP.png';
-import CertificateITS from '/public/images/certificate-ITS.png';
-import CertificateSEC from '/public/images/certificate-SEC.png';
-import CertificateUXD from '/public/images/certificate-UXD.png';
+import CertificateGPM from "/public/images/certificate-GPM.png";
+import CertificateITAP from "/public/images/certificate-ITAP.png";
+import CertificateITS from "/public/images/certificate-ITS.png";
+import CertificateSEC from "/public/images/certificate-SEC.png";
+import CertificateUXD from "/public/images/certificate-UXD.png";
 
-import AvatarKrisztian from '/public/images/avatar-krisztian.png';
-import AvatarEugen from '/public/images/avatar-eugen.png';
-import AvatarDummy from '/public/images/avatar-dummy.svg';
+import AvatarKrisztian from "/public/images/avatar-krisztian.png";
+import AvatarEugen from "/public/images/avatar-eugen.png";
+import AvatarDummy from "/public/images/avatar-dummy.svg";
 
 import {
   CertificateDetails,
@@ -81,334 +78,319 @@ import {
   ProjectDetails,
   TechDetails,
   TestimonialDetails,
-} from '@/lib/types';
+} from "@/lib/types";
 
 export const EXTERNAL_LINKS = {
-  GITHUB: 'https://github.com/shadeiskndr',
-  //TWITTER: 'https://twitter.com/shadeiskndr',
-  UNIKL: 'https://miit.unikl.edu.my/',
-  };
+  GITHUB: "https://github.com/shadeiskndr",
+  UNIKL: "https://miit.unikl.edu.my/",
+};
 
 export const NAV_LINKS = [
   {
-    label: 'About',
-    href: '#about',
+    label: "About",
+    href: "#about",
   },
   {
-    label: 'Education',
-    href: '#education',
+    label: "Education",
+    href: "#education",
   },
   {
-    label: 'Projects',
-    href: '#projects',
+    label: "Projects",
+    href: "#projects",
   },
   {
-    label: 'Skills',
-    href: '#skills',
+    label: "Skills",
+    href: "#skills",
   },
   {
-    label: 'Experience',
-    href: '#experience',
+    label: "Experience",
+    href: "#experience",
   },
   {
-    label: 'Certificates',
-    href: '#certificates',
+    label: "Certificates",
+    href: "#certificates",
   },
   {
-    label: 'Contact',
-    href: '#contact',
+    label: "Contact",
+    href: "#contact",
   },
 ];
 
 export const SOCIAL_LINKS = [
   {
     icon: Github,
-    url: 'https://github.com/shadeiskndr',
+    url: "https://github.com/shadeiskndr",
   },
   {
     icon: Linkedin,
-    url: 'https://www.linkedin.com/in/shahathir-iskandar-b60869270/',
+    url: "https://www.linkedin.com/in/shahathir-iskandar-b60869270/",
   },
   {
     icon: Mail,
-    url: 'mailto:shahathiriskandar43@gmail.com',
+    url: "mailto:shahathiriskandar43@gmail.com",
   },
   {
     icon: MessageCircle,
-    url: 'https://wa.me/601153787564',
-  },
-  /*{
-    icon: Twitter,
-    url: 'https://twitter.com/shadeiskndr',
-  },*/
-  {
-    icon: Instagram,
-    url: 'https://www.instagram.com/shadeiskndr',
-  },
-  {
-    icon: Facebook,
-    url: 'https://www.facebook.com/shahathir.iskandar/',
+    url: "https://wa.me/601153787564",
   },
 ];
 
 export const LANGUAGES: TechDetails[] = [
   {
-    label: 'Java',
+    label: "Java",
     logo: LogoJava,
-    url: 'https://docs.oracle.com/en/java/',
+    url: "https://docs.oracle.com/en/java/",
   },
   {
-    label: 'Javascript',
+    label: "Javascript",
     logo: LogoJavascript,
-    url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript',
+    url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
   },
   {
-    label: 'Typescript',
+    label: "Typescript",
     logo: LogoTypescript,
-    url: 'https://www.typescriptlang.org/',
+    url: "https://www.typescriptlang.org/",
   },
   {
-    label: 'Dart',
-    logo: LogoDart,
-    url: 'https://dart.dev/guides',
-  },
-  {
-    label: 'PHP',
+    label: "PHP",
     logo: LogoPHP,
-    url: 'https://www.php.net/manual/en/index.php',
+    url: "https://www.php.net/manual/en/index.php",
   },
   {
-    label: 'Python',
+    label: "Python",
     logo: LogoPython,
-    url: 'https://www.python.org/doc/',
+    url: "https://www.python.org/doc/",
   },
   {
-    label: 'HTML',
+    label: "HTML",
     logo: LogoHTML,
-    url: 'https://developer.mozilla.org/en-US/docs/Web/HTML',
+    url: "https://developer.mozilla.org/en-US/docs/Web/HTML",
   },
   {
-    label: 'CSS',
+    label: "CSS",
     logo: LogoCSS,
-    url: 'https://developer.mozilla.org/en-US/docs/Web/CSS',
+    url: "https://developer.mozilla.org/en-US/docs/Web/CSS",
   },
 ];
 
-export const FRAMEWORKS: TechDetails[] = [
+export const FRONTEND: TechDetails[] = [
   {
-    label: 'Next.js',
-    logo: LogoNextjs,
-    url: 'https://nextjs.org/',
-  },
-  {
-    label: 'React.js',
+    label: "React.js",
     logo: LogoReact,
-    url: 'https://react.dev/',
+    url: "https://react.dev/",
   },
   {
-    label: 'Astro',
-    logo: LogoAstro,
-    url: 'https://docs.astro.build/en/getting-started/',
+    label: "Next.js",
+    logo: LogoNextjs,
+    url: "https://nextjs.org/",
   },
   {
-    label: 'Node.js',
-    logo: LogoNodejs,
-    url: 'https://nodejs.org/docs/latest/api/',
+    label: "Vite",
+    logo: LogoVite,
+    url: "https://vitejs.dev/",
   },
   {
-    label: 'Java EE',
-    logo: LogoJakarta,
-    url: 'https://jakarta.ee/learn/docs/jakartaee-tutorial/current/index.html',
+    label: "Redux",
+    logo: LogoRedux,
+    url: "https://redux.js.org/",
   },
   {
-    label: 'Flutter',
-    logo: LogoFlutter,
-    url: 'https://docs.flutter.dev/',
+    label: "React Router",
+    logo: LogoReactRouter,
+    url: "https://reactrouter.com/en/main",
   },
   {
-    label: 'Tailwindcss',
+    label: "Material UI",
+    logo: LogoMUI,
+    url: "https://mui.com/material-ui/getting-started/overview/",
+  },
+  {
+    label: "Tailwind CSS",
     logo: LogoTailwindcss,
-    url: 'https://tailwindcss.com/',
+    url: "https://tailwindcss.com/",
   },
   {
-    label: 'Java Ant',
-    logo: LogoAnt,
-    url: 'https://ant.apache.org/manual/',
+    label: "Bootstrap",
+    logo: LogoBootstrap,
+    url: "https://getbootstrap.com/",
   },
   {
-    label: 'React Native',
+    label: "SCSS",
+    logo: LogoSCSS,
+    url: "https://sass-lang.com/",
+  },
+  {
+    label: "React Native",
     logo: LogoReactNative,
-    url: 'https://reactnative.dev/docs/getting-started',
+    url: "https://reactnative.dev/docs/getting-started",
+  },
+];
+
+export const BACKEND: TechDetails[] = [
+  {
+    label: "Java",
+    logo: LogoJava,
+    url: "https://docs.oracle.com/en/java/",
   },
   {
-    label: 'Laravel',
-    logo: LogoLaravel,
-    url: 'https://laravel.com/docs/11.x/installation',
+    label: "Spring Boot",
+    logo: LogoSpring,
+    url: "https://spring.io/projects/spring-boot",
   },
   {
-    label: 'XAMPP',
-    logo: LogoXAMPP,
-    url: 'https://www.apachefriends.org/docs/',
+    label: "Java EE",
+    logo: LogoJakarta,
+    url: "https://jakarta.ee/learn/docs/jakartaee-tutorial/current/index.html",
   },
   {
-    label: 'Glassfish',
-    logo: LogoGlassfish,
-    url: 'https://glassfish.org/docs/',
+    label: "Node.js",
+    logo: LogoNodejs,
+    url: "https://nodejs.org/docs/latest/api/",
+  },
+  {
+    label: "Express",
+    logo: LogoExpress,
+    url: "https://expressjs.com/en/starter/installing.html",
+  },
+  {
+    label: "Vanilla PHP 8",
+    logo: LogoPHP,
+    url: "https://www.php.net/manual/en/index.php",
   },
 ];
 
 export const DATABASES: TechDetails[] = [
   {
-    label: 'MySQL',
+    label: "MySQL",
     logo: LogoMySQL,
-    url: 'https://dev.mysql.com/doc/',
+    url: "https://dev.mysql.com/doc/",
   },
   {
-    label: 'SQLite',
+    label: "MS SQL Server",
+    logo: LogoMSSQL,
+    url: "https://learn.microsoft.com/en-us/sql/sql-server/?view=sql-server-ver16",
+  },
+  {
+    label: "SQLite",
     logo: LogoSqlite,
-    url: 'https://www.sqlite.org/docs.html',
+    url: "https://www.sqlite.org/docs.html",
   },
   {
-    label: 'Appwrite',
+    label: "Appwrite",
     logo: LogoAppwrite,
-    url: 'https://appwrite.io/docs',
-  },
-  {
-    label: 'Firebase',
-    logo: LogoFirebase,
-    url: 'https://firebase.google.com/docs',
-  },
-  {
-    label: 'MongoDB',
-    logo: LogoMongoDB,
-    url: 'https://www.mongodb.com/',
-  },
-  {
-    label: 'PrismaDB',
-    logo: LogoPrisma,
-    url: 'https://www.prisma.io/docs',
-  },
-  {
-    label: 'MariaDB',
-    logo: LogoMariaDB,
-    url: 'https://mariadb.com/kb/en/documentation/',
+    url: "https://appwrite.io/docs",
   },
 ];
 
 export const CLOUDDEVOPS: TechDetails[] = [
   {
-    label: 'Git',
+    label: "Git",
     logo: LogoGit,
-    url: 'https://git-scm.com/',
+    url: "https://git-scm.com/",
   },
   {
-    label: 'Docker',
+    label: "Docker",
     logo: LogoDocker,
-    url: 'https://docs.docker.com/',
+    url: "https://docs.docker.com/",
   },
   {
-    label: 'AWS',
-    logo: LogoAWS,
-    url: 'https://docs.aws.amazon.com/',
-  },
-  {
-    label: 'Vercel',
+    label: "Vercel",
     logo: LogoVercel,
-    url: 'https://vercel.com/docs',
+    url: "https://vercel.com/docs",
   },
   {
-    label: 'Netlify',
+    label: "Netlify",
     logo: LogoNetlify,
-    url: 'https://docs.netlify.com/',
+    url: "https://docs.netlify.com/",
   },
   {
-    label: 'Heroku',
-    logo: LogoHeroku,
-    url: 'https://devcenter.heroku.com/categories/reference',
-  },
-  {
-    label: 'DigitalOcean',
+    label: "DigitalOcean",
     logo: LogoDigitalOcean,
-    url: 'https://docs.digitalocean.com/',
+    url: "https://docs.digitalocean.com/",
   },
   {
-    label: 'Google Cloud',
-    logo: LogoGoogleCloud,
-    url: 'https://cloud.google.com/docs',
+    label: "Nginx",
+    logo: LogoNginx,
+    url: "https://docs.nginx.com/",
+  },
+  {
+    label: "DBeaver",
+    logo: LogoDBeaver,
+    url: "https://dbeaver.io/docs/",
+  },
+  {
+    label: "Postman",
+    logo: LogoPostman,
+    url: "https://www.postman.com/product/api-client/",
   },
 ];
 
 export const EDITOR: TechDetails[] = [
   {
-    label: 'VS Code',
+    label: "VS Code",
     logo: LogoVSCode,
-    url: 'https://code.visualstudio.com/docs',
+    url: "https://code.visualstudio.com/docs",
   },
   {
-    label: 'Netbeans',
+    label: "Netbeans",
     logo: LogoNetbeans,
-    url: 'https://netbeans.apache.org/tutorial/main/kb/',
+    url: "https://netbeans.apache.org/tutorial/main/kb/",
   },
   {
-    label: 'Eclipse',
-    logo: LogoEclipse,
-    url: 'https://www.eclipse.org/documentation/',
-  },
-  {
-    label: 'Sublime Text',
+    label: "Sublime Text",
     logo: LogoSublimeText,
-    url: 'https://www.sublimetext.com/docs/',
+    url: "https://www.sublimetext.com/docs/",
   },
   {
-    label: 'IntelliJ',
+    label: "IntelliJ",
     logo: LogoIntelliJ,
-    url: 'https://www.jetbrains.com/help/idea/getting-started.html',
+    url: "https://www.jetbrains.com/help/idea/getting-started.html",
   },
 ];
 
 export const DESIGNTOOLS: TechDetails[] = [
   {
-    label: 'Figma',
+    label: "Figma",
     logo: LogoFigma,
-    url: 'https://www.figma.com/',
+    url: "https://www.figma.com/",
   },
   {
-    label: 'Photoshop',
+    label: "Photoshop",
     logo: LogoPhotoshop,
-    url: 'https://helpx.adobe.com/photoshop/user-guide.html',
+    url: "https://helpx.adobe.com/photoshop/user-guide.html",
   },
   {
-    label: 'Illustrator',
+    label: "Illustrator",
     logo: LogoIllustrator,
-    url: 'https://helpx.adobe.com/illustrator/user-guide.html',
+    url: "https://helpx.adobe.com/illustrator/user-guide.html",
   },
   {
-    label: 'Canva',
+    label: "Canva",
     logo: LogoCanva,
-    url: 'https://www.canva.com',
+    url: "https://www.canva.com",
   },
   {
-    label: 'Powerpoint',
+    label: "Powerpoint",
     logo: LogoPowerpoint,
-    url: 'https://www.microsoft.com/en-my/microsoft-365/powerpoint',
+    url: "https://www.microsoft.com/en-my/microsoft-365/powerpoint",
   },
 ];
 
 export const DOCTOOLS: TechDetails[] = [
   {
-    label: 'Word',
+    label: "Word",
     logo: LogoWord,
-    url: 'https://www.microsoft.com/en-my/microsoft-365/word',
+    url: "https://www.microsoft.com/en-my/microsoft-365/word",
   },
   {
-    label: 'Excel',
+    label: "Excel",
     logo: LogoExcel,
-    url: 'https://www.microsoft.com/en-my/microsoft-365/excel',
+    url: "https://www.microsoft.com/en-my/microsoft-365/excel",
   },
   {
-    label: 'Overleaf (LaTeX)',
+    label: "Overleaf (LaTeX)",
     logo: LogoOverleaf,
-    url: 'https://www.overleaf.com/',
+    url: "https://www.overleaf.com/",
   },
 ];
 
@@ -416,171 +398,167 @@ export const EXPERIENCES: ExperienceDetails[] = [
   {
     logo: LogoEstee,
     darkModeLogo: LogoEsteeDark,
-    logoAlt: 'The Estee Lauder Companies logo',
-    position: 'Software Engineer Intern',
-    startDate: new Date(2024, 8),
-    endDate: new Date(2025, 2),
+    logoAlt: "The Estee Lauder Companies logo",
+    position: "Software Engineer Intern",
+    startDate: new Date(2024, 9),
+    endDate: new Date(2025, 1),
     summary: [
-      'Contributed to the development and maintenance of a large-scale point-of-sale (POS) system for retail operations.',
-      'Collaborated with cross-functional teams to implement new features and optimize existing functionalities.',
-      'Gained hands-on experience with retail software architecture and best practices in a production environment.',
-      'Assisted in troubleshooting and resolving critical issues to ensure smooth operations for retail clients.',
-      'Participated in code reviews and implemented improvements to enhance system performance and reliability.'
+      "Contributed significantly to the development and delivery of an internal Support Portal full-stack web application to support Estee Lauder Companies' retail operations.",
+      "Gained hands-on experience with retail software architecture and best practices in a production environment.",
+      "Assisted in troubleshooting and resolving critical issues to ensure smooth operations for retail clients.",
+      "Participated in code reviews and implemented improvements to enhance system performance and reliability.",
     ],
   },
   {
     logo: Logo99,
-    logoAlt: '99 Speedmart logo',
-    position: 'Logistics Associate',
+    logoAlt: "99 Speedmart logo",
+    position: "Logistics Associate",
     startDate: new Date(2020, 1),
     endDate: new Date(2020, 5),
     //currentlyWorkHere: true,
     summary: [
-      'Coordinated with the store manager to restock inventory as needed, performed regular stock checks and reported any issues to the store manager immediately.',
-      'Organized the store area for ease of access and optimal space utilization.',
+      "Coordinated with the store manager to restock inventory as needed, performed regular stock checks and reported any issues to the store manager immediately.",
+      "Organized the store area for ease of access and optimal space utilization.",
     ],
   },
 ];
 
 export const PROJECTS: ProjectDetails[] = [
   {
-    name: 'Catalogd',
+    name: "Catalogd",
     description:
-      'A social cataloging web application for video game enthusiasts. Designed to provide a platform where video game enthusiasts can catalog their gaming experiences, discover new  titles, share reviews, and connect with others. A final year project (FYP) to complete my Bachelor.',
-    url: 'https://catalogd-fyp.vercel.app',
+      "A social cataloging web application for video game enthusiasts. Designed to provide a platform where video game enthusiasts can catalog their gaming experiences, discover new  titles, share reviews, and connect with others. A final year project (FYP) to complete my Bachelor.",
+    url: "https://catalogd-fyp.vercel.app",
     previewImage: ProjectCatalogd,
     technologies: [
-      'Next.js',
-      'Typescript',
-      'React',
-      'Appwrite',
-      'Tailwind CSS',
+      "Next.js",
+      "Typescript",
+      "React",
+      "Appwrite",
+      "Tailwind CSS",
     ],
   },
   {
-    name: 'AI Game Recommender',
+    name: "AI Game Recommender",
     description:
-      'A web application that leverages AI through vector embedding to provide personalized video game recommendations through prompts & vector search. Over 1500 video game titles recognized for vector search recommendations integrated into Catalogd. Integrated Mistral AI with DataStax to calculate vector embedding for each video game title data.',
-    url: 'https://ai-game-recommender.netlify.app',
+      "A web application that leverages AI through vector embedding to provide personalized video game recommendations through prompts & vector search. Over 1500 video game titles recognized for vector search recommendations integrated into Catalogd. Integrated Mistral AI with DataStax to calculate vector embedding for each video game title data.",
+    url: "https://ai-game-recommender.netlify.app",
     previewImage: ProjectAIGame,
     technologies: [
-      'Next.js',
-      'Typescript',
-      'Tailwind CSS',
-      'DataStax',
-      'Mistral AI',
+      "Next.js",
+      "Typescript",
+      "Tailwind CSS",
+      "DataStax",
+      "Mistral AI",
     ],
   },
   {
-    name: 'EduCafe Booking',
+    name: "EduCafe Booking",
     description:
-      'EduCafe Booking is a school cafeteria service web-app that allows students to order their meals remotely, enables staff to manage food bookings, and improves the manager’s workflow. Developed using JSP, Servlets, and Tailwind CSS for the UI, implemented business logic with Enterprise Java Beans (EJBs) from Java EE, and integrated a MySQL database for data storage. This is a university project for the ISB37804 Reuse and Component Based Development class.',
-    url: 'https://github.com/shadeiskndr/EduCafe-Booking',
+      "EduCafe Booking is a school cafeteria service web-app that allows students to order their meals remotely, enables staff to manage food bookings, and improves the manager’s workflow. Developed using JSP, Servlets, and Tailwind CSS for the UI, implemented business logic with Enterprise Java Beans (EJBs) from Java EE, and integrated a MySQL database for data storage. This is a university project for the ISB37804 Reuse and Component Based Development class.",
+    url: "https://github.com/shadeiskndr/EduCafe-Booking",
     previewImage: ProjectEduCafe,
     technologies: [
-      'Java',
-      'Java EE',
-      'MySQL',
-      'Tailwind CSS',
-      'JSP',
-      'Servlet',
+      "Java",
+      "Java EE",
+      "MySQL",
+      "Tailwind CSS",
+      "JSP",
+      "Servlet",
     ],
-    gifUrl: 'https://raw.githubusercontent.com/shadeiskndr/shadeiskndr.github.io/main/uploads/EduCafe%20Demo.gif',
+    gifUrl:
+      "https://raw.githubusercontent.com/shadeiskndr/shadeiskndr.github.io/main/uploads/EduCafe%20Demo.gif",
   },
   {
-    name: 'My PHP Docker',
+    name: "My PHP Docker",
     description:
-      'A full-stack web application to show my past PHP university projects for Internet Programming class. Projects include: vehicle rental management system, my movies, cars database & fun calculators.',
-    url: 'https://github.com/shadeiskndr/PHP-Docker-WebApps',
+      "A full-stack web application to show my past PHP university projects for Internet Programming class. Projects include: vehicle rental management system, my movies, cars database & fun calculators.",
+    url: "https://github.com/shadeiskndr/PHP-Docker-WebApps",
     previewImage: ProjectPHPDocker,
     technologies: [
-      'Vanilla PHP',
-      'Apache Web',
-      'MySQL',
-      'Tailwind CSS',
-      'Linux (Ubuntu VM)',
-      'DigitalOcean',
-      'Docker',
+      "Vanilla PHP",
+      "Apache Web",
+      "MySQL",
+      "Tailwind CSS",
+      "Linux (Ubuntu VM)",
+      "DigitalOcean",
+      "Docker",
     ],
   },
   {
-    name: 'Shahathir.me',
+    name: "Shahathir.me",
     description:
-      'A portfolio website created to showcase information about me, my technical skills, the projects that I have done and my experiences. Used various NextJS UI libraries to make the website beautiful.',
-    url: 'https://shahathir.me',
+      "A portfolio website created to showcase information about me, my technical skills, the projects that I have done and my experiences. Used various NextJS UI libraries to make the website beautiful.",
+    url: "https://shahathir.me",
     previewImage: ProjectShahathirme,
-    technologies: [
-      'Next.js',
-      'React',
-      'Typescript',
-      'Tailwind CSS',
-    ],
+    technologies: ["Next.js", "React", "Typescript", "Tailwind CSS"],
   },
 ];
 
 export const TESTIMONIALS: TestimonialDetails[] = [
   {
-    personName: 'Krisztian Gyuris',
+    personName: "Krisztian Gyuris",
     personAvatar: AvatarKrisztian,
-    title: 'Founder - inboxgenie.io',
+    title: "Founder - inboxgenie.io",
     testimonial:
-      'Job well done! I am really impressed. He is very very good at what he does:) I would recommend Sagar and will rehire in the future for Frontend development.',
+      "Job well done! I am really impressed. He is very very good at what he does:) I would recommend Sagar and will rehire in the future for Frontend development.",
   },
   {
-    personName: 'Eugen Esanu',
+    personName: "Eugen Esanu",
     personAvatar: AvatarEugen,
-    title: 'Founder - shosho.design',
+    title: "Founder - shosho.design",
     testimonial:
-      'Great guy, highly recommended for any COMPLEX front-end development job! His skills are top-notch and he will be an amazing addition to any team.',
+      "Great guy, highly recommended for any COMPLEX front-end development job! His skills are top-notch and he will be an amazing addition to any team.",
   },
   {
-    personName: 'Joe Matkin',
+    personName: "Joe Matkin",
     personAvatar: AvatarDummy,
-    title: 'Freelancer',
+    title: "Freelancer",
     testimonial:
-      'Sagar was extremely easy and pleasant to work with and he truly cares about the project being a success. Sagar has a high level of knowledge and was able to work on my MERN stack application without any issues.',
+      "Sagar was extremely easy and pleasant to work with and he truly cares about the project being a success. Sagar has a high level of knowledge and was able to work on my MERN stack application without any issues.",
   },
 ];
 
 export const CERTIFICATES: CertificateDetails[] = [
   {
-    certificateName: 'Google Project Management Professional Certificate',
+    certificateName: "Google Project Management Professional Certificate",
     certificateImage: CertificateGPM,
-    certificateSource: 'Coursera',
+    certificateSource: "Coursera",
     certificateDescription:
-      ' Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.',
-    url: 'https://www.coursera.org/account/accomplishments/specialization/8L4C2AHPPWMP',
-    },
+      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+    url: "https://www.coursera.org/account/accomplishments/specialization/8L4C2AHPPWMP",
+  },
   {
-    certificateName: 'Google IT Automation with Python Professional Certificate',
+    certificateName:
+      "Google IT Automation with Python Professional Certificate",
     certificateImage: CertificateITAP,
-    certificateSource: 'Coursera',
+    certificateSource: "Coursera",
     certificateDescription:
-      ' Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.',
-    url: 'https://www.coursera.org/account/accomplishments/specialization/KWQAJCAQAYY2',
-    },
+      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+    url: "https://www.coursera.org/account/accomplishments/specialization/KWQAJCAQAYY2",
+  },
   {
-    certificateName: 'Google IT Support Professional Certificate',
+    certificateName: "Google IT Support Professional Certificate",
     certificateImage: CertificateITS,
-    certificateSource: 'Coursera',
+    certificateSource: "Coursera",
     certificateDescription:
-      ' Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.',
-    url: 'https://www.coursera.org/account/accomplishments/specialization/SF3NTQPRQZLB',
-    },
+      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+    url: "https://www.coursera.org/account/accomplishments/specialization/SF3NTQPRQZLB",
+  },
   {
-    certificateName: 'Google Cybersecurity Professional Certificate',
+    certificateName: "Google Cybersecurity Professional Certificate",
     certificateImage: CertificateSEC,
-    certificateSource: 'Coursera',
+    certificateSource: "Coursera",
     certificateDescription:
-      ' Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.',
-    url: 'https://www.coursera.org/account/accomplishments/specialization/KWPRBNTZCGKK',
-    },
+      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+    url: "https://www.coursera.org/account/accomplishments/specialization/KWPRBNTZCGKK",
+  },
   {
-    certificateName: 'Google UX Design Professional Certificate',
+    certificateName: "Google UX Design Professional Certificate",
     certificateImage: CertificateUXD,
-    certificateSource: 'Coursera',
+    certificateSource: "Coursera",
     certificateDescription:
-      ' Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.',
-    url: 'https://www.coursera.org/account/accomplishments/specialization/JD7XZR37DJSU',
+      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+    url: "https://www.coursera.org/account/accomplishments/specialization/JD7XZR37DJSU",
   },
 ];
