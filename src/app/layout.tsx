@@ -1,60 +1,60 @@
-import Script from 'next/script';
-import { Inter } from 'next/font/google';
-import { Metadata } from 'next';
+import Script from "next/script";
+import { Inter } from "next/font/google";
+import { Metadata } from "next";
 
-import './globals.css';
-import Header from '@/components/layout/header';
-import { Providers } from '@/lib/providers';
-import Footer from '@/components/layout/footer';
+import "./globals.css";
+import Header from "@/components/layout/header";
+import { Providers } from "@/lib/providers";
+import Footer from "@/components/layout/footer";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
-const title = 'Shahathir Iskandar | Software Engineering Intern From Gombak, Selangor, Malaysia.';
-const description =
-  'A software engineering student intern who is interested in software development (web, mobile, and desktop), from Gombak, Selangor, Malaysia.';
-const url = 'https://shahathir.me';
+const title =
+  "Shahathir Iskandar | Software Developer From Batu Caves, Selangor, Malaysia.";
+const description = "A software developer from Batu Caves, Selangor, Malaysia.";
+const url = "https://shahathir.me";
 
 export const metadata: Metadata = {
   metadataBase: new URL(url),
   title,
   description,
   keywords: [
-    'Web Developer',
-    'Mobile Developer',
-    'Front-end Developer',
-    'Full-stack Developer',
-    'Next.js Developer',
-    'React Developer',
-    'Java Developer',
+    "Web Developer",
+    "Mobile Developer",
+    "Front-end Developer",
+    "Full-stack Developer",
+    "Next.js Developer",
+    "React Developer",
+    "Java Developer",
   ],
-  creator: 'Shahathir Iskandar',
+  creator: "Shahathir Iskandar",
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
   openGraph: {
-    type: 'website',
+    type: "website",
     url,
     title,
     description,
     siteName: title,
     images: [
       {
-        url: '/images/open-graph-shahathir.jpg',
+        url: "/images/open-graph-shahathir.jpg",
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
     title,
     description,
-    creator: '@shadeiskndr',
-    images: '/images/open-graph-shahathir.jpg',
+    creator: "@shadeiskndr",
+    images: "/images/open-graph-shahathir.jpg",
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
