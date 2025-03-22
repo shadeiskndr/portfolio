@@ -59,6 +59,8 @@ import LogoEsteeDark from "/public/images/logos/logo-estee-dark.png";
 import ProjectCatalogd from "/public/images/project-catalogd.png";
 import ProjectAIGame from "/public/images/project-aigamerecommender.jpg";
 import ProjectShahathirme from "/public/images/project-shahathirme.jpg";
+import ProjectCountryEconomicDashboard from "/public/images/project-countryeconomicdashboard.png";
+import ProjectTodoList from "/public/images/project-todolist.png";
 import ProjectEduCafe from "/public/images/project-educafe.jpg";
 import ProjectPHPDocker from "/public/images/project-phpdocker.png";
 
@@ -433,7 +435,7 @@ export const PROJECTS: ProjectDetails[] = [
     technologies: [
       "Next.js",
       "Typescript",
-      "React",
+      "React.js",
       "Appwrite",
       "Tailwind CSS",
     ],
@@ -449,7 +451,39 @@ export const PROJECTS: ProjectDetails[] = [
       "Typescript",
       "Tailwind CSS",
       "DataStax",
-      "Mistral AI",
+      "Open AI Text-Embed Model",
+    ],
+  },
+  {
+    name: "Country Economic Indicator Analytics Dashboard",
+    description:
+      "A full-stack web application that serves to provide access and visualise various economic indicators of a specific country, including: GDP growth rates, population growth rates, education expenditure percentages, inflation rates and labour force statistics.",
+    url: "https://github.com/shadeiskndr/tgp-challenge-api",
+    previewImage: ProjectCountryEconomicDashboard,
+    technologies: [
+      "Spring Boot",
+      "Java",
+      "React.js",
+      "TypeScript",
+      "MySQL",
+      "Material-UI",
+      "JWT",
+    ],
+    gifUrl:
+      "https://raw.githubusercontent.com/shadeiskndr/shadeiskndr.github.io/main/uploads/countryeconomicdashboard.gif",
+  },
+  {
+    name: "Todo List",
+    description:
+      "Built a full-stack to-do list web application for users to keep track of their daily tasks. Demonstrates integration between legacy COBOL systems, a modern Express.js API, and an Angular frontend. Utilized Docker Compose and Dockerfiles to simulate a legacy backend using GnuCOBOL docker image.",
+    url: "https://github.com/shadeiskndr/cobol-express-angular-crud",
+    previewImage: ProjectTodoList,
+    technologies: [
+      "COBOL",
+      "Angular",
+      "Express.js",
+      "Node.js",
+      "Docker Compose",
     ],
   },
   {
