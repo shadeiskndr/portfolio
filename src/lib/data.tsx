@@ -485,6 +485,8 @@ export const PROJECTS: ProjectDetails[] = [
       "Node.js",
       "Docker Compose",
     ],
+    gifUrl:
+      "https://raw.githubusercontent.com/shadeiskndr/shadeiskndr.github.io/main/uploads/todolist.gif",
   },
   {
     name: "EduCafe Booking",
