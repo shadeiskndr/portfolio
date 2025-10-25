@@ -31,7 +31,7 @@ const EducationSection = () => {
           <Typography variant="h3">
             Bachelor of Information Technology (Hons.) in Software Engineering
           </Typography>
-          <Typography variant="body1" className="text-secondary-foreground">
+          <Typography variant="body1" className="text-foreground">
             Universiti Kuala Lumpur - Malaysian Institute of Information Technology (UniKL MIIT)
           </Typography>
           <div className="flex flex-col gap-2 md:flex-row md:gap-6">
@@ -49,7 +49,7 @@ const EducationSection = () => {
           <Typography variant="body1"></Typography>
           <Typography variant="body1"></Typography>
           <Typography variant="h3">Foundation in Science</Typography>
-          <Typography variant="body1" className="text-secondary-foreground">
+          <Typography variant="body1" className="text-foreground">
             Universiti Teknologi MARA
           </Typography>
           <div className="flex flex-col gap-2 md:flex-row md:gap-6">
@@ -67,7 +67,7 @@ const EducationSection = () => {
           <Typography variant="body1"></Typography>
           <Typography variant="body1"></Typography>
           <Typography variant="h3">Malaysian Certificate of Education (SPM)</Typography>
-          <Typography variant="body1" className="text-secondary-foreground">
+          <Typography variant="body1" className="text-foreground">
             Sekolah Menengah Kebangsaan Sungai Pusu
           </Typography>
           <div className="flex flex-col gap-2 md:flex-row md:gap-6">

@@ -5,6 +5,7 @@ import { Metadata } from "next";
 import "@/app/globals.css";
 import Header from "@/components/layout/header";
 import { Providers } from "@/lib/providers";
+import { ColorThemeProvider } from "@/lib/color-provider";
 import Footer from "@/components/layout/footer";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -76,11 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
       ) : null}
       <body className={`${inter.className} antialiased`}>
-        <Providers>
-          <Header />
-          <main className="flex min-h-screen w-full flex-col">{children}</main>
-          <Footer />
-        </Providers>
+        <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
+          <Providers>
+            <Header />
+            <main className="flex min-h-screen w-full flex-col">{children}</main>
+            <Footer />
+          </Providers>
+        </ColorThemeProvider>
       </body>
     </html>
   );

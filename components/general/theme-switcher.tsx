@@ -1,17 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { MoonStar, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useState, useEffect } from "react";
+import { MoonStar, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
-import IconButton from '@/components/general/icon-button';
+import IconButton from "@/components/general/icon-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   useEffect(() => {
@@ -28,9 +29,14 @@ const ThemeSwitcher = () => {
   }
 
   return (
-    <IconButton onClick={toggleTheme}>
-      {theme === 'dark' ? <Sun /> : <MoonStar />}
-    </IconButton>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <IconButton onClick={toggleTheme}>{theme === "dark" ? <Sun /> : <MoonStar />}</IconButton>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 

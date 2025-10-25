@@ -13,7 +13,7 @@ const Tag = React.forwardRef<HTMLDivElement, TagProps>(
     return (
       <div
         className={cn(
-          "bg-secondary flex items-center justify-center rounded-xl px-5 py-1",
+          "bg-secondary [a&]:hover:bg-secondary/90 flex items-center justify-center rounded-xl px-5 py-1",
           className
         )}
         {...props}

@@ -12,7 +12,7 @@ const CertificateDetails = ({
   url,
 }: CertificateDetailsProps) => {
   return (
-    <Card className="mx-auto flex flex-col items-center gap-6 p-8 md:w-2/3 md:p-12 lg:w-1/3">
+    <Card className="mx-auto flex flex-col items-center gap-6 border p-8 md:w-2/3 md:p-12 lg:w-1/3">
       <Link noCustomization href={url} externalLink>
         <Image
           src={certificateImage!}

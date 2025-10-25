@@ -31,7 +31,7 @@ const HeroSection = () => {
             <Typography variant="h1">
               Shahathir Iskandar <span className="animate-waving-hand inline-block">👋</span>
             </Typography>
-            <Typography className="text-secondary-foreground">
+            <Typography className="text-foreground">
               Versatile and motivated individual with a passion for software development.
               Experienced in creating robust and user-friendly websites and applications.
             </Typography>
@@ -39,7 +39,7 @@ const HeroSection = () => {
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               <MapPin className="secondary-foreground" />
-              <Typography className="text-secondary-foreground">
+              <Typography className="text-foreground">
                 Batu Caves / Kuala Lumpur | Malaysia
               </Typography>
             </div>
@@ -51,7 +51,7 @@ const HeroSection = () => {
                   <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
                 </span>
               </div>
-              <Typography className="text-secondary-foreground">
+              <Typography className="text-foreground">
                 Searching for opportunities as a Software Developer (Web / Frontend / Fullstack)
               </Typography>
             </div>

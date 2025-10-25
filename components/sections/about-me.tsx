@@ -31,7 +31,7 @@ const AboutMeSection = () => {
         {/* Content */}
         <div className="flex max-w-xl flex-col gap-6">
           <Typography variant="h3">Get to know me 😀</Typography>
-          <Typography className="text-secondary-foreground">
+          <Typography className="text-foreground">
             I&apos;m a software developer recently graduated from the{" "}
             <Link noCustomization externalLink withUnderline href={EXTERNAL_LINKS.UNIKL}>
               Universiti Kuala Lumpur Malaysian Institute of Information Technology (UniKL MIIT)
@@ -40,39 +40,39 @@ const AboutMeSection = () => {
             pages to complex web, mobile and desktop applications. I have also obtained several
             certificates that prove my commitment to lifelong learning.
           </Typography>
-          <Typography className="text-secondary-foreground">
+          <Typography className="text-foreground">
             I started my journey into the world of programming at 15, taking computer science
             classes during my high school years. I don&apos;t imagine myself doing anything else as
             seriously. Since then, I&apos;ve continued to grow and evolve as a developer, always
             looking for new challenges and opportunities to learn the latest technologies.
           </Typography>
-          <Typography className="text-secondary-foreground">
+          <Typography className="text-foreground">
             I&apos;m someone who plans ahead, always thinking of proper solutions for my projects or
             assignments. I&apos;m a dedicated team player with a strong work ethic. Also, I&apos;m
             certainly someone who you can fully trust to get a job done well.
           </Typography>
-          <Typography className="text-secondary-foreground">
+          <Typography className="text-foreground">
             Whenever I am not coding or programming, I like to spend that leisure time by watching
             new TV shows or movies, reading blogs or social posts, or following new programming
             tutorials.
           </Typography>
-          <Typography className="text-secondary-foreground">
+          <Typography className="text-foreground">
             Here are some interesting facts about me:
           </Typography>
           <div className="flex flex-col gap-2 md:flex-row md:gap-6">
             <ul className="flex list-inside list-disc flex-col gap-2">
-              <Typography component="li" className="text-secondary-foreground">
+              <Typography component="li" className="text-foreground">
                 Appreciates the LRT & MRT 🚇
               </Typography>
-              <Typography component="li" className="text-secondary-foreground">
+              <Typography component="li" className="text-foreground">
                 Music lover 🎧
               </Typography>
             </ul>
             <ul className="flex list-inside list-disc flex-col gap-2">
-              <Typography component="li" className="text-secondary-foreground">
+              <Typography component="li" className="text-foreground">
                 Free & open software advocate 🙌🏻
               </Typography>
-              <Typography component="li" className="text-secondary-foreground">
+              <Typography component="li" className="text-foreground">
                 PC & Gadget enthusiast 🖱️
               </Typography>
             </ul>

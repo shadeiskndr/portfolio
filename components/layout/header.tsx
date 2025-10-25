@@ -20,6 +20,7 @@ import IconButton from "@/components/general/icon-button";
 import DownloadCV from "@/components/general/download-cv";
 import Typography from "@/components/general/typography";
 import DropdownMenu from "@/components/navigation/dropdown-menu";
+import { ColorThemeToggle } from "../general/color-switcher";
 
 const Logo = () => (
   <Typography variant="h3" className="font-bold">
@@ -71,6 +72,7 @@ const Header = () => {
           <Separator orientation="vertical" className="h-8" />
           <div className="flex items-center gap-4">
             <ThemeSwitcher />
+            <ColorThemeToggle />
             <DownloadCV />
           </div>
         </div>
@@ -115,8 +117,12 @@ const Header = () => {
             </div>
             <div className="flex flex-col gap-4 p-4">
               <div className="flex items-center justify-between">
-                <Typography>Switch Theme</Typography>
+                <Typography>Switch Light & Dark Mode</Typography>
                 <ThemeSwitcher />
+              </div>
+              <div className="flex items-center justify-between">
+                <Typography>Switch Color Theme</Typography>
+                <ColorThemeToggle />
               </div>
               <DownloadCV />
             </div>

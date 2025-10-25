@@ -5,7 +5,7 @@ import { ProjectDetails as ProjectDetailsType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import Typography from "@/components/general/typography";
 import Link from "@/components/navigation/link";
-import Tag from "@/components/data-display/tag";
+import { Badge } from "@/components/ui/badge";
 import Card from "@/components/layout/card";
 
 type ProjectDetailsProps = ProjectDetailsType & {
@@ -54,17 +54,21 @@ const ProjectDetails = ({
       {/* Content */}
       <div
         className={cn(
-          "flex flex-col gap-6 p-8 md:w-1/2 lg:p-12",
-          layoutType === "default" ? "" : "md:order-first"
+          "flex flex-col gap-6 border p-8 max-md:rounded-b-xl max-md:border max-md:border-t-0 md:w-1/2 lg:p-12",
+          layoutType === "default"
+            ? "border-l-0 md:rounded-r-xl"
+            : "md:order-first md:rounded-l-xl md:border-r-0"
         )}
       >
         <Typography variant="subtitle" className="text-foreground font-semibold">
           {name}
         </Typography>
-        <Typography className="text-secondary-foreground">{description}</Typography>
+        <Typography className="text-foreground">{description}</Typography>
         <div className="flex flex-wrap gap-2">
           {technologies?.map((technology, index) => (
-            <Tag key={index} label={technology} />
+            <Badge key={index} variant={"outline"}>
+              {technology}
+            </Badge>
           ))}
         </div>
         <Link

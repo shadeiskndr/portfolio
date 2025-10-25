@@ -24,7 +24,7 @@ const ExperienceDetails = ({
   attachedFile,
 }: ExperienceDetailsProps) => {
   return (
-    <Card className="relative mx-auto flex w-full max-w-4xl flex-col justify-between gap-4 p-8 md:flex-row md:gap-8">
+    <Card className="relative mx-auto flex w-full max-w-4xl flex-col justify-between gap-4 border p-8 md:flex-row md:gap-8">
       <div className="max-md:order-1 md:w-1/4">
         <ImageWrapper
           src={logo}
@@ -39,7 +39,7 @@ const ExperienceDetails = ({
         </Typography>
         <ul className="flex list-disc flex-col gap-2 md:gap-1">
           {summary?.map((sentence, index) => (
-            <Typography component="li" key={index} className="text-secondary-foreground">
+            <Typography component="li" key={index} className="text-foreground">
               {sentence}
             </Typography>
           ))}
