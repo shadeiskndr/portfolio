@@ -110,7 +110,7 @@ export function Providers({
 
     // Use View Transitions API if supported
     if ("startViewTransition" in document) {
-      (document as any).startViewTransition(() => {
+      document.startViewTransition(() => {
         setTheme(newTheme);
       });
     } else {
