@@ -87,7 +87,7 @@ export function ColorThemeProvider({
 
     // Use View Transitions API if supported
     if ("startViewTransition" in document) {
-      (document as any).startViewTransition(() => {
+      document.startViewTransition(() => {
         setColorTheme(newTheme);
       });
     } else {
