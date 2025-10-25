@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTimeout } from "@/hooks/use-timeout";
 
-type ColorTheme = "default" | "claude";
+type ColorTheme = "default" | "claude" | "rose";
 
 type ColorThemeProviderProps = {
   children: React.ReactNode;

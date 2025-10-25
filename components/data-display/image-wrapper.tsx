@@ -1,22 +1,16 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image, { ImageProps, StaticImageData } from 'next/image';
-import { useTheme } from 'next-themes';
+import { useEffect, useState } from "react";
+import Image, { ImageProps, StaticImageData } from "next/image";
+import { useTheme } from "@/lib/providers";
 
 type ImageWrapperProps = ImageProps & {
   srcForDarkMode?: string | StaticImageData;
 };
 
-const ImageWrapper = ({
-  srcForDarkMode,
-  src,
-  alt,
-  ...props
-}: ImageWrapperProps) => {
-  // Ref :: https://github.com/pacocoursey/next-themes#avoid-hydration-mismatch
+const ImageWrapper = ({ srcForDarkMode, src, alt, ...props }: ImageWrapperProps) => {
   const [mounted, setMounted] = useState(false);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
@@ -26,7 +20,7 @@ const ImageWrapper = ({
     return null;
   }
 
-  const finalSrc = theme === 'dark' ? srcForDarkMode || src : src;
+  const finalSrc = resolvedTheme === "dark" ? srcForDarkMode || src : src;
 
   return <Image src={finalSrc!} alt={alt} {...props} />;
 };

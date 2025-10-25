@@ -1,4 +1,4 @@
-import { Palette } from "lucide-react";
+import { CheckIcon, Palette } from "lucide-react";
 
 import IconButton from "@/components/general/icon-button";
 import {
@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useColorTheme } from "@/lib/color-provider";
 
 export function ColorThemeToggle() {
-  const { setColorThemeWithTransition } = useColorTheme();
+  const { colorTheme, setColorThemeWithTransition } = useColorTheme();
 
   return (
     <DropdownMenu>
@@ -30,9 +30,21 @@ export function ColorThemeToggle() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setColorThemeWithTransition("default")}>
           Default
+          <span className="ml-auto flex items-center">
+            {colorTheme === "default" && <CheckIcon className="size-4" />}
+          </span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setColorThemeWithTransition("claude")}>
           Claude
+          <span className="ml-auto flex items-center">
+            {colorTheme === "claude" && <CheckIcon className="size-4" />}
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setColorThemeWithTransition("rose")}>
+          Rose
+          <span className="ml-auto flex items-center">
+            {colorTheme === "rose" && <CheckIcon className="size-4" />}
+          </span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
