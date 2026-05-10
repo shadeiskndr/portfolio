@@ -1,0 +1,23 @@
+---
+title: React 19's `use()` hook unwraps promises in components
+date: 2026-05-08
+summary: You can `await` a promise in a render function via `use(promise)` — Suspense boundary handles the loading state.
+tags:
+  - react
+  - til
+---
+
+In React 19, `use()` lets you read the value of a promise (or a Context) directly inside a component's render function:
+
+```tsx
+import { use } from "react";
+
+function UserName({ userPromise }: { userPromise: Promise<User> }) {
+  const user = use(userPromise);
+  return <span>{user.name}</span>;
+}
+```
+
+Wrap the consumer in `<Suspense>` and you get loading-state handling for free. The promise must be **created outside** the rendering component (typically in a Server Component or higher up), otherwise you'll create a new promise every render and never resolve.
+
+This makes a lot of `useEffect` + `useState` boilerplate disappear when you're just fetching one thing.
