@@ -3,6 +3,7 @@ import {
   DM_Sans,
   Fraunces,
   Geist,
+  Inter,
   JetBrains_Mono,
   Lora,
   Plus_Jakarta_Sans,
@@ -15,6 +16,9 @@ import "@/app/globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ColorThemeProvider } from "@/lib/color-provider";
 import { Providers } from "@/lib/providers";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -107,7 +111,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} ${lora.variable} ${robotoMono.variable} ${geist.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${dmSans.variable} ${fraunces.variable} scroll-smooth!`}
+      className={cn(
+        "scroll-smooth!",
+        plusJakartaSans.variable,
+        lora.variable,
+        robotoMono.variable,
+        geist.variable,
+        sourceSerif.variable,
+        jetbrainsMono.variable,
+        dmSans.variable,
+        fraunces.variable,
+        "font-sans",
+        inter.variable
+      )}
       suppressHydrationWarning
     >
       {googleAnalyticsId ? (
