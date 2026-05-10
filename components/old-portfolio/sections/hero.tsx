@@ -1,9 +1,9 @@
 import { MapPin } from "lucide-react";
 import Image from "next/image";
-import SocialIcons from "@/components/data-display/social-icons";
-import DownloadCV from "@/components/general/download-cv";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
+import SocialIcons from "@/components/old-portfolio/data-display/social-icons";
+import DownloadCV from "@/components/old-portfolio/general/download-cv";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
 import ShahathirHeadshot4 from "@/public/images/flipped-transparent-selfie.png";
 
 const HeroSection = () => {

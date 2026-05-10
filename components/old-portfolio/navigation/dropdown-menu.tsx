@@ -1,6 +1,6 @@
 "use client";
 import { ChevronDown } from "lucide-react";
-import Link from "@/components/navigation/link";
+import Link from "@/components/old-portfolio/navigation/link";
 import {
   DropdownMenuContent,
   DropdownMenuItem,

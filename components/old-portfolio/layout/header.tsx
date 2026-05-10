@@ -1,12 +1,12 @@
 "use client";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import DownloadCV from "@/components/general/download-cv";
-import IconButton from "@/components/general/icon-button";
-import ThemeSwitcher from "@/components/general/theme-switcher";
-import Typography from "@/components/general/typography";
-import DropdownMenu from "@/components/navigation/dropdown-menu";
-import Link from "@/components/navigation/link";
+import DownloadCV from "@/components/old-portfolio/general/download-cv";
+import IconButton from "@/components/old-portfolio/general/icon-button";
+import ThemeSwitcher from "@/components/old-portfolio/general/theme-switcher";
+import Typography from "@/components/old-portfolio/general/typography";
+import DropdownMenu from "@/components/old-portfolio/navigation/dropdown-menu";
+import Link from "@/components/old-portfolio/navigation/link";
 import {
   Drawer,
   DrawerClose,

@@ -4,11 +4,11 @@ import { Copy, Mail, Phone } from "lucide-react";
 import { useState } from "react";
 // import Link from 'next/link';
 
-import SocialIcons from "@/components/data-display/social-icons";
-import Tag from "@/components/data-display/tag";
-import IconButton from "@/components/general/icon-button";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
+import SocialIcons from "@/components/old-portfolio/data-display/social-icons";
+import Tag from "@/components/old-portfolio/data-display/tag";
+import IconButton from "@/components/old-portfolio/general/icon-button";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
 import useWindowSize from "@/hooks/use-window-size";
 import { copyTextToClipboard } from "@/lib/utils";
 

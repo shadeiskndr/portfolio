@@ -1,8 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
-import Typography from "@/components/general/typography";
-import Card from "@/components/layout/card";
-import Link from "@/components/navigation/link";
+import Typography from "@/components/old-portfolio/general/typography";
+import Card from "@/components/old-portfolio/layout/card";
+import Link from "@/components/old-portfolio/navigation/link";
 import { Badge } from "@/components/ui/badge";
 import type { ProjectDetails as ProjectDetailsType } from "@/lib/types";
 import { cn } from "@/lib/utils";

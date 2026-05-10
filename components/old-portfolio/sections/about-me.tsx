@@ -1,8 +1,8 @@
 import Image from "next/image";
-import Tag from "@/components/data-display/tag";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
-import Link from "@/components/navigation/link";
+import Tag from "@/components/old-portfolio/data-display/tag";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
+import Link from "@/components/old-portfolio/navigation/link";
 import { EXTERNAL_LINKS } from "@/lib/data";
 import ShahathirFullPose from "@/public/images/shahathir-full-pose.png";
 

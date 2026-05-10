@@ -1,10 +1,10 @@
 "use client";
 
 import { Paperclip } from "lucide-react";
-import ImageWrapper from "@/components/data-display/image-wrapper";
-import IconButton from "@/components/general/icon-button";
-import Typography from "@/components/general/typography";
-import Card from "@/components/layout/card";
+import ImageWrapper from "@/components/old-portfolio/data-display/image-wrapper";
+import IconButton from "@/components/old-portfolio/general/icon-button";
+import Typography from "@/components/old-portfolio/general/typography";
+import Card from "@/components/old-portfolio/layout/card";
 import type { ExperienceDetails as ExperienceDetailsProps } from "@/lib/types";
 
 const dateFormatOptions: Intl.DateTimeFormatOptions = {

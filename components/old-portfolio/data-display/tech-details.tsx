@@ -1,8 +1,8 @@
 "use client";
 
-import ImageWrapper from "@/components/data-display/image-wrapper";
-import Typography from "@/components/general/typography";
-import Link from "@/components/navigation/link";
+import ImageWrapper from "@/components/old-portfolio/data-display/image-wrapper";
+import Typography from "@/components/old-portfolio/general/typography";
+import Link from "@/components/old-portfolio/navigation/link";
 import type { TechDetails as TechDetailsType } from "@/lib/types";
 
 const TechDetails = ({ url, logo, darkModeLogo, label }: TechDetailsType) => {

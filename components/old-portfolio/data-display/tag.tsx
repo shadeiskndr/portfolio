@@ -1,5 +1,5 @@
 import * as React from "react";
-import Typography from "@/components/general/typography";
+import Typography from "@/components/old-portfolio/general/typography";
 import { cn } from "@/lib/utils";
 
 interface TagProps extends React.HTMLAttributes<HTMLDivElement> {

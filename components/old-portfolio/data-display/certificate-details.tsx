@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Typography from "@/components/general/typography";
-import Card from "@/components/layout/card";
-import Link from "@/components/navigation/link";
+import Typography from "@/components/old-portfolio/general/typography";
+import Card from "@/components/old-portfolio/layout/card";
+import Link from "@/components/old-portfolio/navigation/link";
 import type { CertificateDetails as CertificateDetailsProps } from "@/lib/types";
 
 const CertificateDetails = ({

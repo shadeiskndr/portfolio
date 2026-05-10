@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Tag from "@/components/data-display/tag";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
+import Tag from "@/components/old-portfolio/data-display/tag";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
 import UniKLImage from "@/public/images/logos/unikl-image.jpg";
 
 const EducationSection = () => {

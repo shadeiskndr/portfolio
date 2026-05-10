@@ -1,7 +1,7 @@
-import ExperienceDetails from "@/components/data-display/experience-details";
-import Tag from "@/components/data-display/tag";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
+import ExperienceDetails from "@/components/old-portfolio/data-display/experience-details";
+import Tag from "@/components/old-portfolio/data-display/tag";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
 import { EXPERIENCES } from "@/lib/data";
 
 const ExperienceSection = () => {

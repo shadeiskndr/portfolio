@@ -1,7 +1,7 @@
-import Tag from "@/components/data-display/tag";
-import TechDetails from "@/components/data-display/tech-details";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
+import Tag from "@/components/old-portfolio/data-display/tag";
+import TechDetails from "@/components/old-portfolio/data-display/tech-details";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
 import { BACKEND, CLOUDDEVOPS, DATABASES, FRONTEND, LANGUAGES } from "@/lib/data";
 
 const SkillsSection = () => {

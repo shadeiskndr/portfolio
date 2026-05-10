@@ -1,6 +1,6 @@
 import { CheckIcon, Palette } from "lucide-react";
 
-import IconButton from "@/components/general/icon-button";
+import IconButton from "@/components/old-portfolio/general/icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,

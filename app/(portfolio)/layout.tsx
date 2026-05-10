@@ -1,5 +1,5 @@
-import Footer from "@/components/layout/footer";
-import Header from "@/components/layout/header";
+import Footer from "@/components/old-portfolio/layout/footer";
+import Header from "@/components/old-portfolio/layout/header";
 
 export default function PortfolioLayout({ children }: { children: React.ReactNode }) {
   return (

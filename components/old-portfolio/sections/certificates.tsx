@@ -1,7 +1,7 @@
-import CertificateDetails from "@/components/data-display/certificate-details";
-import Tag from "@/components/data-display/tag";
-import Typography from "@/components/general/typography";
-import Container from "@/components/layout/container";
+import CertificateDetails from "@/components/old-portfolio/data-display/certificate-details";
+import Tag from "@/components/old-portfolio/data-display/tag";
+import Typography from "@/components/old-portfolio/general/typography";
+import Container from "@/components/old-portfolio/layout/container";
 import { CERTIFICATES } from "@/lib/data";
 
 const CertificatesSection = () => {

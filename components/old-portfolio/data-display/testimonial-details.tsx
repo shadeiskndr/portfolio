@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Typography from "@/components/general/typography";
-import Card from "@/components/layout/card";
+import Typography from "@/components/old-portfolio/general/typography";
+import Card from "@/components/old-portfolio/layout/card";
 import type { TestimonialDetails as TestimonialDetailsProps } from "@/lib/types";
 
 const TestimonialDetails = ({
