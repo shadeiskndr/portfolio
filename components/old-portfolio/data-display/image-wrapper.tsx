@@ -2,7 +2,7 @@
 
 import Image, { type ImageProps, type StaticImageData } from "next/image";
 import { useEffect, useState } from "react";
-import { useTheme } from "@/lib/providers";
+import { useTheme } from "@/lib/light-dark-providers";
 
 type ImageWrapperProps = ImageProps & {
   srcForDarkMode?: string | StaticImageData;

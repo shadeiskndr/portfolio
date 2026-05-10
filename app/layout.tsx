@@ -15,7 +15,7 @@ import Script from "next/script";
 import "@/app/globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ColorThemeProvider } from "@/lib/color-provider";
-import { Providers } from "@/lib/providers";
+import { Providers } from "@/lib/light-dark-providers";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });

@@ -4,7 +4,7 @@ import { MoonStar, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import IconButton from "@/components/old-portfolio/general/icon-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useTheme } from "@/lib/providers";
+import { useTheme } from "@/lib/light-dark-providers";
 
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
