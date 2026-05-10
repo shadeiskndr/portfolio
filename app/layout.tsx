@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import {
+  DM_Sans,
+  Fraunces,
+  Geist,
+  JetBrains_Mono,
+  Lora,
+  Plus_Jakarta_Sans,
+  Roboto_Mono,
+  Source_Serif_4,
+} from "next/font/google";
 import Script from "next/script";
 
 import "@/app/globals.css";
@@ -9,7 +18,46 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ColorThemeProvider } from "@/lib/color-provider";
 import { Providers } from "@/lib/providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta-sans",
+  display: "swap",
+});
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-lora",
+  display: "swap",
+});
+const robotoMono = Roboto_Mono({
+  subsets: ["latin"],
+  variable: "--font-roboto-mono",
+  display: "swap",
+});
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  variable: "--font-source-serif",
+  display: "swap",
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
 
 const title = "Shahathir Iskandar | Software Developer From Batu Caves, Selangor, Malaysia.";
 const description = "A software developer from Batu Caves, Selangor, Malaysia.";
@@ -59,7 +107,11 @@ const googleAnalyticsId = process.env.GOOGLE_ANALYTICS_ID;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth!" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${plusJakartaSans.variable} ${lora.variable} ${robotoMono.variable} ${geist.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${dmSans.variable} ${fraunces.variable} scroll-smooth!`}
+      suppressHydrationWarning
+    >
       {googleAnalyticsId ? (
         <head>
           <Script
@@ -77,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </Script>
         </head>
       ) : null}
-      <body className={`${inter.className} antialiased`}>
+      <body className="antialiased">
         <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
           <Providers>
             <TooltipProvider>
