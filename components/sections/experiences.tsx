@@ -1,8 +1,8 @@
-import { EXPERIENCES } from "@/lib/data";
 import ExperienceDetails from "@/components/data-display/experience-details";
 import Tag from "@/components/data-display/tag";
 import Typography from "@/components/general/typography";
 import Container from "@/components/layout/container";
+import { EXPERIENCES } from "@/lib/data";
 
 const ExperienceSection = () => {
   return (

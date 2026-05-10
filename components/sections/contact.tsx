@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Copy, Mail, Phone } from "lucide-react";
+import { useState } from "react";
 // import Link from 'next/link';
 
 import SocialIcons from "@/components/data-display/social-icons";
@@ -32,8 +32,7 @@ const ContactSection = () => {
         setCopiedValueType(null);
         clearTimeout(timeoutId);
       }, 1500);
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch (_error) {
       setIsCopied(false);
       setCopiedValueType(null);
       alert("Unable to copy!");

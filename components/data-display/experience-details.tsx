@@ -1,11 +1,11 @@
 "use client";
 
-import Typography from "@/components/general/typography";
-import ImageWrapper from "@/components/data-display/image-wrapper";
-import Card from "@/components/layout/card";
-import IconButton from "@/components/general/icon-button";
 import { Paperclip } from "lucide-react";
-import { ExperienceDetails as ExperienceDetailsProps } from "@/lib/types";
+import ImageWrapper from "@/components/data-display/image-wrapper";
+import IconButton from "@/components/general/icon-button";
+import Typography from "@/components/general/typography";
+import Card from "@/components/layout/card";
+import type { ExperienceDetails as ExperienceDetailsProps } from "@/lib/types";
 
 const dateFormatOptions: Intl.DateTimeFormatOptions = {
   year: "numeric",
@@ -34,7 +34,7 @@ const ExperienceDetails = ({
         />
       </div>
       <div className="flex flex-col gap-4 max-md:order-3 md:w-2/4">
-        <Typography variant="subtitle" className="text-foreground font-semibold">
+        <Typography variant="subtitle" className="font-semibold text-foreground">
           {position}
         </Typography>
         <ul className="flex list-disc flex-col gap-2 md:gap-1">

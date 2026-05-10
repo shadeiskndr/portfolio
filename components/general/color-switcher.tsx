@@ -16,13 +16,17 @@ export function ColorThemeToggle() {
   return (
     <DropdownMenu>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <IconButton>
-              <Palette className="h-[1.2rem] w-[1.2rem]" />
-            </IconButton>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              render={
+                <IconButton>
+                  <Palette className="h-[1.2rem] w-[1.2rem]" />
+                </IconButton>
+              }
+            />
+          }
+        />
         <TooltipContent>
           <p>Change Color Theme</p>
         </TooltipContent>

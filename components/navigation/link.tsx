@@ -1,5 +1,5 @@
+import NextLink, { type LinkProps as NextLinkProps } from "next/link";
 import * as React from "react";
-import NextLink, { LinkProps as NextLinkProps } from "next/link";
 
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,7 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         ref={ref}
         className={cn(
           noCustomization ??
-            "text-base font-medium text-gray-600 transition-all hover:text-gray-900 active:text-gray-600",
+            "font-medium text-base text-gray-600 transition-all hover:text-gray-900 active:text-gray-600",
           withUnderline
             ? "underline underline-offset-4 transition-all hover:text-gray-900 active:text-gray-600"
             : "",

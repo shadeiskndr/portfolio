@@ -1,14 +1,8 @@
-import {
-  LANGUAGES,
-  FRONTEND,
-  BACKEND,
-  DATABASES,
-  CLOUDDEVOPS,
-} from "@/lib/data";
 import Tag from "@/components/data-display/tag";
 import TechDetails from "@/components/data-display/tech-details";
 import Typography from "@/components/general/typography";
 import Container from "@/components/layout/container";
+import { BACKEND, CLOUDDEVOPS, DATABASES, FRONTEND, LANGUAGES } from "@/lib/data";
 
 const SkillsSection = () => {
   return (
@@ -17,7 +11,7 @@ const SkillsSection = () => {
         <div className="self-center">
           <Tag label="Technical Skills" />
         </div>
-        <Typography variant="subtitleskils" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center">
           Programming Languages:
         </Typography>
       </div>
@@ -29,7 +23,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center">
           Frontend:
         </Typography>
       </div>
@@ -41,7 +35,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center">
           Backend:
         </Typography>
       </div>
@@ -53,7 +47,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center">
           Databases:
         </Typography>
       </div>
@@ -65,7 +59,7 @@ const SkillsSection = () => {
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center ">
+        <Typography variant="subtitleskils" className="max-w-xl text-center">
           Developer Tools:
         </Typography>
       </div>

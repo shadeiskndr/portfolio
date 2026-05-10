@@ -1,0 +1,40 @@
+# Build output
+.next
+out
+dist
+build
+
+# Dependencies (installed inside the image)
+node_modules
+
+# Version control
+.git
+.gitignore
+.github
+
+# Editor / OS / tool caches
+.vscode
+.cursor
+.idea
+.DS_Store
+
+# Dev-only tooling
+.husky
+
+# Environment files (provide via orchestrator, not the image)
+.env*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tests / coverage
+coverage
+.nyc_output
+
+# Markdown / READMEs
+*.md
+
+# Don't copy the Docker build context itself
+Dockerfile
+.dockerignore

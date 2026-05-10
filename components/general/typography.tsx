@@ -1,16 +1,16 @@
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
 const typographyVariants = cva("text-foreground text-normal", {
   variants: {
     variant: {
-      h1: "text-4xl font-semibold md:font-bold md:text-5xl md:tracking-[-0.02em] lg:text-6xl lg:leading-[72px]",
-      h2: "text-lg md:text-4xl font-semibold tracking-[-0.02em]",
-      h3: "text-2xl md:text-3xl font-semibold tracking-[-0.02em]",
+      h1: "font-semibold text-4xl md:font-bold md:text-5xl md:tracking-[-0.02em] lg:text-6xl lg:leading-[72px]",
+      h2: "font-semibold text-lg tracking-[-0.02em] md:text-4xl",
+      h3: "font-semibold text-2xl tracking-[-0.02em] md:text-3xl",
       subtitle: "text-lg md:text-xl",
-      subtitleskils: "text-lg md:text-xl font-semibold",
+      subtitleskils: "font-semibold text-lg md:text-xl",
       body1: "text-base md:text-lg",
       body2: "text-base",
       body3: "text-sm",

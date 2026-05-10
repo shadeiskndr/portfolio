@@ -2,10 +2,10 @@
 import { ChevronDown } from "lucide-react";
 import Link from "@/components/navigation/link";
 import {
-  DropdownMenu as UIDropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenu as UIDropdownMenu,
 } from "@/components/ui/dropdown-menu";
 
 interface LinkItem {
@@ -21,18 +21,23 @@ interface DropdownMenuProps {
 const DropdownMenu: React.FC<DropdownMenuProps> = ({ label, links }) => {
   return (
     <UIDropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2">
-          {label} <ChevronDown />
-        </button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <button type="button" className="flex items-center gap-2">
+            {label} <ChevronDown />
+          </button>
+        }
+      />
       <DropdownMenuContent>
         {links.map((link, index) => (
-          <DropdownMenuItem key={index} asChild>
-            <Link href={link.href} className="text-foreground hover:text-muted-foreground">
-              {link.label}
-            </Link>
-          </DropdownMenuItem>
+          <DropdownMenuItem
+            key={index}
+            render={
+              <Link href={link.href} className="text-foreground hover:text-muted-foreground">
+                {link.label}
+              </Link>
+            }
+          />
         ))}
       </DropdownMenuContent>
     </UIDropdownMenu>

@@ -1,6 +1,6 @@
-import { Copyright } from 'lucide-react';
+import { Copyright } from "lucide-react";
 
-import Typography from '@/components/general/typography';
+import Typography from "@/components/general/typography";
 
 const Footer = () => {
   return (

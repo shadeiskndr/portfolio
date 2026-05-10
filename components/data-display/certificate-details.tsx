@@ -1,9 +1,8 @@
 import Image from "next/image";
-
-import { CertificateDetails as CertificateDetailsProps } from "@/lib/types";
 import Typography from "@/components/general/typography";
 import Card from "@/components/layout/card";
 import Link from "@/components/navigation/link";
+import type { CertificateDetails as CertificateDetailsProps } from "@/lib/types";
 
 const CertificateDetails = ({
   certificateName,
@@ -21,10 +20,10 @@ const CertificateDetails = ({
         ></Image>
       </Link>
       <div className="flex w-full flex-col gap-1">
-        <Typography variant="body1" className="text-foreground w-full text-center font-semibold">
+        <Typography variant="body1" className="w-full text-center font-semibold text-foreground">
           {certificateName}
         </Typography>
-        <Typography variant="body3" className="text-muted-foreground w-full text-center">
+        <Typography variant="body3" className="w-full text-center text-muted-foreground">
           {certificateSource}
         </Typography>
       </div>

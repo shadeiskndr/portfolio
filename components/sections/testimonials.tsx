@@ -1,8 +1,8 @@
-import { TESTIMONIALS } from "@/lib/data";
 import Tag from "@/components/data-display/tag";
 import TestimonialDetails from "@/components/data-display/testimonial-details";
 import Typography from "@/components/general/typography";
 import Container from "@/components/layout/container";
+import { TESTIMONIALS } from "@/lib/data";
 
 const TestimonialsSection = () => {
   return (

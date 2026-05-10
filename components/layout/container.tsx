@@ -19,7 +19,7 @@ const Container = React.forwardRef<HTMLElement, ContainerProps>(
   ({ className, children, ...props }: ContainerProps, ref) => {
     return (
       <section
-        className={cn("bg-background w-full py-16 md:py-20 2xl:py-24", className)}
+        className={cn("w-full bg-background py-16 md:py-20 2xl:py-24", className)}
         ref={ref}
         {...props}
       >

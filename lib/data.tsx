@@ -1,92 +1,80 @@
 import { Github, Linkedin, Mail, MessageCircle } from "lucide-react";
-
-import LogoJava from "/public/images/logos/icon-java.svg";
-import LogoJavascript from "/public/images/logos/icon-javascript.svg";
-import LogoTypescript from "/public/images/logos/icon-typescript.svg";
-import LogoHTML from "/public/images/logos/icon-html.svg";
-import LogoPython from "/public/images/logos/icon-python.svg";
-import LogoCSS from "/public/images/logos/icon-css.svg";
-import LogoPHP from "/public/images/logos/icon-php.svg";
-
-import LogoReact from "/public/images/logos/icon-react.svg";
-import LogoNextjs from "/public/images/logos/icon-nextjs.svg";
-import LogoNodejs from "/public/images/logos/icon-nodejs.svg";
-import LogoJakarta from "/public/images/logos/icon-jakarta.svg";
-import LogoTailwindcss from "/public/images/logos/icon-tailwindcss.svg";
-import LogoSpring from "/public/images/logos/logo-springboot.svg";
-import LogoVite from "/public/images/logos/logo-vite.svg";
-import LogoRedux from "/public/images/logos/logo-redux.svg";
-import LogoReactRouter from "/public/images/logos/logo-reactrouter.svg";
-import LogoBootstrap from "/public/images/logos/logo-bootstrap.svg";
-import LogoSCSS from "/public/images/logos/logo-scss.svg";
-import LogoExpress from "/public/images/logos/logo-express.svg";
-import LogoNginx from "/public/images/logos/logo-nginx.svg";
-import LogoMSSQL from "/public/images/logos/logo-mssql.svg";
-import LogoDBeaver from "/public/images/logos/logo-dbeaver.svg";
-import LogoPostman from "/public/images/logos/logo-postman.svg";
-import LogoMUI from "/public/images/logos/logo-mui.svg";
-import LogoReactNative from "/public/images/logos/icon-reactnative.svg";
-import LogoAngular from "/public/images/logos/icon-angular.svg";
-import LogoDjango from "/public/images/logos/icon-django.svg";
-import LogoFastApi from "/public/images/logos/icon-fastapi.svg";
-
-import LogoPostgres from "/public/images/logos/icon-postgres.svg";
-import LogoMySQL from "/public/images/logos/icon-mysql.svg";
-import LogoSqlite from "/public/images/logos/icon-sqlite.svg";
-import LogoAppwrite from "/public/images/logos/icon-appwrite.svg";
-
-import LogoGit from "/public/images/logos/icon-git.svg";
-import LogoDocker from "/public/images/logos/icon-docker.svg";
-import LogoVercel from "/public/images/logos/icon-vercel.png";
-import LogoNetlify from "/public/images/logos/icon-netlify.svg";
-import LogoDigitalOcean from "/public/images/logos/icon-digitalocean.svg";
-
-import LogoVSCode from "/public/images/logos/icon-vscode.svg";
-import LogoNetbeans from "/public/images/logos/icon-netbeans.png";
-import LogoIntelliJ from "/public/images/logos/icon-intellij.svg";
-import LogoSublimeText from "/public/images/logos/icon-sublimetext.svg";
-
-import LogoFigma from "/public/images/logos/icon-figma.svg";
-import LogoPhotoshop from "/public/images/logos/icon-photoshop.svg";
-import LogoIllustrator from "/public/images/logos/icon-illustrator.svg";
-import LogoCanva from "/public/images/logos/icon-canva.svg";
-import LogoPowerpoint from "/public/images/logos/icon-powerpoint.svg";
-
-import LogoWord from "/public/images/logos/icon-word.svg";
-import LogoExcel from "/public/images/logos/icon-excel.svg";
-import LogoOverleaf from "/public/images/logos/icon-overleaf.png";
-
-import Logo99 from "/public/images/logos/logo-99.png";
-import LogoEstee from "/public/images/logos/logo-estee.png";
-import LogoEsteeDark from "/public/images/logos/logo-estee-dark.png";
-import LogoFRG from "/public/images/logos/logo-frg-dark.png";
-import LogoFRGLight from "/public/images/logos/logo-frg-light.png";
-
-import ProjectCatalogd from "/public/images/project-catalogd.png";
-import ProjectAIGame from "/public/images/project-aigamerecommender.jpg";
-import ProjectShahathirme from "/public/images/project-shahathirme.jpg";
-import ProjectCountryEconomicDashboard from "/public/images/project-countryeconomicdashboard.png";
-import ProjectTodoList from "/public/images/project-todolist.png";
-import ProjectEduCafe from "/public/images/project-educafe.jpg";
-import ProjectPHPDocker from "/public/images/project-phpdocker.png";
-
-import CertificateGPM from "/public/images/certificate-GPM.png";
-import CertificateITAP from "/public/images/certificate-ITAP.png";
-import CertificateITS from "/public/images/certificate-ITS.png";
-import CertificateSEC from "/public/images/certificate-SEC.png";
-import CertificateUXD from "/public/images/certificate-UXD.png";
-
-import AvatarKrisztian from "/public/images/avatar-krisztian.png";
-import AvatarEugen from "/public/images/avatar-eugen.png";
-import AvatarDummy from "/public/images/avatar-dummy.svg";
-
-import {
+import type {
   CertificateDetails,
   ExperienceDetails,
   ProjectDetails,
   TechDetails,
   TestimonialDetails,
 } from "@/lib/types";
+import AvatarDummy from "@/public/images/avatar-dummy.svg";
+import AvatarEugen from "@/public/images/avatar-eugen.png";
+import AvatarKrisztian from "@/public/images/avatar-krisztian.png";
+import CertificateGPM from "@/public/images/certificate-GPM.png";
+import CertificateITAP from "@/public/images/certificate-ITAP.png";
+import CertificateITS from "@/public/images/certificate-ITS.png";
+import CertificateSEC from "@/public/images/certificate-SEC.png";
+import CertificateUXD from "@/public/images/certificate-UXD.png";
+import LogoAngular from "@/public/images/logos/icon-angular.svg";
+import LogoAppwrite from "@/public/images/logos/icon-appwrite.svg";
+import LogoCanva from "@/public/images/logos/icon-canva.svg";
+import LogoCSS from "@/public/images/logos/icon-css.svg";
+import LogoDigitalOcean from "@/public/images/logos/icon-digitalocean.svg";
+import LogoDjango from "@/public/images/logos/icon-django.svg";
+import LogoDocker from "@/public/images/logos/icon-docker.svg";
+import LogoExcel from "@/public/images/logos/icon-excel.svg";
+import LogoFastApi from "@/public/images/logos/icon-fastapi.svg";
+import LogoFigma from "@/public/images/logos/icon-figma.svg";
+import LogoGit from "@/public/images/logos/icon-git.svg";
+import LogoHTML from "@/public/images/logos/icon-html.svg";
+import LogoIllustrator from "@/public/images/logos/icon-illustrator.svg";
+import LogoIntelliJ from "@/public/images/logos/icon-intellij.svg";
+import LogoJakarta from "@/public/images/logos/icon-jakarta.svg";
+import LogoJava from "@/public/images/logos/icon-java.svg";
+import LogoJavascript from "@/public/images/logos/icon-javascript.svg";
+import LogoMySQL from "@/public/images/logos/icon-mysql.svg";
+import LogoNetbeans from "@/public/images/logos/icon-netbeans.png";
+import LogoNetlify from "@/public/images/logos/icon-netlify.svg";
+import LogoNextjs from "@/public/images/logos/icon-nextjs.svg";
+import LogoNodejs from "@/public/images/logos/icon-nodejs.svg";
+import LogoOverleaf from "@/public/images/logos/icon-overleaf.png";
+import LogoPhotoshop from "@/public/images/logos/icon-photoshop.svg";
+import LogoPHP from "@/public/images/logos/icon-php.svg";
+import LogoPostgres from "@/public/images/logos/icon-postgres.svg";
+import LogoPowerpoint from "@/public/images/logos/icon-powerpoint.svg";
+import LogoPython from "@/public/images/logos/icon-python.svg";
+import LogoReact from "@/public/images/logos/icon-react.svg";
+import LogoReactNative from "@/public/images/logos/icon-reactnative.svg";
+import LogoSqlite from "@/public/images/logos/icon-sqlite.svg";
+import LogoSublimeText from "@/public/images/logos/icon-sublimetext.svg";
+import LogoTailwindcss from "@/public/images/logos/icon-tailwindcss.svg";
+import LogoTypescript from "@/public/images/logos/icon-typescript.svg";
+import LogoVercel from "@/public/images/logos/icon-vercel.png";
+import LogoVSCode from "@/public/images/logos/icon-vscode.svg";
+import LogoWord from "@/public/images/logos/icon-word.svg";
+import Logo99 from "@/public/images/logos/logo-99.png";
+import LogoBootstrap from "@/public/images/logos/logo-bootstrap.svg";
+import LogoDBeaver from "@/public/images/logos/logo-dbeaver.svg";
+import LogoEstee from "@/public/images/logos/logo-estee.png";
+import LogoEsteeDark from "@/public/images/logos/logo-estee-dark.png";
+import LogoExpress from "@/public/images/logos/logo-express.svg";
+import LogoFRG from "@/public/images/logos/logo-frg-dark.png";
+import LogoFRGLight from "@/public/images/logos/logo-frg-light.png";
+import LogoMSSQL from "@/public/images/logos/logo-mssql.svg";
+import LogoMUI from "@/public/images/logos/logo-mui.svg";
+import LogoNginx from "@/public/images/logos/logo-nginx.svg";
+import LogoPostman from "@/public/images/logos/logo-postman.svg";
+import LogoReactRouter from "@/public/images/logos/logo-reactrouter.svg";
+import LogoRedux from "@/public/images/logos/logo-redux.svg";
+import LogoSCSS from "@/public/images/logos/logo-scss.svg";
+import LogoSpring from "@/public/images/logos/logo-springboot.svg";
+import LogoVite from "@/public/images/logos/logo-vite.svg";
+import ProjectAIGame from "@/public/images/project-aigamerecommender.jpg";
+import ProjectCatalogd from "@/public/images/project-catalogd.png";
+import ProjectCountryEconomicDashboard from "@/public/images/project-countryeconomicdashboard.png";
+import ProjectEduCafe from "@/public/images/project-educafe.jpg";
+import ProjectPHPDocker from "@/public/images/project-phpdocker.png";
+import ProjectShahathirme from "@/public/images/project-shahathirme.jpg";
+import ProjectTodoList from "@/public/images/project-todolist.png";
 
 export const EXTERNAL_LINKS = {
   GITHUB: "https://github.com/shadeiskndr",

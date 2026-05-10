@@ -1,8 +1,7 @@
-import Image from 'next/image';
-
-import { TestimonialDetails as TestimonialDetailsProps } from '@/lib/types';
-import Typography from '@/components/general/typography';
-import Card from '@/components/layout/card';
+import Image from "next/image";
+import Typography from "@/components/general/typography";
+import Card from "@/components/layout/card";
+import type { TestimonialDetails as TestimonialDetailsProps } from "@/lib/types";
 
 const TestimonialDetails = ({
   personName,
@@ -15,10 +14,7 @@ const TestimonialDetails = ({
       <Image src={personAvatar!} alt={`${personName} avatar`}></Image>
       <Typography>&quot;{testimonial}&quot;</Typography>
       <div className="flex w-full flex-col gap-1">
-        <Typography
-          variant="subtitle"
-          className="w-full text-center font-semibold text-gray-900"
-        >
+        <Typography variant="subtitle" className="w-full text-center font-semibold text-gray-900">
           {personName}
         </Typography>
         <Typography variant="body3" className="w-full text-center">

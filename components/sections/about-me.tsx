@@ -1,11 +1,10 @@
 import Image from "next/image";
-
-import ShahathirFullPose from "/public/images/shahathir-full-pose.png";
 import Tag from "@/components/data-display/tag";
-import Container from "@/components/layout/container";
 import Typography from "@/components/general/typography";
+import Container from "@/components/layout/container";
 import Link from "@/components/navigation/link";
 import { EXTERNAL_LINKS } from "@/lib/data";
+import ShahathirFullPose from "@/public/images/shahathir-full-pose.png";
 
 const AboutMeSection = () => {
   return (
@@ -17,14 +16,16 @@ const AboutMeSection = () => {
       <div className="flex w-full flex-col justify-between gap-12 md:flex-row">
         {/* Image */}
         <div className="flex justify-center md:order-first md:justify-end">
-          <div className="relative h-[380px] w-[320px] md:h-[460px] md:w-[380px] lg:h-[520px] lg:w-[440px]">
+          <div className="relative h-95 w-[320px] md:h-115 md:w-95 lg:h-130 lg:w-110">
             <Image
               src={ShahathirFullPose}
               alt="Fullpose of Shahathir"
-              className="bg-background absolute z-10 h-[360px] w-[280px] border-8 max-md:left-5 md:top-0 md:right-0 md:h-[420px] md:w-[340px] lg:h-[480px] lg:w-[400px]"
+              loading="eager"
+              fetchPriority="high"
+              className="absolute z-10 h-90 w-70 border-8 bg-background max-md:left-5 md:top-0 md:right-0 md:h-105 md:w-85 lg:h-120 lg:w-100"
               style={{ objectFit: "cover" }}
             ></Image>
-            <div className="bg-background absolute h-[360px] w-[320px] border-8 max-md:top-5 md:bottom-0 md:left-0 md:h-[420px] md:w-[340px] lg:h-[480px] lg:w-[400px]"></div>
+            <div className="absolute h-90 w-[320px] border-8 bg-background max-md:top-5 md:bottom-0 md:left-0 md:h-105 md:w-85 lg:h-120 lg:w-100"></div>
           </div>
         </div>
 

@@ -1,12 +1,11 @@
-import Image from "next/image";
 import { ExternalLink } from "lucide-react";
-
-import { ProjectDetails as ProjectDetailsType } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Typography from "@/components/general/typography";
+import Card from "@/components/layout/card";
 import Link from "@/components/navigation/link";
 import { Badge } from "@/components/ui/badge";
-import Card from "@/components/layout/card";
+import type { ProjectDetails as ProjectDetailsType } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type ProjectDetailsProps = ProjectDetailsType & {
   layoutType: "default" | "reverse";
@@ -26,7 +25,7 @@ const ProjectDetails = ({
       {/* Image */}
       <div
         className={cn(
-          "bg-card flex items-center justify-center border p-8 max-md:rounded-t-xl md:w-1/2 lg:p-12",
+          "flex items-center justify-center border bg-card p-8 max-md:rounded-t-xl md:w-1/2 lg:p-12",
           layoutType === "default"
             ? "md:rounded-l-xl md:border-r"
             : "md:order-last md:rounded-r-xl md:border-l"
@@ -60,7 +59,7 @@ const ProjectDetails = ({
             : "md:order-first md:rounded-l-xl md:border-r-0"
         )}
       >
-        <Typography variant="subtitle" className="text-foreground font-semibold">
+        <Typography variant="subtitle" className="font-semibold text-foreground">
           {name}
         </Typography>
         <Typography className="text-foreground">{description}</Typography>
@@ -74,7 +73,7 @@ const ProjectDetails = ({
         <Link
           href={url}
           noCustomization
-          className="hover:bg-secondary [&_svg]:stroke-muted-foreground hover:[&_svg]:stroke-foreground self-start rounded-lg p-1.5"
+          className="self-start rounded-lg p-1.5 hover:bg-secondary [&_svg]:stroke-muted-foreground hover:[&_svg]:stroke-foreground"
           externalLink
         >
           <ExternalLink />

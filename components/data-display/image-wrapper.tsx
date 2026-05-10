@@ -1,7 +1,7 @@
 "use client";
 
+import Image, { type ImageProps, type StaticImageData } from "next/image";
 import { useEffect, useState } from "react";
-import Image, { ImageProps, StaticImageData } from "next/image";
 import { useTheme } from "@/lib/providers";
 
 type ImageWrapperProps = ImageProps & {

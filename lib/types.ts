@@ -1,4 +1,4 @@
-import type { StaticImageData } from 'next/image';
+import type { StaticImageData } from "next/image";
 
 export type TechDetails = {
   logo: string | StaticImageData;
@@ -28,7 +28,6 @@ export type ProjectDetails = {
   gifUrl?: string; // Add this line
 };
 
-
 export type TestimonialDetails = {
   personName: string;
   personAvatar?: string | StaticImageData;
@@ -43,4 +42,3 @@ export type CertificateDetails = {
   certificateSource: string;
   url: string;
 };
-

@@ -1,12 +1,13 @@
-import Script from "next/script";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Metadata } from "next";
+import Script from "next/script";
 
 import "@/app/globals.css";
-import Header from "@/components/layout/header";
-import { Providers } from "@/lib/providers";
-import { ColorThemeProvider } from "@/lib/color-provider";
 import Footer from "@/components/layout/footer";
+import Header from "@/components/layout/header";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ColorThemeProvider } from "@/lib/color-provider";
+import { Providers } from "@/lib/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -79,9 +80,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} antialiased`}>
         <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
           <Providers>
-            <Header />
-            <main className="flex min-h-screen w-full flex-col">{children}</main>
-            <Footer />
+            <TooltipProvider>
+              <Header />
+              <main className="flex min-h-screen w-full flex-col">{children}</main>
+              <Footer />
+            </TooltipProvider>
           </Providers>
         </ColorThemeProvider>
       </body>

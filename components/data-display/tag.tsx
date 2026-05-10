@@ -1,24 +1,22 @@
 import * as React from "react";
-
-import { cn } from "@/lib/utils";
 import Typography from "@/components/general/typography";
+import { cn } from "@/lib/utils";
 
 interface TagProps extends React.HTMLAttributes<HTMLDivElement> {
   label?: string;
 }
 
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ({ label, className, ...props }: TagProps, ref) => {
+  ({ label, className, ...props }: TagProps, _ref) => {
     return (
       <div
         className={cn(
-          "bg-secondary [a&]:hover:bg-secondary/90 flex items-center justify-center rounded-xl px-5 py-1",
+          "flex items-center justify-center rounded-xl bg-secondary px-5 py-1 [a&]:hover:bg-secondary/90",
           className
         )}
         {...props}
       >
-        <Typography variant="body3" className="text-secondary-foreground font-medium">
+        <Typography variant="body3" className="font-medium text-secondary-foreground">
           {label}
         </Typography>
       </div>

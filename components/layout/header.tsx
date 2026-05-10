@@ -1,25 +1,24 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-
-import {
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerClose,
-  DrawerTitle,
-} from "@/components/ui/drawer";
-import { Separator } from "@/components/ui/separator";
-import { NAV_LINKS } from "@/lib/data";
-import { cn } from "@/lib/utils";
-import useWindowSize from "@/hooks/use-window-size";
-import useScroll from "@/hooks/use-scroll";
-import Link from "@/components/navigation/link";
-import ThemeSwitcher from "@/components/general/theme-switcher";
-import IconButton from "@/components/general/icon-button";
+import { useEffect, useState } from "react";
 import DownloadCV from "@/components/general/download-cv";
+import IconButton from "@/components/general/icon-button";
+import ThemeSwitcher from "@/components/general/theme-switcher";
 import Typography from "@/components/general/typography";
 import DropdownMenu from "@/components/navigation/dropdown-menu";
+import Link from "@/components/navigation/link";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Separator } from "@/components/ui/separator";
+import useScroll from "@/hooks/use-scroll";
+import useWindowSize from "@/hooks/use-window-size";
+import { NAV_LINKS } from "@/lib/data";
+import { cn } from "@/lib/utils";
 import { ColorThemeToggle } from "../general/color-switcher";
 
 const Logo = () => (
@@ -47,7 +46,7 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "bg-background sticky top-0 z-30 w-full border-b border-transparent",
+        "sticky top-0 z-30 w-full border-transparent border-b bg-background",
         scrolled ? "bg-background/50 backdrop-blur-xl" : ""
       )}
     >
