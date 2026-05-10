@@ -12,8 +12,6 @@ import {
 import Script from "next/script";
 
 import "@/app/globals.css";
-import Footer from "@/components/layout/footer";
-import Header from "@/components/layout/header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ColorThemeProvider } from "@/lib/color-provider";
 import { Providers } from "@/lib/providers";
@@ -132,11 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
           <Providers>
-            <TooltipProvider>
-              <Header />
-              <main className="flex min-h-screen w-full flex-col">{children}</main>
-              <Footer />
-            </TooltipProvider>
+            <TooltipProvider>{children}</TooltipProvider>
           </Providers>
         </ColorThemeProvider>
       </body>
