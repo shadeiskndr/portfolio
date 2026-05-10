@@ -4,7 +4,7 @@ import TopNav from "@/components/new-site/layout/top-nav";
 export default function NewSiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[320px_1fr]">
-      <div className="hidden lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
+      <div className="hidden border-r bg-background/50 lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
         <Sidebar />
       </div>
       <div className="flex min-h-screen flex-col">

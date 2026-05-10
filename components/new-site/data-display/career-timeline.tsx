@@ -19,19 +19,19 @@ function formatRange(start: Date, end?: Date): string {
 
 export default function CareerTimeline() {
   return (
-    <section className="space-y-3">
-      <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+    <section className="space-y-2.5">
+      <h3 className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
         My Career Journey
       </h3>
-      <ol className="space-y-3">
+      <ol className="space-y-2.5">
         {CAREER_TIMELINE.map((entry) => (
-          <li key={entry.company} className="flex gap-3">
-            <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+          <li key={entry.company} className="flex gap-2.5">
+            <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-md bg-muted">
               <Image
                 src={entry.logo}
                 alt={`${entry.company} logo`}
                 fill
-                sizes="36px"
+                sizes="32px"
                 className="object-contain dark:hidden"
               />
               {entry.darkLogo ? (
@@ -40,27 +40,27 @@ export default function CareerTimeline() {
                   alt=""
                   aria-hidden
                   fill
-                  sizes="36px"
+                  sizes="32px"
                   className="hidden object-contain dark:block"
                 />
               ) : null}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="truncate font-semibold text-sm">
+                <p className="truncate font-semibold text-xs">
                   {entry.company}
                   {entry.current ? (
-                    <span className="ml-2 rounded-full bg-primary/15 px-1.5 py-0.5 font-medium text-primary text-xs">
+                    <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 font-medium text-[10px] text-primary">
                       Current
                     </span>
                   ) : null}
                 </p>
-                <span className="flex-shrink-0 text-muted-foreground text-xs">
+                <span className="flex-shrink-0 text-[10px] text-muted-foreground">
                   {formatDuration(entry.startDate, entry.endDate)}
                 </span>
               </div>
-              <p className="truncate text-muted-foreground text-sm">{entry.position}</p>
-              <p className="text-muted-foreground text-xs">
+              <p className="truncate text-muted-foreground text-xs">{entry.position}</p>
+              <p className="text-[10px] text-muted-foreground">
                 {formatRange(entry.startDate, entry.endDate)}
               </p>
             </div>

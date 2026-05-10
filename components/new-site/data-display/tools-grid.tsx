@@ -3,23 +3,23 @@ import { TOOLS } from "@/lib/new-site/data";
 
 export default function ToolsGrid() {
   return (
-    <section className="space-y-3">
-      <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+    <section className="space-y-2.5">
+      <h3 className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
         Tools & Platforms
       </h3>
-      <ul className="grid grid-cols-6 gap-2">
+      <ul className="grid grid-cols-7 gap-1.5">
         {TOOLS.map((tool) => (
           <li
             key={tool.label}
-            className="group relative flex aspect-square items-center justify-center rounded-md bg-muted/40 p-1.5 transition-colors hover:bg-muted"
+            className="group relative flex aspect-square items-center justify-center rounded-md bg-muted/40 p-1 transition-colors hover:bg-muted"
             title={tool.label}
           >
             <Image
               src={tool.logo}
               alt={tool.label}
-              width={20}
-              height={20}
-              className="h-5 w-5 object-contain"
+              width={16}
+              height={16}
+              className="h-4 w-4 object-contain"
               unoptimized
             />
           </li>

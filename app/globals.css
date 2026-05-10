@@ -76,17 +76,33 @@
   * {
     @apply border-border outline-ring/50;
     color-scheme: light dark;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
+
   html {
     @apply font-sans;
   }
+
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     letter-spacing: var(--letter-spacing);
   }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
   }
 }
