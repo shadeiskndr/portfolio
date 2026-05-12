@@ -31,7 +31,7 @@ function Footer() {
         </a>
         {" · "}
         <a href="/old" className="hover:text-foreground">
-          Old portfolio
+          Old site
         </a>
       </p>
     </footer>

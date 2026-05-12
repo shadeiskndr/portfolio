@@ -3,7 +3,7 @@ import { PERSONAL } from "@/lib/new-site/data";
 export default function SpotifyCard() {
   return (
     <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2.5">
-      <SpotifyIcon className="h-5 w-5 flex-shrink-0 text-[#1DB954]" />
+      <SpotifyIcon className="h-5 w-5 shrink-0 text-[#1DB954]" />
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-xs">currently not playing anything</p>
         <p className="truncate text-muted-foreground text-xs">{PERSONAL.name} is</p>

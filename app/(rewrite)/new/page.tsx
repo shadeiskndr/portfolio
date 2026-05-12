@@ -23,7 +23,8 @@ export default function AboutHome() {
             UniKL MIIT
           </Link>{" "}
           and now spend most of my time on web apps for the financial-risk space — which is a
-          fancier way of saying I write a lot of TypeScript and stare at a lot of charts.
+          fancier way of saying I write a lot of TypeScript and stare at a lot form fields, data
+          tables, ETL diagrams, and charts.
         </p>
 
         <p>
@@ -35,14 +36,14 @@ export default function AboutHome() {
 
         <p>
           I plan more than I should. I rewrite more than I need to. I care about the small stuff —
-          spacing, hit targets, the way a button feels under your finger — probably more than is
+          spacing, hit targets, the way a page feels to navigate — probably more than is
           economically rational.{" "}
           <Highlight>I just have a stubborn need to get the details right.</Highlight>
         </p>
 
         <p>
           When I&apos;m not at a keyboard I&apos;m usually{" "}
-          <Highlight variant="underline">somewhere on the LRT</Highlight>, deep in a playlist, or
+          <Highlight variant="underline">somewhere on the MRT</Highlight>, deep in a playlist, or
           falling down a YouTube rabbit hole about something I&apos;ll never use professionally.
           I&apos;m a quiet evangelist for free and open-source software, and I have strong opinions
           about consumer electronics I won&apos;t bore you with here.

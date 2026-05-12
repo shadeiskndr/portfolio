@@ -37,7 +37,7 @@ export default function PostList({
               >
                 {post.title}
               </h2>
-              <time className="flex-shrink-0 text-muted-foreground text-sm">
+              <time className="shrink-0 text-muted-foreground text-sm">
                 {formatDate(post.date)}
               </time>
             </div>

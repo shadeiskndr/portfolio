@@ -97,6 +97,7 @@
 
   ::-webkit-scrollbar {
     width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
@@ -104,5 +105,12 @@
   ::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 5px;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
