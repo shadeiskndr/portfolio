@@ -7,9 +7,11 @@ import ToolsGrid from "@/components/new-site/data-display/tools-grid";
 
 export default function Sidebar() {
   return (
-    <aside className="flex min-h-full flex-col gap-5 p-5">
-      <AvatarCard />
-      <SocialRow />
+    <aside className="flex min-h-full flex-col gap-6 p-5">
+      <div className="space-y-2.5">
+        <AvatarCard />
+        <SocialRow />
+      </div>
       <CareerTimeline />
       <ToolsGrid />
       <QuoteCard />

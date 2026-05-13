@@ -1,4 +1,7 @@
-import { Github, Linkedin, Mail, MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
+import { GithubIcon } from "@/components/icons/lucide-github";
+import { LinkedinIcon } from "@/components/icons/lucide-linkedin";
+import { WhatsappIcon } from "@/components/icons/simple-icons-whatsapp";
 import type {
   CertificateDetails,
   ExperienceDetails,
@@ -114,11 +117,11 @@ export const NAV_LINKS = [
 
 export const SOCIAL_LINKS = [
   {
-    icon: Github,
+    icon: GithubIcon,
     url: "https://github.com/shadeiskndr",
   },
   {
-    icon: Linkedin,
+    icon: LinkedinIcon,
     url: "https://www.linkedin.com/in/shahathir-iskandar-b60869270/",
   },
   {
@@ -126,7 +129,7 @@ export const SOCIAL_LINKS = [
     url: "mailto:shahathiriskandar43@gmail.com",
   },
   {
-    icon: MessageCircle,
+    icon: WhatsappIcon,
     url: "https://wa.me/601153787564",
   },
 ];

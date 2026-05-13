@@ -1,15 +1,17 @@
-import {
-  FileText,
-  Github,
-  Instagram,
-  Linkedin,
-  type LucideIcon,
-  Mail,
-  MessageCircle,
-  Twitter,
-} from "lucide-react";
+import type * as React from "react";
+import { FileText, Mail } from "lucide-react";
+import { GithubIcon } from "@/components/icons/lucide-github";
+import { InstagramIcon } from "@/components/icons/lucide-instagram";
+import { LinkedinIcon } from "@/components/icons/lucide-linkedin";
+import { TwitterIcon } from "@/components/icons/lucide-twitter";
+import { PlaystationIcon } from "@/components/icons/simple-icons-playstation";
+import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
+import { SteamIcon } from "@/components/icons/simple-icons-steam";
+import { ThreadsIcon } from "@/components/icons/simple-icons-threads";
+import { WhatsappIcon } from "@/components/icons/simple-icons-whatsapp";
 
-export type SocialLink = { label: string; icon: LucideIcon; url: string };
+export type SocialIcon = React.ComponentType<{ className?: string }>;
+export type SocialLink = { label: string; icon: SocialIcon; url: string };
 export type NavLink = { label: string; href: string };
 export type CareerEntry = {
   company: string;
@@ -29,23 +31,40 @@ export const PERSONAL = {
   age: 24,
   location: "Batu Caves, Selangor, Malaysia",
   flag: "🇲🇾",
-  status: "shipping pixel-perfect UIs",
-  tagline: "your friendly neighbourhood",
-  taglineSuffix: "developer",
+  tagline: "professionally distracted",
+  taglineSuffixes: [
+    "software developer",
+    "tinkerer",
+    "problem solver",
+    "pixel pusher",
+    "gamer",
+  ],
   avatar: "/images/shahathir-headshot-transparent.png",
 };
 
 export const SOCIAL_LINKS: SocialLink[] = [
-  { label: "GitHub", icon: Github, url: "https://github.com/shadeiskndr" },
-  { label: "Twitter", icon: Twitter, url: "https://twitter.com/shadeiskndr" },
+  { label: "GitHub", icon: GithubIcon, url: "https://github.com/shadeiskndr" },
+  { label: "Twitter", icon: TwitterIcon, url: "https://twitter.com/shadeiskndr" },
   {
     label: "LinkedIn",
-    icon: Linkedin,
+    icon: LinkedinIcon,
     url: "https://www.linkedin.com/in/shahathir-iskandar-b60869270/",
   },
-  { label: "Instagram", icon: Instagram, url: "https://instagram.com/shadeiskndr" },
+  { label: "Instagram", icon: InstagramIcon, url: "https://instagram.com/shadeiskndr" },
+  { label: "Threads", icon: ThreadsIcon, url: "https://threads.net/@shadeiskndr" },
+  {
+    label: "Spotify",
+    icon: SpotifyIcon,
+    url: "https://open.spotify.com/user/cw4uqrox0encxaij8fce4176p",
+  },
+  { label: "Steam", icon: SteamIcon, url: "https://steamcommunity.com/profiles/76561198339110953/" },
+  {
+    label: "PlayStation",
+    icon: PlaystationIcon,
+    url: "https://profile.playstation.com/ShadeIs_28",
+  },
   { label: "Email", icon: Mail, url: "mailto:shahathiriskandar43@gmail.com" },
-  { label: "WhatsApp", icon: MessageCircle, url: "https://wa.me/601153787564" },
+  { label: "WhatsApp", icon: WhatsappIcon, url: "https://wa.me/601153787564" },
   { label: "Resume", icon: FileText, url: "/files/Resume_ShahathirIskandar.pdf" },
 ];
 
@@ -82,52 +101,35 @@ export const CAREER_TIMELINE: CareerEntry[] = [
   },
 ];
 
+const DEVICON = (name: string, variant = "original") =>
+  `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${name}/${name}-${variant}.svg`;
+const SIMPLE = (slug: string) => `https://cdn.simpleicons.org/${slug}`;
+
 export const TOOLS: Tool[] = [
-  {
-    label: "TypeScript",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
-  },
-  {
-    label: "React",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
-  },
-  {
-    label: "Next.js",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg",
-  },
-  {
-    label: "Tailwind",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original.svg",
-  },
-  {
-    label: "Node.js",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
-  },
-  {
-    label: "PostgreSQL",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
-  },
-  {
-    label: "Docker",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
-  },
-  { label: "Git", logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" },
-  {
-    label: "Figma",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",
-  },
-  {
-    label: "VS Code",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg",
-  },
-  {
-    label: "Python",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
-  },
-  {
-    label: "Java",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
-  },
+  { label: "TypeScript", logo: DEVICON("typescript") },
+  { label: "Python", logo: DEVICON("python") },
+  { label: "Java", logo: DEVICON("java") },
+  { label: "Go", logo: DEVICON("go") },
+  { label: "HTML5", logo: DEVICON("html5") },
+  { label: "CSS3", logo: DEVICON("css3") },
+  { label: "React", logo: DEVICON("react") },
+  { label: "Next.js", logo: DEVICON("nextjs") },
+  { label: "Vite", logo: DEVICON("vitejs") },
+  { label: "Angular", logo: DEVICON("angular") },
+  { label: "Tailwind CSS", logo: DEVICON("tailwindcss") },
+  { label: "shadcn/ui", logo: "/icons/shadcn.svg" },
+  { label: "Material UI", logo: DEVICON("materialui") },
+  { label: "Sass", logo: DEVICON("sass") },
+  { label: "Node.js", logo: DEVICON("nodejs") },
+  { label: "Bun", logo: DEVICON("bun") },
+  { label: "Django", logo: "/icons/django.svg" },
+  { label: "FastAPI", logo: DEVICON("fastapi") },
+  { label: "Spring Boot", logo: DEVICON("spring") },
+  { label: "PostgreSQL", logo: DEVICON("postgresql") },
+  { label: "SQLite", logo: DEVICON("sqlite") },
+  { label: "AWS", logo: "/icons/aws.svg" },
+  { label: "Cloudflare", logo: SIMPLE("cloudflare") },
+  { label: "Docker", logo: DEVICON("docker") },
 ];
 
 export const QUOTES: Quote[] = [

@@ -2,7 +2,7 @@ import { SOCIAL_LINKS } from "@/lib/new-site/data";
 
 export default function SocialRow() {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-0.75">
       {SOCIAL_LINKS.map(({ label, icon: Icon, url }) => (
         <a
           key={label}
