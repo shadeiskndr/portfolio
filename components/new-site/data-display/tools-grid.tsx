@@ -1,11 +1,6 @@
 import Image from "next/image";
 import { Marquee, MarqueeContent, MarqueeItem } from "@/components/ui/diceui/marquee";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TOOLS } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
 

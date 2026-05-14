@@ -35,6 +35,13 @@
         "components": "@/components/ui/diceui",
         "ui": "@/components/ui/diceui"
       }
+    },
+    "@magicui": {
+      "url": "https://magicui.design/r/{name}.json",
+      "aliases": {
+        "components": "@/components/ui/magicui",
+        "ui": "@/components/ui/magicui"
+      }
     }
   }
 }

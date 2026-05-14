@@ -107,13 +107,9 @@ export function Toolbar({
   className,
   onSelect,
 }: ToolbarProps) {
-  const [selected, setSelected] = React.useState<string | null>(
-    defaultSelected
-  );
+  const [selected, setSelected] = React.useState<string | null>(defaultSelected);
   const [isToggled, setIsToggled] = React.useState(false);
-  const [activeNotification, setActiveNotification] = React.useState<
-    string | null
-  >(null);
+  const [activeNotification, setActiveNotification] = React.useState<string | null>(null);
   const outsideClickRef = React.useRef(null);
 
   const handleItemClick = (itemId: string) => {
@@ -146,8 +142,7 @@ export function Toolbar({
               variants={notificationVariants as any}
             >
               <div className="rounded-full bg-primary px-3 py-1 text-primary-foreground text-xs">
-                {items.find((item) => item.id === activeNotification)?.title}{" "}
-                clicked!
+                {items.find((item) => item.id === activeNotification)?.title} clicked!
               </div>
               <motion.div
                 animate="animate"
@@ -178,10 +173,7 @@ export function Toolbar({
               transition={transition as any}
               variants={buttonVariants as any}
             >
-              <item.icon
-                className={cn(selected === item.id && "text-white")}
-                size={16}
-              />
+              <item.icon className={cn(selected === item.id && "text-white")} size={16} />
               <AnimatePresence initial={false}>
                 {selected === item.id && (
                   <motion.span
@@ -223,14 +215,8 @@ export function Toolbar({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {isToggled ? (
-              <Edit2 className="h-3.5 w-3.5" />
-            ) : (
-              <Lock className="h-3.5 w-3.5" />
-            )}
-            <span className="font-medium text-sm">
-              {isToggled ? "On" : "Off"}
-            </span>
+            {isToggled ? <Edit2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+            <span className="font-medium text-sm">{isToggled ? "On" : "Off"}</span>
           </motion.button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { LayoutGroup, motion } from "motion/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useHorizontalScrollState } from "@/hooks/use-horizontal-scroll-state";
@@ -27,25 +28,38 @@ export default function TopNav() {
           ref={ref}
           className="hide-scrollbar flex flex-1 items-center gap-1 overflow-x-auto scroll-smooth"
         >
-          {NAV_LINKS.map((link) => {
-            const active =
-              link.href === "/new" ? pathname === "/new" : pathname.startsWith(link.href);
-            return (
-              <li key={link.href}>
-                <NextLink
-                  href={link.href}
-                  className={cn(
-                    "inline-flex whitespace-nowrap rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-muted",
-                    active
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {link.label}
-                </NextLink>
-              </li>
-            );
-          })}
+          <LayoutGroup id="top-nav">
+            {NAV_LINKS.map((link) => {
+              const active =
+                link.href === "/new" ? pathname === "/new" : pathname.startsWith(link.href);
+              return (
+                <li key={link.href}>
+                  <NextLink
+                    href={link.href}
+                    className={cn(
+                      "relative inline-flex whitespace-nowrap rounded-md px-3 py-1.5 text-sm transition-colors",
+                      active
+                        ? "font-medium text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="top-nav-active"
+                        className="absolute inset-0 rounded-md bg-muted"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 32,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
+                  </NextLink>
+                </li>
+              );
+            })}
+          </LayoutGroup>
         </ul>
         <NavScrollButton
           direction="right"

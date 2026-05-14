@@ -106,8 +106,7 @@ export default function TypewriterTitle({
           timeoutRef.current = setTimeout(runTypewriter, deleteSpeed);
         } else {
           isDeletingRef.current = false;
-          const isLastSequence =
-            sequenceIndexRef.current === sequencesRef.current.length - 1;
+          const isLastSequence = sequenceIndexRef.current === sequencesRef.current.length - 1;
 
           if (isLastSequence && autoLoop) {
             timeoutRef.current = setTimeout(() => {
@@ -134,8 +133,7 @@ export default function TypewriterTitle({
             runTypewriter();
           }, pauseDuration);
         } else {
-          const isLastSequence =
-            sequenceIndexRef.current === sequencesRef.current.length - 1;
+          const isLastSequence = sequenceIndexRef.current === sequencesRef.current.length - 1;
 
           if (isLastSequence && autoLoop) {
             timeoutRef.current = setTimeout(() => {
@@ -189,11 +187,7 @@ export default function TypewriterTitle({
       initial={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <span
-        className={
-          inline ? "min-w-[0.5em]" : "inline-block min-h-[1.2em] min-w-[0.5em]"
-        }
-      >
+      <span className={inline ? "min-w-[0.5em]" : "inline-block min-h-[1.2em] min-w-[0.5em]"}>
         {displayText}
       </span>
       <motion.span

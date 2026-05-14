@@ -1,5 +1,5 @@
-import type * as React from "react";
 import { FileText, Mail } from "lucide-react";
+import type * as React from "react";
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { InstagramIcon } from "@/components/icons/lucide-instagram";
 import { LinkedinIcon } from "@/components/icons/lucide-linkedin";
@@ -32,13 +32,7 @@ export const PERSONAL = {
   location: "Batu Caves, Selangor, Malaysia",
   flag: "🇲🇾",
   tagline: "professionally distracted",
-  taglineSuffixes: [
-    "software developer",
-    "tinkerer",
-    "problem solver",
-    "pixel pusher",
-    "gamer",
-  ],
+  taglineSuffixes: ["software developer", "tinkerer", "problem solver", "pixel pusher", "gamer"],
   avatar: "/images/shahathir-headshot-transparent.png",
 };
 
@@ -57,7 +51,11 @@ export const SOCIAL_LINKS: SocialLink[] = [
     icon: SpotifyIcon,
     url: "https://open.spotify.com/user/cw4uqrox0encxaij8fce4176p",
   },
-  { label: "Steam", icon: SteamIcon, url: "https://steamcommunity.com/profiles/76561198339110953/" },
+  {
+    label: "Steam",
+    icon: SteamIcon,
+    url: "https://steamcommunity.com/profiles/76561198339110953/",
+  },
   {
     label: "PlayStation",
     icon: PlaystationIcon,

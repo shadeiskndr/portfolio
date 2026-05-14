@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   Dialog,
   DialogClose,
@@ -27,6 +25,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 
 const ROOT_NAME = "ResponsiveDialog";
 
@@ -65,7 +65,7 @@ function ResponsiveDialog({
       if (!isControlled) setUncontrolledOpen(next);
       onOpenChange?.(next);
     },
-    [isControlled, onOpenChange],
+    [isControlled, onOpenChange]
   );
 
   const value = React.useMemo(() => ({ isMobile }), [isMobile]);
@@ -141,19 +141,11 @@ function ResponsiveDialogOverlay({ className, ...props }: React.ComponentProps<"
   return <DialogOverlay data-variant="dialog" className={className} {...props} />;
 }
 
-function ResponsiveDialogContent({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
+function ResponsiveDialogContent({ className, children, ...props }: React.ComponentProps<"div">) {
   const { isMobile } = useResponsiveDialog();
   if (isMobile) {
     return (
-      <DrawerContent
-        data-variant="drawer"
-        className={cn("px-4 pb-4", className)}
-        {...props}
-      >
+      <DrawerContent data-variant="drawer" className={cn("px-4 pb-4", className)} {...props}>
         {children}
       </DrawerContent>
     );
