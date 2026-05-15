@@ -16,6 +16,7 @@ import "@/app/globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ColorThemeProvider } from "@/lib/color-provider";
 import { Providers } from "@/lib/light-dark-providers";
+import { QueryProvider } from "@/lib/query-provider";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -144,11 +145,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
       ) : null}
       <body className="antialiased">
-        <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
-          <Providers>
-            <TooltipProvider>{children}</TooltipProvider>
-          </Providers>
-        </ColorThemeProvider>
+        <QueryProvider>
+          <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
+            <Providers>
+              <TooltipProvider>{children}</TooltipProvider>
+            </Providers>
+          </ColorThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

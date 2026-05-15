@@ -25,6 +25,11 @@ export type CareerEntry = {
 export type Tool = { label: string; logo: string; url?: string };
 export type Quote = { text: string; author?: string };
 
+export const LANYARD = {
+  baseUrl: "https://lanyard.shahathir.me",
+  userId: "126344833299251200",
+} as const;
+
 export const PERSONAL = {
   name: "Shahathir",
   emoji: "(•◡•)",

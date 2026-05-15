@@ -1,15 +1,88 @@
+"use client";
+
+import Image from "next/image";
+import { useLanyard } from "@/hooks/use-lanyard";
+import { useSpotifyNowPlaying } from "@/hooks/use-spotify-now-playing";
 import { PERSONAL } from "@/lib/new-site/data";
 
+type Track = {
+  song: string;
+  artist: string;
+  album: string;
+  albumArtUrl: string | null;
+  url: string;
+};
+
 export default function SpotifyCard() {
-  return (
+  const { data: lanyard } = useLanyard();
+  const lanyardPlaying = lanyard?.listening_to_spotify ? lanyard.spotify : null;
+
+  // Only fall through to the Web API if Lanyard says we're not listening.
+  const { data: fallback } = useSpotifyNowPlaying(!lanyardPlaying);
+
+  let track: Track | null = null;
+  let isPlaying = false;
+
+  if (lanyardPlaying) {
+    track = {
+      song: lanyardPlaying.song,
+      artist: lanyardPlaying.artist,
+      album: lanyardPlaying.album,
+      albumArtUrl: lanyardPlaying.album_art_url,
+      url: `https://open.spotify.com/track/${lanyardPlaying.track_id}`,
+    };
+    isPlaying = true;
+  } else if (fallback?.track) {
+    track = fallback.track;
+    isPlaying = fallback.isPlaying;
+  }
+
+  const card = (
     <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2.5">
-      <SpotifyIcon className="h-5 w-5 shrink-0 text-[#1DB954]" />
+      {track?.albumArtUrl ? (
+        <Image
+          alt={`${track.album} cover`}
+          src={track.albumArtUrl}
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 rounded"
+        />
+      ) : (
+        <SpotifyIcon className="h-5 w-5 shrink-0 text-[#1DB954]" />
+      )}
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-xs">currently not playing anything</p>
-        <p className="truncate text-muted-foreground text-xs">{PERSONAL.name} is</p>
+        {track ? (
+          <>
+            <p className="truncate font-medium text-xs">{track.song}</p>
+            <p className="truncate text-muted-foreground text-xs">
+              {isPlaying ? track.artist : `last played · ${track.artist}`}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="truncate text-muted-foreground text-xs">{PERSONAL.name} is</p>
+            <p className="truncate text-muted-foreground text-xs">currently not playing anything</p>
+          </>
+        )}
       </div>
     </div>
   );
+
+  if (track) {
+    return (
+      <a
+        href={track.url}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Open ${track.song} on Spotify`}
+        className="block transition-opacity hover:opacity-90"
+      >
+        {card}
+      </a>
+    );
+  }
+
+  return card;
 }
 
 function SpotifyIcon({ className }: { className?: string }) {

@@ -8,9 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSound } from "@/hooks/use-sound";
 import { useColorTheme } from "@/lib/color-provider";
 import { useTheme } from "@/lib/light-dark-providers";
-import { useSound } from "@/hooks/use-sound";
 import { cn } from "@/lib/utils";
 
 const colorThemes = [
