@@ -1,6 +1,6 @@
 "use client";
 
-import { BellOff, CheckIcon, MoonStar, Palette, Play, Sun } from "lucide-react";
+import { Bell, BellOff, CheckIcon, MoonStar, Palette, Play, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useColorTheme } from "@/lib/color-provider";
 import { useTheme } from "@/lib/light-dark-providers";
+import { useSound } from "@/hooks/use-sound";
 import { cn } from "@/lib/utils";
 
 const colorThemes = [
@@ -35,6 +36,7 @@ export default function ThemeControls() {
   const [mounted, setMounted] = useState(false);
   const { theme, setThemeWithTransition } = useTheme();
   const { colorTheme, setColorThemeWithTransition } = useColorTheme();
+  const { enabled: soundEnabled, toggle: toggleSound, playClick } = useSound();
 
   useEffect(() => setMounted(true), []);
 
@@ -43,13 +45,23 @@ export default function ThemeControls() {
       <IconBtn aria-label="Play">
         <Play className="h-4 w-4" />
       </IconBtn>
-      <IconBtn aria-label="Notifications off">
-        <BellOff className="h-4 w-4" />
+      <IconBtn
+        aria-label={soundEnabled ? "Mute sounds" : "Unmute sounds"}
+        aria-pressed={soundEnabled}
+        onClick={() => {
+          const willEnable = !soundEnabled;
+          toggleSound();
+          if (willEnable) {
+            playClick("sound");
+          }
+        }}
+      >
+        {mounted && soundEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
       </IconBtn>
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <IconBtn aria-label="Color theme">
+            <IconBtn aria-label="Color theme" onClick={() => playClick("icon")}>
               <Palette className="h-4 w-4" />
             </IconBtn>
           }
@@ -58,7 +70,10 @@ export default function ThemeControls() {
           {colorThemes.map((t) => (
             <DropdownMenuItem
               key={t.id}
-              onClick={() => setColorThemeWithTransition(t.id)}
+              onClick={() => {
+                playClick("mouse");
+                setColorThemeWithTransition(t.id);
+              }}
               className="gap-2"
             >
               {t.label}
@@ -71,7 +86,10 @@ export default function ThemeControls() {
       </DropdownMenu>
       <IconBtn
         aria-label="Toggle dark mode"
-        onClick={() => setThemeWithTransition(theme === "dark" ? "light" : "dark")}
+        onClick={() => {
+          playClick("icon");
+          setThemeWithTransition(theme === "dark" ? "light" : "dark");
+        }}
       >
         {mounted && theme === "dark" ? (
           <Sun className="h-4 w-4" />
