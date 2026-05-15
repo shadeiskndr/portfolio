@@ -17,6 +17,7 @@
       "!public",
       "!stubs",
       "!drizzle",
+      "!convex/_generated",
       "!**/*.md"
     ]
   },
