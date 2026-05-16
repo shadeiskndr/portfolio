@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const iconButtonVariants = cva(
-  "flex items-center justify-center rounded-lg p-1.5 transition-colors duration-200 hover:bg-muted active:bg-secondary [&_svg]:stroke-muted-foreground [&_svg]:hover:stroke-foreground",
+  "flex items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground active:bg-secondary [&_svg]:stroke-muted-foreground [&_svg]:hover:stroke-foreground",
   {
     variants: {
       size: {
