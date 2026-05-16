@@ -4,6 +4,7 @@ import QuoteCard from "@/components/new-site/data-display/quote-card";
 import SocialRow from "@/components/new-site/data-display/social-row";
 import SpotifyCard from "@/components/new-site/data-display/spotify-card";
 import ToolsGrid from "@/components/new-site/data-display/tools-grid";
+import Link from "@/components/new-site/link";
 
 export default function Sidebar() {
   return (
@@ -28,13 +29,9 @@ function Footer() {
     <footer className="space-y-1 text-center">
       <p className="text-muted-foreground text-xs">{new Date().getFullYear()} © shahathir.me</p>
       <p className="text-muted-foreground/70 text-xs">
-        <a href="/new/changelog" className="hover:text-foreground">
-          Changelogs
-        </a>
+        <Link href="/new/changelog">Changelogs</Link>
         {" · "}
-        <a href="/old" className="hover:text-foreground">
-          Old site
-        </a>
+        <Link href="/old">Old site</Link>
       </p>
     </footer>
   );

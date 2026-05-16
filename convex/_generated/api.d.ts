@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as commits from "../commits.js";
 import type * as crons from "../crons.js";
+import type * as http from "../http.js";
 import type * as spotify from "../spotify.js";
 
 import type {
@@ -18,7 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  commits: typeof commits;
   crons: typeof crons;
+  http: typeof http;
   spotify: typeof spotify;
 }>;
 

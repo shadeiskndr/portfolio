@@ -13,4 +13,23 @@ export default defineSchema({
     playedAt: v.optional(v.number()),
     fetchedAt: v.number(),
   }),
+
+  commits: defineTable({
+    sha: v.string(),
+    shortSha: v.string(),
+    subject: v.string(),
+    type: v.string(),
+    noise: v.boolean(),
+    authorDate: v.number(),
+    url: v.string(),
+  })
+    .index("by_sha", ["sha"])
+    .index("by_date", ["authorDate"])
+    .index("by_type_date", ["type", "authorDate"])
+    .searchIndex("search_subject", { searchField: "subject" }),
+
+  commitCounts: defineTable({
+    type: v.string(),
+    count: v.number(),
+  }).index("by_type", ["type"]),
 });
