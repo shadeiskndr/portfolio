@@ -1,4 +1,4 @@
-import Loader from "@/components/kokonutui/loader";
+import Loader from "@/components/ui/kokonutui/loader";
 
 export default function Loading() {
   return (

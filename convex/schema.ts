@@ -32,4 +32,10 @@ export default defineSchema({
     type: v.string(),
     count: v.number(),
   }).index("by_type", ["type"]),
+
+  githubContributions: defineTable({
+    username: v.string(),
+    payload: v.string(),
+    fetchedAt: v.number(),
+  }).index("by_username", ["username"]),
 });

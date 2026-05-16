@@ -10,6 +10,7 @@
 
 import type * as commits from "../commits.js";
 import type * as crons from "../crons.js";
+import type * as github from "../github.js";
 import type * as http from "../http.js";
 import type * as spotify from "../spotify.js";
 
@@ -22,6 +23,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   commits: typeof commits;
   crons: typeof crons;
+  github: typeof github;
   http: typeof http;
   spotify: typeof spotify;
 }>;

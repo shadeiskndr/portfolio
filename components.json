@@ -42,6 +42,20 @@
         "components": "@/components/ui/magicui",
         "ui": "@/components/ui/magicui"
       }
+    },
+    "@smoothui": {
+      "url": "https://smoothui.dev/r/{name}.json",
+      "aliases": {
+        "components": "@/components/ui/smoothui",
+        "ui": "@/components/ui/smoothui"
+      }
+    },
+    "@componentry": {
+      "url": "https://componentry.fun/r/{name}.json",
+      "aliases": {
+        "components": "@/components/ui/componentry",
+        "ui": "@/components/ui/componentry"
+      }
     }
   }
 }

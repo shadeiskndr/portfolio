@@ -85,7 +85,8 @@
             "useAriaPropsForRole": "off",
             "useKeyWithClickEvents": "off",
             "noRedundantRoles": "off",
-            "useButtonType": "off"
+            "useButtonType": "off",
+            "noStaticElementInteractions": "off"
           },
           "correctness": {
             "useExhaustiveDependencies": "off"

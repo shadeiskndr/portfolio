@@ -1,4 +1,16 @@
-import { FileText, Mail } from "lucide-react";
+import {
+  BarChart3,
+  FileCode,
+  FileText,
+  Gamepad2,
+  Globe,
+  ListChecks,
+  type LucideIcon,
+  Mail,
+  Sparkles,
+  Utensils,
+} from "lucide-react";
+import type { StaticImageData } from "next/image";
 import type * as React from "react";
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { InstagramIcon } from "@/components/icons/lucide-instagram";
@@ -9,6 +21,13 @@ import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
 import { SteamIcon } from "@/components/icons/simple-icons-steam";
 import { ThreadsIcon } from "@/components/icons/simple-icons-threads";
 import { WhatsappIcon } from "@/components/icons/simple-icons-whatsapp";
+import ProjectAIGame from "@/public/images/project-aigamerecommender.jpg";
+import ProjectCatalogd from "@/public/images/project-catalogd.png";
+import ProjectCountryEconomic from "@/public/images/project-countryeconomicdashboard.png";
+import ProjectEduCafe from "@/public/images/project-educafe.jpg";
+import ProjectPHPDocker from "@/public/images/project-phpdocker.png";
+import ProjectShahathirme from "@/public/images/project-shahathirme.jpg";
+import ProjectTodoList from "@/public/images/project-todolist.png";
 
 export type SocialIcon = React.ComponentType<{ className?: string }>;
 export type SocialLink = { label: string; icon: SocialIcon; url: string };
@@ -24,6 +43,15 @@ export type CareerEntry = {
 };
 export type Tool = { label: string; logo: string; url?: string };
 export type Quote = { text: string; author?: string };
+export type Project = {
+  title: string;
+  description: string;
+  url: string;
+  technologies: string[];
+  icon: LucideIcon;
+  color: string;
+  image: StaticImageData;
+};
 
 export const PERSONAL = {
   name: "Shahathir",
@@ -142,5 +170,78 @@ export const QUOTES: Quote[] = [
   {
     text: "Make it work, make it right, make it fast.",
     author: "Kent Beck",
+  },
+];
+
+export const PROJECTS: Project[] = [
+  {
+    title: "Catalogd",
+    description:
+      "Social cataloging app for video game enthusiasts — log plays, write reviews, discover titles, connect with others. Final-year project for my Bachelor's.",
+    url: "https://catalogd.shahathir.me",
+    technologies: ["Next.js", "TypeScript", "Appwrite", "Tailwind CSS"],
+    icon: Gamepad2,
+    color: "#a78bfa",
+    image: ProjectCatalogd,
+  },
+  {
+    title: "shahathir.me",
+    description:
+      "This site. Portfolio + slow-blog hybrid. The version you're looking at is a ground-up rewrite — see the changelog for the gory details.",
+    url: "https://shahathir.me",
+    technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Convex"],
+    icon: Globe,
+    color: "#38bdf8",
+    image: ProjectShahathirme,
+  },
+  {
+    title: "AI Game Recommender",
+    description:
+      "Personalised game recommendations via vector search. 20,000+ titles embedded with OpenAI; queried through DataStax. Wired into Catalogd.",
+    url: "https://ai-game-recommender.shahathir.me",
+    technologies: ["Next.js", "TypeScript", "DataStax", "OpenAI Embeddings"],
+    icon: Sparkles,
+    color: "#f472b6",
+    image: ProjectAIGame,
+  },
+  {
+    title: "Country Economic Dashboard",
+    description:
+      "Full-stack dashboard for visualising country-level economic indicators — GDP, inflation, labour force, education spend.",
+    url: "https://github.com/shadeiskndr/tgp-challenge-api",
+    technologies: ["Spring Boot", "Java", "React", "TypeScript", "MySQL", "JWT"],
+    icon: BarChart3,
+    color: "#34d399",
+    image: ProjectCountryEconomic,
+  },
+  {
+    title: "PHP Starter",
+    description:
+      "Collection of PHP coursework — vehicle rental system, movie database, fun calculators — packaged with Apache + MySQL via Docker.",
+    url: "https://github.com/shadeiskndr/PHP-Docker-WebApps",
+    technologies: ["PHP", "Apache", "MySQL", "Docker", "Tailwind CSS"],
+    icon: FileCode,
+    color: "#22d3ee",
+    image: ProjectPHPDocker,
+  },
+  {
+    title: "COBOL Todo List",
+    description:
+      "Full-stack todo app demonstrating COBOL ↔ Express ↔ Angular integration. GnuCOBOL backend simulated via Docker Compose.",
+    url: "https://github.com/shadeiskndr/cobol-express-angular-crud",
+    technologies: ["COBOL", "Angular", "Express", "Node.js", "Docker"],
+    icon: ListChecks,
+    color: "#60a5fa",
+    image: ProjectTodoList,
+  },
+  {
+    title: "EduCafe Booking",
+    description:
+      "School cafeteria ordering web app — students order remotely, staff manage bookings. Built with JSP, EJBs, and MySQL for a uni component-based development class.",
+    url: "https://github.com/shadeiskndr/EduCafe-Booking",
+    technologies: ["Java EE", "JSP", "Servlets", "MySQL", "Tailwind CSS"],
+    icon: Utensils,
+    color: "#f59e0b",
+    image: ProjectEduCafe,
   },
 ];
