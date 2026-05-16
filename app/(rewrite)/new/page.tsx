@@ -6,10 +6,7 @@ export default function AboutHome() {
   return (
     <article className="mx-auto max-w-2xl space-y-6">
       <BlurFade delay={0}>
-        <h1
-          className="font-medium text-3xl tracking-tight md:text-4xl"
-          style={{ fontFamily: "var(--font-fraunces)" }}
-        >
+        <h1 className="font-medium font-serif text-3xl tracking-tight md:text-4xl">
           hi, i&apos;m <Highlight>shahathir</Highlight> — a software developer building things at{" "}
           <Highlight variant="underline">FRG</Highlight>.
         </h1>

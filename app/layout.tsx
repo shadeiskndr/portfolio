@@ -1,43 +1,19 @@
 import type { Metadata } from "next";
-import {
-  Caveat,
-  DM_Sans,
-  Fraunces,
-  Geist,
-  Inter,
-  JetBrains_Mono,
-  Lora,
-  Plus_Jakarta_Sans,
-  Roboto_Mono,
-  Source_Serif_4,
-} from "next/font/google";
+import { Caveat, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 
 import "@/app/globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { buildThemeCSSText, THEME_VARS_STYLE_ID } from "@/lib/apply-theme-css-vars";
 import { ColorThemeProvider } from "@/lib/color-provider";
+import { DEFAULT_COLOR_THEME } from "@/lib/color-themes";
 import { ConvexClientProvider } from "@/lib/convex-client-provider";
 import { Providers } from "@/lib/light-dark-providers";
 import { QueryProvider } from "@/lib/query-provider";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const initialThemeCSS = buildThemeCSSText(DEFAULT_COLOR_THEME);
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta-sans",
-  display: "swap",
-});
-const lora = Lora({
-  subsets: ["latin"],
-  variable: "--font-lora",
-  display: "swap",
-});
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-roboto-mono",
-  display: "swap",
-});
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
@@ -48,19 +24,9 @@ const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
   display: "swap",
 });
-const jetbrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
-});
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-geist-mono",
   display: "swap",
 });
 const caveat = Caveat({
@@ -122,37 +88,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
       className={cn(
         "scroll-smooth!",
-        plusJakartaSans.variable,
-        lora.variable,
-        robotoMono.variable,
         geist.variable,
         sourceSerif.variable,
-        jetbrainsMono.variable,
-        dmSans.variable,
-        fraunces.variable,
+        geistMono.variable,
         caveat.variable,
-        "font-sans",
-        inter.variable
+        "font-sans"
       )}
       suppressHydrationWarning
     >
-      {googleAnalyticsId ? (
-        <head>
-          <Script
-            async
-            src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
-          ></Script>
-          <Script id="google-anayltics-script">
-            {`
+      <head>
+        <style
+          id={THEME_VARS_STYLE_ID}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Built from typed theme data
+          dangerouslySetInnerHTML={{ __html: initialThemeCSS }}
+        />
+        {googleAnalyticsId ? (
+          <>
+            <Script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
+            ></Script>
+            <Script id="google-anayltics-script">
+              {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-          
+
             gtag('config', '${googleAnalyticsId}');
           `}
-          </Script>
-        </head>
-      ) : null}
+            </Script>
+          </>
+        ) : null}
+      </head>
       <body className="antialiased">
         <ConvexClientProvider>
           <QueryProvider>

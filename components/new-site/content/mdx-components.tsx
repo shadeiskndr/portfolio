@@ -7,15 +7,13 @@ export const mdxComponents: MDXComponents = {
   Highlight,
   h1: ({ className, ...props }) => (
     <h1
-      className={cn("mt-8 mb-4 font-semibold text-2xl tracking-tight", className)}
-      style={{ fontFamily: "var(--font-fraunces)" }}
+      className={cn("mt-8 mb-4 font-semibold font-serif text-2xl tracking-tight", className)}
       {...props}
     />
   ),
   h2: ({ className, ...props }) => (
     <h2
-      className={cn("mt-8 mb-3 font-semibold text-xl tracking-tight", className)}
-      style={{ fontFamily: "var(--font-fraunces)" }}
+      className={cn("mt-8 mb-3 font-semibold font-serif text-xl tracking-tight", className)}
       {...props}
     />
   ),

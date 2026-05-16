@@ -39,10 +39,7 @@ export default async function TilPostPage({ params }: { params: Promise<{ slug: 
           </time>
         </BlurFade>
         <BlurFade delay={0.09}>
-          <h1
-            className="font-semibold text-3xl tracking-tight md:text-4xl"
-            style={{ fontFamily: "var(--font-fraunces)" }}
-          >
+          <h1 className="font-semibold font-serif text-3xl tracking-tight md:text-4xl">
             {post.title}
           </h1>
         </BlurFade>

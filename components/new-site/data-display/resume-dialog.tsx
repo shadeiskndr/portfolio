@@ -38,12 +38,7 @@ export function ResumeDialog({ children }: ResumeDialogProps) {
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="flex h-[90vh] flex-col gap-0 overflow-hidden p-0 md:h-[90vh] md:w-[95vw] md:max-w-3xl!">
         <ResponsiveDialogHeader className="border-foreground/10 border-b px-5 py-3 sm:py-4">
-          <ResponsiveDialogTitle
-            className="text-base"
-            style={{ fontFamily: "var(--font-fraunces), ui-serif, Georgia, serif" }}
-          >
-            Resume
-          </ResponsiveDialogTitle>
+          <ResponsiveDialogTitle className="font-serif text-base">Resume</ResponsiveDialogTitle>
           <ResponsiveDialogDescription className="text-xs">
             Shahathir Iskandar — Software Developer
           </ResponsiveDialogDescription>

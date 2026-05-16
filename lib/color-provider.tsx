@@ -1,10 +1,18 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useQuery } from "convex/react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api } from "@/convex/_generated/api";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTimeout } from "@/hooks/use-timeout";
-
-type ColorTheme = "default" | "claude" | "rose";
+import { applyThemeCSSVars } from "@/lib/apply-theme-css-vars";
+import { applyThemeFonts } from "@/lib/apply-theme-fonts";
+import {
+  COLOR_THEMES,
+  type ColorTheme,
+  DEFAULT_COLOR_THEME,
+  type ThemeOption,
+} from "@/lib/color-themes";
 
 type ColorThemeProviderProps = {
   children: React.ReactNode;
@@ -16,12 +24,22 @@ type ColorThemeProviderState = {
   colorTheme: ColorTheme;
   setColorTheme: (theme: ColorTheme) => void;
   setColorThemeWithTransition: (theme: ColorTheme) => void;
+  themes: ThemeOption[];
+  localThemes: ThemeOption[];
+  remoteThemes: ThemeOption[];
+  transitionEnabled: boolean;
+  setTransitionEnabled: (enabled: boolean) => void;
 };
 
 const initialState: ColorThemeProviderState = {
   colorTheme: "default",
   setColorTheme: () => null,
   setColorThemeWithTransition: () => null,
+  themes: COLOR_THEMES,
+  localThemes: COLOR_THEMES,
+  remoteThemes: [],
+  transitionEnabled: true,
+  setTransitionEnabled: () => null,
 };
 
 const ColorThemeProviderContext = createContext<ColorThemeProviderState>(initialState);
@@ -33,14 +51,30 @@ export function ColorThemeProvider({
   ...props
 }: ColorThemeProviderProps) {
   const [colorTheme, setColorTheme] = useLocalStorage<ColorTheme>(storageKey, defaultTheme);
+  const [transitionEnabled, setTransitionEnabled] = useLocalStorage<boolean>(
+    `${storageKey}-transition`,
+    true
+  );
   const [styleId, setStyleId] = useState<string | null>(null);
+
+  const remoteThemesRaw = useQuery(api.themes.getTweakcnThemes);
+  const remoteThemes = useMemo<ThemeOption[]>(() => remoteThemesRaw ?? [], [remoteThemesRaw]);
+
+  const { themes, themesById } = useMemo(() => {
+    const merged = [...COLOR_THEMES, ...remoteThemes];
+    return {
+      themes: merged,
+      themesById: new Map(merged.map((t) => [t.id, t])),
+    };
+  }, [remoteThemes]);
 
   useEffect(() => {
     const root = window.document.documentElement;
-
-    // Set the data-theme attribute
     root.setAttribute("data-theme", colorTheme);
-  }, [colorTheme]);
+    const theme = themesById.get(colorTheme) ?? DEFAULT_COLOR_THEME;
+    applyThemeCSSVars(window.document, theme);
+    applyThemeFonts(window.document, theme);
+  }, [colorTheme, themesById]);
 
   // Clean up animation styles after transition
   useTimeout(
@@ -57,6 +91,11 @@ export function ColorThemeProvider({
   );
 
   const setColorThemeWithTransition = (newTheme: ColorTheme) => {
+    if (!transitionEnabled) {
+      setColorTheme(newTheme);
+      return;
+    }
+
     // Inject polygon wipe animation styles
     const newStyleId = `color-theme-transition-${Date.now()}`;
     const style = document.createElement("style");
@@ -95,10 +134,15 @@ export function ColorThemeProvider({
     }
   };
 
-  const value = {
+  const value: ColorThemeProviderState = {
     colorTheme,
     setColorTheme,
     setColorThemeWithTransition,
+    themes,
+    localThemes: COLOR_THEMES,
+    remoteThemes,
+    transitionEnabled,
+    setTransitionEnabled,
   };
 
   return (

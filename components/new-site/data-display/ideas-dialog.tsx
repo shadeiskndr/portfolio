@@ -177,12 +177,7 @@ export function IdeasDialog({ children }: IdeasDialogProps) {
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="flex h-[80vh] flex-col gap-0 overflow-hidden p-0 md:h-[85vh] md:w-[95vw] md:max-w-4xl!">
         <ResponsiveDialogHeader className="border-foreground/10 border-b px-5 py-3 sm:py-4">
-          <ResponsiveDialogTitle
-            className="text-base"
-            style={{ fontFamily: "var(--font-fraunces), ui-serif, Georgia, serif" }}
-          >
-            Ideas
-          </ResponsiveDialogTitle>
+          <ResponsiveDialogTitle className="font-serif text-base">Ideas</ResponsiveDialogTitle>
           <ResponsiveDialogDescription className="text-xs">
             Loose thoughts pinned to a board.
           </ResponsiveDialogDescription>

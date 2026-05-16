@@ -9,4 +9,6 @@ crons.interval("refresh github contributions", { hours: 6 }, internal.github.ref
   username: "shadeiskndr",
 });
 
+crons.interval("refresh tweakcn themes", { hours: 24 }, internal.themes.refreshTweakcnThemes, {});
+
 export default crons;

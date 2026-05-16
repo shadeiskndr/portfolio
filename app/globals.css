@@ -1,8 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "./themes/default.css";
-@import "./themes/claude.css";
-@import "./themes/rose.css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));

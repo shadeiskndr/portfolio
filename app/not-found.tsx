@@ -11,10 +11,7 @@ export default function NotFound() {
         </BlurFade>
 
         <BlurFade delay={0.08}>
-          <h1
-            className="font-medium text-3xl tracking-tight md:text-4xl"
-            style={{ fontFamily: "var(--font-fraunces)" }}
-          >
+          <h1 className="font-medium font-serif text-3xl tracking-tight md:text-4xl">
             this page <Highlight>doesn&apos;t exist</Highlight> — or maybe it did, and i moved it.
           </h1>
         </BlurFade>

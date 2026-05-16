@@ -31,10 +31,7 @@ export default function PostList({
             className="group flex flex-col gap-1 py-4 transition-colors hover:bg-muted/30"
           >
             <div className="flex items-baseline justify-between gap-4">
-              <h2
-                className="font-semibold text-lg group-hover:text-primary"
-                style={{ fontFamily: "var(--font-fraunces)" }}
-              >
+              <h2 className="font-semibold font-serif text-lg group-hover:text-primary">
                 {post.title}
               </h2>
               <time className="shrink-0 text-muted-foreground text-sm">

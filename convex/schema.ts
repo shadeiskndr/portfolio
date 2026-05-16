@@ -38,4 +38,10 @@ export default defineSchema({
     payload: v.string(),
     fetchedAt: v.number(),
   }).index("by_username", ["username"]),
+
+  tweakcnThemes: defineTable({
+    key: v.string(),
+    payload: v.string(),
+    fetchedAt: v.number(),
+  }).index("by_key", ["key"]),
 });
