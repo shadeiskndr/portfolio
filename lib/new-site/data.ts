@@ -52,6 +52,17 @@ export type Project = {
   color: string;
   image: StaticImageData;
 };
+export type IdeaColor = "yellow" | "pink" | "blue" | "green";
+export type Idea = {
+  id: string;
+  title: string;
+  body?: string;
+  author?: string;
+  color?: IdeaColor;
+  rotation?: number;
+  position: { x: number; y: number };
+};
+export type IdeaConnection = { from: string; to: string };
 
 export const PERSONAL = {
   name: "Shahathir",
@@ -171,6 +182,48 @@ export const QUOTES: Quote[] = [
     text: "Make it work, make it right, make it fast.",
     author: "Kent Beck",
   },
+];
+
+export const IDEAS: Idea[] = [
+  {
+    id: "1",
+    title: "Ship the slower version.",
+    body: "Half-finished essays, things learned this week, projects that may or may not ship.",
+    color: "yellow",
+    rotation: -4,
+    position: { x: 40, y: 20 },
+  },
+  {
+    id: "2",
+    title: "Care about the small stuff.",
+    body: "Spacing, hit targets, the way a page feels to navigate.",
+    color: "pink",
+    rotation: 3,
+    position: { x: 360, y: 140 },
+  },
+  {
+    id: "3",
+    title: "Break things in public.",
+    body: "Build, ship, watch the parts you got wrong embarrass you later.",
+    color: "blue",
+    rotation: -2,
+    position: { x: 80, y: 320 },
+  },
+  {
+    id: "4",
+    title: "Not everything has to be polished.",
+    body: "That's sort of the point.",
+    author: "me, probably",
+    color: "green",
+    rotation: 2,
+    position: { x: 420, y: 380 },
+  },
+];
+
+export const IDEA_CONNECTIONS: IdeaConnection[] = [
+  { from: "1", to: "2" },
+  { from: "2", to: "3" },
+  { from: "3", to: "4" },
 ];
 
 export const PROJECTS: Project[] = [

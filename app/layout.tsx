@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import {
+  Caveat,
   DM_Sans,
   Fraunces,
   Geist,
@@ -60,6 +61,11 @@ const dmSans = DM_Sans({
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
+  display: "swap",
+});
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
   display: "swap",
 });
 
@@ -124,6 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         jetbrainsMono.variable,
         dmSans.variable,
         fraunces.variable,
+        caveat.variable,
         "font-sans",
         inter.variable
       )}

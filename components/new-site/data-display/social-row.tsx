@@ -1,3 +1,5 @@
+import { Lightbulb } from "lucide-react";
+import { IdeasDialog } from "@/components/new-site/data-display/ideas-dialog";
 import { SOCIAL_LINKS } from "@/lib/new-site/data";
 
 export default function SocialRow() {
@@ -15,6 +17,15 @@ export default function SocialRow() {
           <Icon className="h-4 w-4" />
         </a>
       ))}
+      <IdeasDialog>
+        <button
+          type="button"
+          aria-label="Ideas"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <Lightbulb className="h-4 w-4" />
+        </button>
+      </IdeasDialog>
     </div>
   );
 }
