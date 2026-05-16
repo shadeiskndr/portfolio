@@ -1,45 +1,93 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import Image from "next/image";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
+import { MusicPlayer } from "@/components/ui/componentry/music-player";
+import { Marquee, MarqueeContent, MarqueeEdge, MarqueeItem } from "@/components/ui/diceui/marquee";
 import { api } from "@/convex/_generated/api";
 import { PERSONAL } from "@/lib/new-site/data";
+import { cn } from "@/lib/utils";
 
 export default function SpotifyCard() {
   const status = useQuery(api.spotify.getNowPlaying);
+  const [hovered, setHovered] = useState(false);
 
   const hasTrack = Boolean(status?.song);
+  const albumArt = status?.albumArtUrl ?? "";
   const isPlaying = status?.isPlaying ?? false;
+  const expanded = hovered && hasTrack && albumArt !== "";
 
-  const card = (
-    <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2.5">
-      {hasTrack && status?.albumArtUrl ? (
-        <Image
-          alt={`${status.album} cover`}
-          src={status.albumArtUrl}
-          width={36}
-          height={36}
-          className="h-9 w-9 shrink-0 rounded"
-        />
-      ) : (
-        <SpotifyIcon className="h-5 w-5 shrink-0 text-[#1DB954]" />
-      )}
-      <div className="min-w-0 flex-1">
-        {hasTrack ? (
-          <>
-            <p className="truncate font-medium text-xs">{status?.song}</p>
-            <p className="truncate text-muted-foreground text-xs">
-              {isPlaying ? status?.artist : `last played · ${status?.artist}`}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="truncate text-muted-foreground text-xs">{PERSONAL.name} is</p>
-            <p className="truncate text-muted-foreground text-xs">currently not playing anything</p>
-          </>
-        )}
+  const spinStyle = isPlaying ? { animationDuration: "4s" } : undefined;
+
+  const statusText = hasTrack ? (
+    <>
+      {PERSONAL.name} is {isPlaying ? "currently listening to" : "last listened to"}{" "}
+      <span className="font-medium text-foreground">{status?.song}</span>
+      {" by "}
+      <span className="font-medium text-foreground">{status?.artist}</span>
+    </>
+  ) : (
+    <>{PERSONAL.name} is currently not listening to anything</>
+  );
+
+  const wrapper = (
+    <motion.div
+      className="relative"
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+    >
+      {/* Always-visible marquee card */}
+      <div className="overflow-hidden rounded-lg border bg-muted/30">
+        <div className="flex items-center gap-3 px-3 py-2.5">
+          <SpotifyIcon
+            className={cn("h-5 w-5 shrink-0 text-[#1DB954]", isPlaying && "animate-spin")}
+            style={spinStyle}
+          />
+          <Marquee speed={28} autoFill className="min-w-0 flex-1">
+            <MarqueeEdge side="left" size="sm" />
+            <MarqueeEdge side="right" size="sm" />
+            <MarqueeContent>
+              <MarqueeItem className="whitespace-nowrap text-muted-foreground text-xs">
+                {statusText}
+              </MarqueeItem>
+            </MarqueeContent>
+          </Marquee>
+        </div>
       </div>
-    </div>
+
+      {/* Popover with vinyl + track info */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute right-0 bottom-full left-0 z-20 pb-2"
+          >
+            <div className="overflow-hidden rounded-lg border bg-card shadow-xl">
+              <div className="flex items-center gap-3 p-3">
+                <MusicPlayer
+                  coverArt={albumArt}
+                  isPlaying={isPlaying}
+                  discClassName="h-14 w-14"
+                  className="shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-xs">{status?.song}</p>
+                  <p className="line-clamp-2 text-muted-foreground text-xs">
+                    {status?.artist}
+                    {status?.album ? ` · ${status.album}` : ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 
   if (hasTrack && status?.url) {
@@ -49,21 +97,12 @@ export default function SpotifyCard() {
         target="_blank"
         rel="noreferrer"
         aria-label={`Open ${status.song} on Spotify`}
-        className="block transition-opacity hover:opacity-90"
+        className="block"
       >
-        {card}
+        {wrapper}
       </a>
     );
   }
 
-  return card;
-}
-
-function SpotifyIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" role="img" className={className}>
-      <title>Spotify</title>
-      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.78-.179-.9-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.301.42-1.021.599-1.561.299z" />
-    </svg>
-  );
+  return wrapper;
 }

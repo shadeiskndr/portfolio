@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { motion } from "motion/react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -112,7 +113,33 @@ export function GithubCalendar({
   }
 
   if (loading) {
-    return <div className={cn("h-32 w-full animate-pulse rounded-xl bg-muted/40", className)} />;
+    const shapeClass = getShapeClass(shape);
+    return (
+      <div className={cn("flex w-max max-w-full flex-col gap-4", className)}>
+        {showTotal && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <Skeleton className="h-4 w-40" />
+          </div>
+        )}
+        <div className="flex w-max max-w-full flex-nowrap gap-0.75">
+          {Array.from({ length: 53 }).map((_, weekIndex) => (
+            <div key={weekIndex} className="flex w-3.5 flex-col gap-0.75">
+              {Array.from({ length: 7 }).map((_, dayIndex) => (
+                <Skeleton
+                  key={dayIndex}
+                  className={cn("aspect-square w-full", shapeClass)}
+                  style={{ animationDelay: `${(weekIndex * 7 + dayIndex) * 4}ms` }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   const weeks = data?.contributions || [];
