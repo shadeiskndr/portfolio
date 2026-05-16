@@ -67,6 +67,12 @@
       "skillPath": "skills/migration-helper/SKILL.md",
       "computedHash": "42d7bf896bba3a4109b9094f9f59d80c0acef83bf60199f892e2a128b278872e"
     },
+    "react-flow": {
+      "source": "existential-birds/beagle",
+      "sourceType": "github",
+      "skillPath": "plugins/beagle-react/skills/react-flow/SKILL.md",
+      "computedHash": "24daea215037828ec60608bf5952cd24ed55ff5512d65fc1d636bd0c0b188c5a"
+    },
     "schema-builder": {
       "source": "get-convex/convex-agent-plugins",
       "sourceType": "github",
