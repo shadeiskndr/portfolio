@@ -33,6 +33,21 @@ export default defineSchema({
     count: v.number(),
   }).index("by_type", ["type"]),
 
+  commitFileLists: defineTable({
+    sha: v.string(),
+    parentSha: v.string(),
+    filesJson: v.string(),
+    fetchedAt: v.number(),
+  }).index("by_sha", ["sha"]),
+
+  commitBlobs: defineTable({
+    ref: v.string(),
+    path: v.string(),
+    content: v.string(),
+    truncated: v.boolean(),
+    fetchedAt: v.number(),
+  }).index("by_ref_path", ["ref", "path"]),
+
   githubContributions: defineTable({
     username: v.string(),
     payload: v.string(),

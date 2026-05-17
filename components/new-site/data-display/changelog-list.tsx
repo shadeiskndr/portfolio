@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { CommitDiffDialog } from "./commit-diff-dialog";
 
 type Commit = Doc<"commits">;
 
@@ -72,17 +73,14 @@ function formatRowDate(ts: number) {
 }
 
 function groupByMonth(commits: Commit[]) {
-  const groups: { key: string; commits: Commit[] }[] = [];
-  let current: { key: string; commits: Commit[] } | null = null;
+  const byKey = new Map<string, Commit[]>();
   for (const c of commits) {
     const key = formatMonthKey(c.authorDate);
-    if (!current || current.key !== key) {
-      current = { key, commits: [] };
-      groups.push(current);
-    }
-    current.commits.push(c);
+    const bucket = byKey.get(key);
+    if (bucket) bucket.push(c);
+    else byKey.set(key, [c]);
   }
-  return groups;
+  return Array.from(byKey, ([key, list]) => ({ key, commits: list }));
 }
 
 export default function ChangelogList() {
@@ -90,6 +88,7 @@ export default function ChangelogList() {
   const [hideNoise, setHideNoise] = useState(false);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [openCommit, setOpenCommit] = useState<Commit | null>(null);
 
   const isSearching = search.trim().length > 0;
 
@@ -165,7 +164,7 @@ export default function ChangelogList() {
                 {/* biome-ignore lint/a11y/useSemanticElements: needs <div> to nest motion.div children for height animation */}
                 <div role="list" className="divide-y overflow-hidden rounded-lg border bg-muted/20">
                   {initial.map((commit) => (
-                    <CommitRow key={commit.sha} commit={commit} />
+                    <CommitRow key={commit.sha} commit={commit} onOpen={setOpenCommit} />
                   ))}
                   <AnimatePresence initial={false}>
                     {isExpanded ? (
@@ -189,7 +188,7 @@ export default function ChangelogList() {
                                 delay: Math.min(i * 0.02, 0.25),
                               }}
                             >
-                              <CommitRowAnchor commit={commit} />
+                              <CommitRowAnchor commit={commit} onOpen={setOpenCommit} />
                             </motion.div>
                           ))}
                         </div>
@@ -210,26 +209,32 @@ export default function ChangelogList() {
             );
           })
         : null}
+
+      <CommitDiffDialog
+        commit={openCommit}
+        onOpenChange={(open) => {
+          if (!open) setOpenCommit(null);
+        }}
+      />
     </div>
   );
 }
 
-function CommitRow({ commit }: { commit: Commit }) {
+function CommitRow({ commit, onOpen }: { commit: Commit; onOpen: (commit: Commit) => void }) {
   return (
     // biome-ignore lint/a11y/useSemanticElements: paired with role="list" parent in ChangelogList
     <div role="listitem">
-      <CommitRowAnchor commit={commit} />
+      <CommitRowAnchor commit={commit} onOpen={onOpen} />
     </div>
   );
 }
 
-function CommitRowAnchor({ commit }: { commit: Commit }) {
+function CommitRowAnchor({ commit, onOpen }: { commit: Commit; onOpen: (commit: Commit) => void }) {
   return (
-    <a
-      href={commit.url}
-      target="_blank"
-      rel="noreferrer"
-      className="group/row relative flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/60 sm:gap-4"
+    <button
+      type="button"
+      onClick={() => onOpen(commit)}
+      className="group/row relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/60 sm:gap-4"
     >
       <span
         aria-hidden
@@ -252,7 +257,7 @@ function CommitRowAnchor({ commit }: { commit: Commit }) {
       <span className="shrink-0 font-mono text-muted-foreground/70 text-xs transition-colors group-hover/row:text-foreground">
         {commit.shortSha}
       </span>
-    </a>
+    </button>
   );
 }
 
