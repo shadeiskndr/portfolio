@@ -106,17 +106,17 @@ export const SOCIAL_LINKS: SocialLink[] = [
 ];
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "About", href: "/new" },
-  { label: "Thoughts", href: "/new/thoughts" },
-  { label: "TIL", href: "/new/til" },
-  { label: "Bookmarks", href: "/new/bookmarks" },
-  { label: "Readings", href: "/new/readings" },
-  { label: "Projects", href: "/new/projects" },
-  { label: "Accolades", href: "/new/accolades" },
-  { label: "Photography", href: "/new/photography" },
-  { label: "Songs", href: "/new/songs" },
-  { label: "Uses", href: "/new/uses" },
-  { label: "Networks", href: "/new/networks" },
+  { label: "About", href: "/" },
+  { label: "Thoughts", href: "/thoughts" },
+  { label: "TIL", href: "/til" },
+  { label: "Bookmarks", href: "/bookmarks" },
+  { label: "Readings", href: "/readings" },
+  { label: "Projects", href: "/projects" },
+  { label: "Accolades", href: "/accolades" },
+  { label: "Photography", href: "/photography" },
+  { label: "Songs", href: "/songs" },
+  { label: "Uses", href: "/uses" },
+  { label: "Networks", href: "/networks" },
 ];
 
 export const CAREER_TIMELINE: CareerEntry[] = [

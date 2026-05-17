@@ -40,8 +40,7 @@ export default function TopNav() {
         >
           <LayoutGroup id="top-nav">
             {NAV_LINKS.map((link) => {
-              const active =
-                link.href === "/new" ? pathname === "/new" : pathname.startsWith(link.href);
+              const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
               return (
                 <li key={link.href}>
                   <NextLink

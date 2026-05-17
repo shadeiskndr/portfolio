@@ -12,7 +12,7 @@ export default async function ReadingsPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader title="Readings" description="Books, papers, and articles I'm working through." />
-      <PostList posts={posts} basePath="/new/readings" />
+      <PostList posts={posts} basePath="/readings" />
     </div>
   );
 }

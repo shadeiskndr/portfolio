@@ -1,5 +1,6 @@
 "use client";
-import { Menu, X } from "lucide-react";
+import { Menu, Sparkles, X } from "lucide-react";
+import NextLink from "next/link";
 import { useEffect, useState } from "react";
 import DownloadCV from "@/components/old-portfolio/general/download-cv";
 import IconButton from "@/components/old-portfolio/general/icon-button";
@@ -15,6 +16,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import useScroll from "@/hooks/use-scroll";
 import useWindowSize from "@/hooks/use-window-size";
 import { NAV_LINKS } from "@/lib/data";
@@ -70,6 +72,22 @@ const Header = () => {
           </ul>
           <Separator orientation="vertical" className="h-8" />
           <div className="flex items-center gap-4">
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <NextLink
+                    href="/"
+                    aria-label="Go to new site"
+                    className="flex items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground active:bg-secondary [&_svg]:h-6 [&_svg]:w-6 [&_svg]:stroke-muted-foreground [&_svg]:hover:stroke-foreground"
+                  >
+                    <Sparkles />
+                  </NextLink>
+                }
+              />
+              <TooltipContent>
+                <p>Go to new site</p>
+              </TooltipContent>
+            </Tooltip>
             <ThemeSwitcher />
             <ColorThemeToggle />
             <DownloadCV />
@@ -115,6 +133,17 @@ const Header = () => {
               </ul>
             </div>
             <div className="flex flex-col gap-4 p-4">
+              <div className="flex items-center justify-between">
+                <Typography>Go to new site</Typography>
+                <NextLink
+                  href="/"
+                  aria-label="Go to new site"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground active:bg-secondary [&_svg]:h-6 [&_svg]:w-6 [&_svg]:stroke-muted-foreground [&_svg]:hover:stroke-foreground"
+                >
+                  <Sparkles />
+                </NextLink>
+              </div>
               <div className="flex items-center justify-between">
                 <Typography>Switch Light & Dark Mode</Typography>
                 <ThemeSwitcher />

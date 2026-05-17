@@ -28,7 +28,7 @@ export default function NotFound() {
             <p>
               Head back to the{" "}
               <Link
-                href="/new"
+                href="/"
                 className="underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground"
               >
                 home page

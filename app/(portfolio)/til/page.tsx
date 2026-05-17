@@ -15,7 +15,7 @@ export default async function TilPage() {
         title="TIL"
         description="Today I learned — short notes on things picked up along the way."
       />
-      <PostList posts={posts} basePath="/new/til" />
+      <PostList posts={posts} basePath="/til" />
     </div>
   );
 }

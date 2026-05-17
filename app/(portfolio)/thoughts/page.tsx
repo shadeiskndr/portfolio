@@ -12,7 +12,7 @@ export default async function ThoughtsPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader title="Thoughts" description="Essays and longer-form writing." />
-      <PostList posts={posts} basePath="/new/thoughts" />
+      <PostList posts={posts} basePath="/thoughts" />
     </div>
   );
 }

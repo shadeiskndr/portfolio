@@ -29,7 +29,7 @@ function Footer() {
     <footer className="space-y-1 text-center">
       <p className="text-muted-foreground text-xs">{new Date().getFullYear()} © shahathir.me</p>
       <p className="text-muted-foreground/70 text-xs">
-        <Link href="/new/changelog">Changelogs</Link>
+        <Link href="/changelog">Changelogs</Link>
         {" · "}
         <Link href="/old">Old site</Link>
       </p>
