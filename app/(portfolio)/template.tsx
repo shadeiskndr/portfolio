@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect } from "react";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 let hasMounted = false;
 
@@ -9,9 +9,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const shouldReduceMotion = useReducedMotion();
   const skipInitial = !hasMounted;
 
-  useEffect(() => {
+  useMountEffect(() => {
     hasMounted = true;
-  }, []);
+  });
 
   return (
     <motion.div

@@ -23,7 +23,7 @@ export default function SpotifyCard() {
 
   const statusText = hasTrack ? (
     <>
-      {PERSONAL.name} is {isPlaying ? "currently listening to" : "last listened to"}{" "}
+      {PERSONAL.name} {isPlaying ? "is currently listening to" : "last listened to"}{" "}
       <span className="font-medium text-foreground">{status?.song}</span>
       {" by "}
       <span className="font-medium text-foreground">{status?.artist}</span>

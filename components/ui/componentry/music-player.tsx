@@ -2,7 +2,8 @@
 
 import { motion } from "motion/react";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 export interface MusicPlayerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -48,32 +49,43 @@ export function MusicPlayer({
 
   const youtubeId = !isControlled && src ? getYoutubeId(src) : null;
 
-  useEffect(() => {
-    if (isControlled) return;
-    if (internalIsPlaying) {
-      if (youtubeId && iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: "command", func: "playVideo", args: [] }),
-          "*"
-        );
-      } else {
-        audioRef.current?.play().catch(() => setInternalIsPlaying(false));
-      }
+  const playMedia = () => {
+    if (youtubeId && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func: "playVideo", args: [] }),
+        "*"
+      );
     } else {
-      if (youtubeId && iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
-          "*"
-        );
-      } else {
-        audioRef.current?.pause();
-      }
+      audioRef.current?.play().catch(() => setInternalIsPlaying(false));
     }
-  }, [internalIsPlaying, youtubeId, isControlled]);
+  };
+
+  const pauseMedia = () => {
+    if (youtubeId && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
+        "*"
+      );
+    } else {
+      audioRef.current?.pause();
+    }
+  };
+
+  useMountEffect(() => {
+    if (!isControlled && autoPlay) {
+      playMedia();
+    }
+  });
 
   const togglePlay = () => {
     if (isControlled) return;
-    setInternalIsPlaying((p) => !p);
+    const next = !internalIsPlaying;
+    setInternalIsPlaying(next);
+    if (next) {
+      playMedia();
+    } else {
+      pauseMedia();
+    }
   };
 
   return (

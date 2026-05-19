@@ -1,8 +1,9 @@
 "use client";
 
 import { Bell, BellOff, MoonStar, Play, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ColorThemePicker from "@/components/new-site/layout/color-theme-picker";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useSound } from "@/hooks/use-sound";
 import { useTheme } from "@/lib/light-dark-providers";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ export default function ThemeControls() {
   const { theme, setThemeWithTransition } = useTheme();
   const { enabled: soundEnabled, toggle: toggleSound, playClick } = useSound();
 
-  useEffect(() => setMounted(true), []);
+  useMountEffect(() => setMounted(true));
 
   return (
     <div className="flex items-center gap-1">

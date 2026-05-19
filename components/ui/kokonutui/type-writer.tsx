@@ -11,7 +11,8 @@
  */
 
 import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 type TypewriterSequence = {
@@ -61,13 +62,12 @@ export default function TypewriterTitle({
   const isDeletingRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize with the sequences provided
+  // Keep ref in sync with latest sequences so the timer loop reads fresh values
+  // without restarting on every array reference change.
   const sequencesRef = useRef(sequences);
-  useEffect(() => {
-    sequencesRef.current = sequences;
-  }, [sequences]);
+  sequencesRef.current = sequences;
 
-  useEffect(() => {
+  useMountEffect(() => {
     const getTypingDelay = () => {
       if (!naturalVariance) {
         return typingSpeed;
@@ -162,17 +162,7 @@ export default function TypewriterTitle({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [
-    // Only restart effect if timing configs change.
-    // We use sequencesRef for content to avoid restarting on array reference change.
-    typingSpeed,
-    deleteSpeed,
-    pauseBeforeDelete,
-    autoLoop,
-    loopDelay,
-    startDelay,
-    naturalVariance,
-  ]);
+  });
 
   const Wrapper = inline ? motion.span : motion.div;
   const content = (
