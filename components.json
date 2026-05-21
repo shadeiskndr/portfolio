@@ -56,6 +56,13 @@
         "components": "@/components/ui/componentry",
         "ui": "@/components/ui/componentry"
       }
+    },
+    "@kibo-ui": {
+      "url": "https://www.kibo-ui.com/r/{name}.json",
+      "aliases": {
+        "components": "@/components/ui/kibo-ui",
+        "ui": "@/components/ui/kibo-ui"
+      }
     }
   }
 }

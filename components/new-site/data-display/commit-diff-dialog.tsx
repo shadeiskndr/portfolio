@@ -54,7 +54,16 @@ import {
 } from "@uiw/codemirror-themes-all";
 import CodeMirror from "@uiw/react-codemirror";
 import { useAction, useQuery } from "convex/react";
-import { Columns2, ExternalLink, FileIcon, Palette, Rows2, WrapText } from "lucide-react";
+import {
+  Columns2,
+  ExternalLink,
+  FileIcon,
+  Palette,
+  Rows2,
+  Search,
+  WrapText,
+  X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import CodeMirrorMerge from "react-codemirror-merge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +76,22 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+  TreeExpander,
+  TreeIcon,
+  TreeLabel,
+  TreeNode,
+  TreeNodeContent,
+  TreeNodeTrigger,
+  TreeProvider,
+  TreeView,
+} from "@/components/ui/kibo-ui/tree";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ResponsiveDialog,
@@ -79,6 +104,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useTheme } from "@/lib/light-dark-providers";
@@ -290,6 +316,70 @@ function langForPath(path: string): Extension | null {
   }
 }
 
+type TreeFileNode = { type: "file"; name: string; path: string; file: FileEntry };
+type TreeFolderNode = {
+  type: "folder";
+  name: string;
+  path: string;
+  children: TreeItem[];
+};
+type TreeItem = TreeFileNode | TreeFolderNode;
+
+function buildFileTree(files: FileEntry[]): TreeItem[] {
+  const root: TreeFolderNode = { type: "folder", name: "", path: "", children: [] };
+  for (const file of files) {
+    const parts = file.path.split("/");
+    let current = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      const folderPath = parts.slice(0, i + 1).join("/");
+      let folder = current.children.find(
+        (c): c is TreeFolderNode => c.type === "folder" && c.name === part
+      );
+      if (!folder) {
+        folder = { type: "folder", name: part, path: folderPath, children: [] };
+        current.children.push(folder);
+      }
+      current = folder;
+    }
+    current.children.push({
+      type: "file",
+      name: parts.at(-1) ?? file.path,
+      path: file.path,
+      file,
+    });
+  }
+  const sort = (items: TreeItem[]): TreeItem[] => {
+    items.sort((a, b) => {
+      if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    for (const item of items) {
+      if (item.type === "folder") sort(item.children);
+    }
+    return items;
+  };
+  return sort(root.children);
+}
+
+function collectFolderPaths(items: TreeItem[], acc: string[] = []): string[] {
+  for (const item of items) {
+    if (item.type === "folder") {
+      acc.push(item.path);
+      collectFolderPaths(item.children, acc);
+    }
+  }
+  return acc;
+}
+
+function nextParentPath(level: number, parentPath: boolean[], isLast: boolean): boolean[] {
+  if (level === 0) return [];
+  const next = [...parentPath];
+  while (next.length < level) next.push(false);
+  next[level - 1] = isLast;
+  return next;
+}
+
 export function CommitDiffDialog({
   commit,
   onOpenChange,
@@ -432,7 +522,7 @@ function CommitDiffBody({ commit }: { commit: Commit }) {
       </ResponsiveDialogHeader>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <aside className="shrink-0 overflow-x-auto overflow-y-auto border-b md:w-64 md:border-r md:border-b-0 lg:w-72">
+        <aside className="flex max-h-[40vh] shrink-0 flex-col overflow-hidden border-b md:max-h-none md:w-64 md:border-r md:border-b-0 lg:w-72">
           {listError ? (
             <p className="px-3 py-4 text-destructive text-xs">{listError}</p>
           ) : !fileList ? (
@@ -440,41 +530,12 @@ function CommitDiffBody({ commit }: { commit: Commit }) {
           ) : fileList.files.length === 0 ? (
             <p className="px-3 py-4 text-muted-foreground text-xs">No file changes.</p>
           ) : (
-            <ul className="flex gap-1 p-2 md:flex-col md:gap-0.5">
-              {fileList.files.map((f) => {
-                const isActive = f.path === effectivePath;
-                return (
-                  <li key={f.path} className="shrink-0 md:shrink">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPath(f.path)}
-                      title={f.path}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
-                        isActive ? "bg-muted text-foreground" : "hover:bg-muted/60"
-                      )}
-                    >
-                      <FileIcon
-                        className={cn(
-                          "size-3.5 shrink-0",
-                          STATUS_COLOR[f.status] ?? "text-muted-foreground"
-                        )}
-                        aria-hidden
-                      />
-                      <span className="min-w-0 flex-1 truncate font-mono">
-                        {f.path.split("/").pop()}
-                      </span>
-                      <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground md:inline">
-                        <span className="text-emerald-600 dark:text-emerald-400">
-                          +{f.additions}
-                        </span>{" "}
-                        <span className="text-red-600 dark:text-red-400">-{f.deletions}</span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <FileTreeSidebar
+              commitSha={commit.sha}
+              effectivePath={effectivePath}
+              files={fileList.files}
+              onSelect={setSelectedPath}
+            />
           )}
         </aside>
 
@@ -651,6 +712,164 @@ function FileDiff({
       <Original value={blobs.before} extensions={mergeExtensions} readOnly />
       <Modified value={blobs.after} extensions={mergeExtensions} readOnly />
     </CodeMirrorMerge>
+  );
+}
+
+function FileTreeSidebar({
+  commitSha,
+  files,
+  effectivePath,
+  onSelect,
+}: {
+  commitSha: string;
+  files: FileEntry[];
+  effectivePath: string | null;
+  onSelect: (path: string) => void;
+}) {
+  const [filterQuery, setFilterQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useDebounceValue("", 500);
+
+  const onFilterChange = (value: string) => {
+    setFilterQuery(value);
+    setDebouncedQuery(value);
+    if (value === "") setDebouncedQuery.flush();
+  };
+  const onClear = () => {
+    setFilterQuery("");
+    setDebouncedQuery("");
+    setDebouncedQuery.flush();
+  };
+
+  const trimmedQuery = debouncedQuery.trim().toLowerCase();
+  const filteredFiles = useMemo(() => {
+    if (!trimmedQuery) return files;
+    return files.filter((f) => f.path.toLowerCase().includes(trimmedQuery));
+  }, [files, trimmedQuery]);
+  const fileTree = useMemo(() => buildFileTree(filteredFiles), [filteredFiles]);
+  const defaultExpandedIds = useMemo(() => collectFolderPaths(fileTree), [fileTree]);
+
+  return (
+    <>
+      <div className="shrink-0 border-b p-2">
+        <InputGroup>
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput
+            aria-label="Filter files"
+            onChange={(e) => onFilterChange(e.target.value)}
+            placeholder="Filter files…"
+            value={filterQuery}
+          />
+          {filterQuery ? (
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton aria-label="Clear filter" onClick={onClear} size="icon-xs">
+                <X />
+              </InputGroupButton>
+            </InputGroupAddon>
+          ) : null}
+        </InputGroup>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {filteredFiles.length === 0 ? (
+          <p className="px-3 py-4 text-muted-foreground text-xs">
+            No files match “{debouncedQuery}”.
+          </p>
+        ) : (
+          <TreeProvider
+            key={`${commitSha}:${trimmedQuery}`}
+            defaultExpandedIds={defaultExpandedIds}
+            indent={14}
+            selectable={false}
+            showLines
+          >
+            <TreeView className="p-2">
+              <FileTreeNodes
+                effectivePath={effectivePath}
+                items={fileTree}
+                level={0}
+                onSelect={onSelect}
+                parentPath={[]}
+              />
+            </TreeView>
+          </TreeProvider>
+        )}
+      </div>
+    </>
+  );
+}
+
+function FileTreeNodes({
+  items,
+  level,
+  parentPath,
+  effectivePath,
+  onSelect,
+}: {
+  items: TreeItem[];
+  level: number;
+  parentPath: boolean[];
+  effectivePath: string | null;
+  onSelect: (path: string) => void;
+}) {
+  return (
+    <>
+      {items.map((item, idx) => {
+        const isLast = idx === items.length - 1;
+        const isSelected = item.type === "file" && item.path === effectivePath;
+        const hasChildren = item.type === "folder";
+        return (
+          <TreeNode
+            key={item.path}
+            isLast={isLast}
+            level={level}
+            nodeId={item.path}
+            parentPath={parentPath}
+          >
+            <TreeNodeTrigger
+              className={cn("py-1", isSelected && "bg-muted text-foreground hover:bg-muted")}
+              onClick={() => {
+                if (item.type === "file") onSelect(item.path);
+              }}
+              title={item.path}
+            >
+              <TreeExpander hasChildren={hasChildren} />
+              {item.type === "file" ? (
+                <FileIcon
+                  aria-hidden
+                  className={cn(
+                    "mr-2 size-3.5 shrink-0",
+                    STATUS_COLOR[item.file.status] ?? "text-muted-foreground"
+                  )}
+                />
+              ) : (
+                <TreeIcon hasChildren />
+              )}
+              <TreeLabel className="font-mono text-xs">{item.name}</TreeLabel>
+              {item.type === "file" ? (
+                <span className="ml-2 hidden shrink-0 font-mono text-[10px] text-muted-foreground md:inline">
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    +{item.file.additions}
+                  </span>{" "}
+                  <span className="text-red-600 dark:text-red-400">-{item.file.deletions}</span>
+                </span>
+              ) : null}
+            </TreeNodeTrigger>
+            {item.type === "folder" ? (
+              <TreeNodeContent hasChildren>
+                <FileTreeNodes
+                  effectivePath={effectivePath}
+                  items={item.children}
+                  level={level + 1}
+                  onSelect={onSelect}
+                  parentPath={nextParentPath(level, parentPath, isLast)}
+                />
+              </TreeNodeContent>
+            ) : null}
+          </TreeNode>
+        );
+      })}
+    </>
   );
 }
 
