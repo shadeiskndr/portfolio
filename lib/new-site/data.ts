@@ -73,6 +73,7 @@ export const PERSONAL = {
   tagline: "professionally distracted",
   taglineSuffixes: ["software developer", "tinkerer", "problem solver", "pixel pusher", "gamer"],
   avatar: "/images/shahathir-headshot-transparent.png",
+  avatarAlt: "/images/flipped-transparent-selfie.png",
 };
 
 export const SOCIAL_LINKS: SocialLink[] = [

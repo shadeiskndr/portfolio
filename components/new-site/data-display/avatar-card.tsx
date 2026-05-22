@@ -1,4 +1,4 @@
-import Image from "next/image";
+import FlipAvatar from "@/components/new-site/data-display/flip-avatar";
 import TypewriterTitle from "@/components/ui/kokonutui/type-writer";
 import { PERSONAL } from "@/lib/new-site/data";
 
@@ -10,16 +10,7 @@ const TAGLINE_SEQUENCES = PERSONAL.taglineSuffixes.map((text, i, arr) => ({
 export default function AvatarCard() {
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="relative mx-auto aspect-square w-full max-w-44 overflow-hidden rounded-xl bg-muted">
-        <Image
-          src={PERSONAL.avatar}
-          alt={PERSONAL.name}
-          fill
-          sizes="240px"
-          className="object-cover"
-          priority
-        />
-      </div>
+      <FlipAvatar alt={PERSONAL.name} backSrc={PERSONAL.avatarAlt} frontSrc={PERSONAL.avatar} />
       <div className="space-y-0.5">
         <h2 className="font-bold text-lg tracking-tight">
           {PERSONAL.name} <span className="text-muted-foreground">{PERSONAL.emoji}</span>
