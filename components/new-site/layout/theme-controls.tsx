@@ -1,8 +1,9 @@
 "use client";
 
-import { Bell, BellOff, MoonStar, Play, Sun } from "lucide-react";
+import { Bell, BellOff, MoonStar, Sun } from "lucide-react";
 import { useState } from "react";
 import ColorThemePicker from "@/components/new-site/layout/color-theme-picker";
+import MusicPlayerPopover from "@/components/new-site/layout/music-player-popover";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useSound } from "@/hooks/use-sound";
 import { useTheme } from "@/lib/light-dark-providers";
@@ -30,9 +31,7 @@ export default function ThemeControls() {
 
   return (
     <div className="flex items-center gap-1">
-      <IconBtn aria-label="Play">
-        <Play className="h-4 w-4" />
-      </IconBtn>
+      <MusicPlayerPopover />
       <IconBtn
         aria-label={soundEnabled ? "Mute sounds" : "Unmute sounds"}
         aria-pressed={soundEnabled}
