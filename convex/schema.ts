@@ -59,4 +59,22 @@ export default defineSchema({
     payload: v.string(),
     fetchedAt: v.number(),
   }).index("by_key", ["key"]),
+
+  photos: defineTable({
+    storageId: v.id("_storage"),
+    title: v.string(),
+    date: v.string(),
+    description: v.string(),
+    order: v.number(),
+    width: v.number(),
+    height: v.number(),
+    kind: v.string(),
+  }).index("by_kind_order", ["kind", "order"]),
+
+  assets: defineTable({
+    storageId: v.id("_storage"),
+    title: v.string(),
+    kind: v.string(),
+    description: v.string(),
+  }).index("by_kind", ["kind"]),
 });

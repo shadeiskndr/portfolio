@@ -8,11 +8,14 @@
  * @module
  */
 
+import type * as assets from "../assets.js";
 import type * as commits from "../commits.js";
 import type * as crons from "../crons.js";
 import type * as github from "../github.js";
 import type * as http from "../http.js";
+import type * as photos from "../photos.js";
 import type * as spotify from "../spotify.js";
+import type * as storage from "../storage.js";
 import type * as themes from "../themes.js";
 
 import type {
@@ -22,11 +25,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  assets: typeof assets;
   commits: typeof commits;
   crons: typeof crons;
   github: typeof github;
   http: typeof http;
+  photos: typeof photos;
   spotify: typeof spotify;
+  storage: typeof storage;
   themes: typeof themes;
 }>;
 

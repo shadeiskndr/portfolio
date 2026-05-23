@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.scdn.co", pathname: "/image/**" },
+      {
+        protocol: "https",
+        hostname: "convex-portfolio.shahathir.me",
+        pathname: "/api/storage/**",
+      },
     ],
   },
 };
