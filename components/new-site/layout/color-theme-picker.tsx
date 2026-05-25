@@ -12,6 +12,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSound } from "@/hooks/use-sound";
 import { useColorTheme } from "@/lib/color-provider";
 import { PALETTE_KEYS, type ThemeOption } from "@/lib/color-themes";
@@ -52,18 +53,26 @@ export default function ColorThemePicker() {
 
   return (
     <Popover>
-      <PopoverTrigger
-        render={
-          <button
-            type="button"
-            aria-label="Color theme"
-            onClick={() => playClick("icon")}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Palette className="h-4 w-4" />
-          </button>
-        }
-      />
+      <Tooltip disableHoverablePopup>
+        <TooltipTrigger
+          render={
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Color theme"
+                  onClick={() => playClick("icon")}
+                  className="rounded-full text-muted-foreground"
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+              }
+            />
+          }
+        />
+        <TooltipContent>Color theme</TooltipContent>
+      </Tooltip>
       <PopoverContent className="rounded-2xl p-0" align="end" alignOffset={-8}>
         <Command
           className={cn(

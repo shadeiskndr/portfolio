@@ -1,10 +1,12 @@
 import type { MDXComponents } from "next-mdx-remote-client/rsc";
-import Highlight from "@/components/new-site/content/highlight";
+import { RevealHighlight } from "@/components/new-site/content/reveal";
 import Link from "@/components/new-site/link";
 import { cn } from "@/lib/utils";
 
 export const mdxComponents: MDXComponents = {
-  Highlight,
+  // Draw the hand-drawn mark as it scrolls into view, since prose has no
+  // entrance animation to gate on.
+  Highlight: (props) => <RevealHighlight isView {...props} />,
   h1: ({ className, ...props }) => (
     <h1
       className={cn("mt-8 mb-4 font-semibold font-serif text-2xl tracking-tight", className)}

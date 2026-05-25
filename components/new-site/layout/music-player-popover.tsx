@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
 import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { playClick } from "@/hooks/use-sound";
 import { cn } from "@/lib/utils";
@@ -146,10 +147,7 @@ export default function MusicPlayerPopover() {
     changeTrack((trackIndex + 1) % PLAYLIST.length, { switchToControls: false });
 
   const prevTrack = () =>
-    changeTrack(
-      (trackIndex - 1 + PLAYLIST.length) % PLAYLIST.length,
-      { switchToControls: false }
-    );
+    changeTrack((trackIndex - 1 + PLAYLIST.length) % PLAYLIST.length, { switchToControls: false });
 
   return (
     <div className="relative">
@@ -213,19 +211,27 @@ export default function MusicPlayerPopover() {
       </svg>
 
       <div style={{ filter: "url(#music-goo)" }} className="relative z-20">
-        <motion.button
-          type="button"
-          onClick={() => {
-            playClick("icon");
-            setIsOpen((v) => !v);
-            if (isOpen) setView("controls");
-          }}
-          aria-label={isOpen ? "Close music player" : "Open music player"}
-          aria-expanded={isOpen}
-          className="relative z-20 inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Play className="h-4 w-4" />
-        </motion.button>
+        <Tooltip disableHoverablePopup>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  playClick("icon");
+                  setIsOpen((v) => !v);
+                  if (isOpen) setView("controls");
+                }}
+                aria-label={isOpen ? "Close music player" : "Open music player"}
+                aria-expanded={isOpen}
+                className="relative z-20 rounded-full text-muted-foreground"
+              >
+                <Play className="h-4 w-4" />
+              </Button>
+            }
+          />
+          <TooltipContent>{isOpen ? "Close music player" : "Open music player"}</TooltipContent>
+        </Tooltip>
 
         <AnimatePresence>
           {isOpen && (
