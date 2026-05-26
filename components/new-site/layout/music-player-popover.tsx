@@ -1,30 +1,17 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import { ListMusic, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
 import { Slider } from "@/components/ui/slider";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { api } from "@/convex/_generated/api";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { playClick } from "@/hooks/use-sound";
 import { cn } from "@/lib/utils";
-
-type Track = { title: string; artist: string; src: string };
-
-const PLAYLIST: Track[] = [
-  {
-    title: "Ghosts",
-    artist: "HoliznaCC0",
-    src: "/songs/HoliznaCC0 - Ghosts.mp3",
-  },
-  {
-    title: "Mixed Signals",
-    artist: "HoliznaCC0",
-    src: "/songs/HoliznaCC0 - Mixed Signals.mp3",
-  },
-];
 
 const TRIGGER_SIZE = 32;
 const MENU_WIDTH = 320;
@@ -42,9 +29,7 @@ function colorCoverUri(color: string) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-function randomCoverColor() {
-  return `hsl(${Math.floor(Math.random() * 360)} 70% 55%)`;
-}
+const FALLBACK_COVER = colorCoverUri("hsl(0 0% 30%)");
 
 const blobVariants: Variants = {
   closed: {
@@ -86,17 +71,18 @@ export default function MusicPlayerPopover() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [hoverTime, setHoverTime] = useState(0);
   const [trackIndex, setTrackIndex] = useState(0);
   const [volume, setVolume] = useState(10);
   const isMuted = volume === 0;
-  const [coverArt, setCoverArt] = useState(() => colorCoverUri("hsl(0 0% 30%)"));
   const audioRef = useRef<HTMLAudioElement>(null);
   const wasPlayingRef = useRef(false);
 
-  const currentTrack = PLAYLIST[trackIndex];
+  const playlist = useQuery(api.songs.list) ?? [];
+  const currentTrack = playlist[trackIndex];
+  const coverArt = currentTrack?.cover ?? FALLBACK_COVER;
 
   useMountEffect(() => {
-    setCoverArt(colorCoverUri(randomCoverColor()));
     if (audioRef.current) audioRef.current.volume = volume / 100;
   });
 
@@ -133,7 +119,6 @@ export default function MusicPlayerPopover() {
       return;
     }
     setTrackIndex(index);
-    setCoverArt(colorCoverUri(randomCoverColor()));
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(false);
@@ -144,10 +129,12 @@ export default function MusicPlayerPopover() {
   const selectTrack = (index: number) => changeTrack(index, { switchToControls: true });
 
   const nextTrack = () =>
-    changeTrack((trackIndex + 1) % PLAYLIST.length, { switchToControls: false });
+    changeTrack((trackIndex + 1) % playlist.length, { switchToControls: false });
 
   const prevTrack = () =>
-    changeTrack((trackIndex - 1 + PLAYLIST.length) % PLAYLIST.length, { switchToControls: false });
+    changeTrack((trackIndex - 1 + playlist.length) % playlist.length, { switchToControls: false });
+
+  if (playlist.length === 0 || !currentTrack) return null;
 
   return (
     <div className="relative">
@@ -177,7 +164,13 @@ export default function MusicPlayerPopover() {
           const d = e.currentTarget.duration;
           if (Number.isFinite(d) && d > 0) setDuration(d);
         }}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={() => {
+          if (playlist.length > 1) {
+            nextTrack();
+          } else {
+            setIsPlaying(false);
+          }
+        }}
         className="pointer-events-none absolute h-0 w-0 opacity-0"
       />
 
@@ -277,35 +270,60 @@ export default function MusicPlayerPopover() {
                       </div>
 
                       <div className="flex flex-col gap-1">
-                        <Slider
-                          value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
-                          onValueChange={(v) => {
-                            if (!duration) return;
-                            const pct = Array.isArray(v) ? v[0] : v;
-                            if (isPlaying) {
-                              wasPlayingRef.current = true;
-                              audioRef.current?.pause();
-                              setIsPlaying(false);
-                            }
-                            seek((pct / 100) * duration);
-                          }}
-                          onValueCommitted={(v) => {
-                            if (!duration) return;
-                            const pct = Array.isArray(v) ? v[0] : v;
-                            seek((pct / 100) * duration);
-                            if (wasPlayingRef.current) {
-                              wasPlayingRef.current = false;
-                              audioRef.current
-                                ?.play()
-                                .then(() => setIsPlaying(true))
-                                .catch(() => {});
-                            }
-                          }}
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          disabled={!duration}
-                        />
+                        <TooltipProvider delay={0}>
+                          <Tooltip trackCursorAxis="x">
+                            <TooltipTrigger
+                              render={
+                                <div
+                                  onPointerMove={(e) => {
+                                    if (!duration) return;
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const pct = Math.max(
+                                      0,
+                                      Math.min(1, (e.clientX - rect.left) / rect.width)
+                                    );
+                                    setHoverTime(pct * duration);
+                                  }}
+                                >
+                                  <Slider
+                                    value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
+                                    onValueChange={(v) => {
+                                      if (!duration) return;
+                                      const pct = Array.isArray(v) ? v[0] : v;
+                                      if (isPlaying) {
+                                        wasPlayingRef.current = true;
+                                        audioRef.current?.pause();
+                                        setIsPlaying(false);
+                                      }
+                                      seek((pct / 100) * duration);
+                                    }}
+                                    onValueCommitted={(v) => {
+                                      if (!duration) return;
+                                      const pct = Array.isArray(v) ? v[0] : v;
+                                      seek((pct / 100) * duration);
+                                      if (wasPlayingRef.current) {
+                                        wasPlayingRef.current = false;
+                                        audioRef.current
+                                          ?.play()
+                                          .then(() => setIsPlaying(true))
+                                          .catch(() => {});
+                                      }
+                                    }}
+                                    min={0}
+                                    max={100}
+                                    step={0.1}
+                                    disabled={!duration}
+                                  />
+                                </div>
+                              }
+                            />
+                            {duration > 0 && (
+                              <TooltipContent sideOffset={8}>
+                                {formatTime(hoverTime)}
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
                         <div className="flex justify-between text-muted-foreground text-xs tabular-nums">
                           <span>{formatTime(currentTime)}</span>
                           <span>{duration ? formatTime(duration) : "--:--"}</span>
@@ -319,7 +337,7 @@ export default function MusicPlayerPopover() {
                             size="icon"
                             aria-label="Previous track"
                             onClick={prevTrack}
-                            disabled={PLAYLIST.length < 2}
+                            disabled={playlist.length < 2}
                             className={CONTROL_BTN_CLASS}
                           >
                             <SkipBack />
@@ -338,7 +356,7 @@ export default function MusicPlayerPopover() {
                             size="icon"
                             aria-label="Next track"
                             onClick={nextTrack}
-                            disabled={PLAYLIST.length < 2}
+                            disabled={playlist.length < 2}
                             className={CONTROL_BTN_CLASS}
                           >
                             <SkipForward />
@@ -402,7 +420,7 @@ export default function MusicPlayerPopover() {
                         </button>
                       </div>
                       <ul className="-mx-1 flex max-h-64 flex-col overflow-y-auto">
-                        {PLAYLIST.map((track, index) => {
+                        {playlist.map((track, index) => {
                           const isActive = index === trackIndex;
                           return (
                             <li key={track.src}>

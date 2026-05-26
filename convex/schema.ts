@@ -77,4 +77,12 @@ export default defineSchema({
     kind: v.string(),
     description: v.string(),
   }).index("by_kind", ["kind"]),
+
+  songs: defineTable({
+    storageId: v.id("_storage"),
+    coverStorageId: v.optional(v.id("_storage")),
+    title: v.string(),
+    artist: v.string(),
+    order: v.number(),
+  }).index("by_order", ["order"]),
 });
