@@ -4,6 +4,7 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import { mdxComponents } from "@/components/new-site/content/mdx-components";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
+import { Signature } from "@/components/ui/signature";
 import { getAllSlugs, getPostBySlug } from "@/lib/new-site/mdx";
 
 export async function generateStaticParams() {
@@ -62,6 +63,9 @@ export default async function ThoughtPostPage({ params }: { params: Promise<{ sl
             }}
           />
         </div>
+      </BlurFade>
+      <BlurFade delay={0.3}>
+        <Signature text="shahathir" fontSize={14} className="mt-10 text-foreground/70" inView />
       </BlurFade>
     </article>
   );
