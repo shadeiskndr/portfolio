@@ -5,17 +5,21 @@ import { cn } from "@/lib/utils";
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  /** Base accent color. Defaults to the theme's `--primary` token; the
+   * spotlight, gradient border, and hover glow are all derived from it. */
+  accentColor?: string;
   spotlightColor?: string;
   borderColor?: string;
   borderWidth?: number;
-  borderRadius?: number;
+  borderRadius?: number | string;
   glowIntensity?: number;
 }
 
 function SpotlightCard({
   children,
   className,
-  spotlightColor = "rgba(120, 119, 198, 0.3)",
+  accentColor = "var(--primary)",
+  spotlightColor,
   borderColor,
   borderWidth = 1,
   borderRadius = 16,
@@ -47,21 +51,29 @@ function SpotlightCard({
     setOpacity(0);
   }, []);
 
+  const radius = typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
+  const spotlight = spotlightColor ?? `color-mix(in oklch, ${accentColor} 30%, transparent)`;
+  const borderGradient =
+    borderColor ??
+    `conic-gradient(
+      from 225deg,
+      color-mix(in oklch, ${accentColor} 90%, transparent),
+      color-mix(in oklch, ${accentColor} 12%, transparent) 25%,
+      color-mix(in oklch, var(--foreground) 15%, transparent) 50%,
+      color-mix(in oklch, ${accentColor} 12%, transparent) 75%,
+      color-mix(in oklch, ${accentColor} 90%, transparent)
+    )`;
+  const glow = `color-mix(in oklch, ${accentColor} 12%, transparent)`;
+
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={cn(
-        "relative overflow-hidden bg-linear-to-b",
-        "from-neutral-50 to-white",
-        "dark:from-neutral-950 dark:to-neutral-900",
-        "transition-all duration-500",
-        className
-      )}
+      className={cn("relative overflow-hidden bg-card", "transition-all duration-500", className)}
       style={{
-        borderRadius: `${borderRadius}px`,
+        borderRadius: radius,
       }}
       {...props}
     >
@@ -69,23 +81,16 @@ function SpotlightCard({
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
-          borderRadius: `${borderRadius}px`,
+          borderRadius: radius,
           padding: `${borderWidth}px`,
-          background: borderColor
-            ? borderColor
-            : `conic-gradient(
-                from 225deg,
-                rgba(120, 119, 198, 0.9),
-                rgba(120, 119, 198, 0.1) 25%,
-                rgba(255, 255, 255, 0.15) 50%,
-                rgba(120, 119, 198, 0.1) 75%,
-                rgba(120, 119, 198, 0.9)
-              )`,
+          background: borderGradient,
           mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           maskComposite: "exclude",
           WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           WebkitMaskComposite: "xor",
-          opacity: isHovered ? 1 : 0.5,
+          // A custom solid borderColor renders as a steady, full-strength
+          // border; the default conic gradient keeps its spotlight dimming.
+          opacity: borderColor ? 1 : isHovered ? 1 : 0.5,
         }}
       />
 
@@ -98,7 +103,7 @@ function SpotlightCard({
           width: "400px",
           height: "400px",
           transform: "translate(-50%, -50%)",
-          background: `radial-gradient(circle, ${spotlightColor} 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${spotlight} 0%, transparent 70%)`,
           opacity: opacity * glowIntensity * 5,
         }}
       />
@@ -107,9 +112,9 @@ function SpotlightCard({
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
-          borderRadius: `${borderRadius}px`,
+          borderRadius: radius,
           opacity: isHovered ? 0.5 : 0,
-          boxShadow: `inset 0 0 30px rgba(120, 119, 198, 0.1), 0 0 30px rgba(120, 119, 198, 0.1)`,
+          boxShadow: `inset 0 0 30px ${glow}, 0 0 30px ${glow}`,
         }}
       />
 
@@ -152,7 +157,7 @@ function SpotlightCardTitle({ children, className, ...props }: SpotlightCardTitl
     <h3
       className={cn(
         "font-semibold text-xl leading-none tracking-tight",
-        "text-neutral-900 dark:text-white",
+        "text-foreground",
         className
       )}
       {...props}
@@ -172,7 +177,7 @@ function SpotlightCardDescription({
   ...props
 }: SpotlightCardDescriptionProps) {
   return (
-    <p className={cn("text-neutral-600 text-sm dark:text-neutral-400", className)} {...props}>
+    <p className={cn("text-muted-foreground text-sm", className)} {...props}>
       {children}
     </p>
   );
@@ -188,7 +193,11 @@ interface MultiSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
 function MultiSpotlightCard({
   children,
   className,
-  colors = ["rgba(120, 119, 198, 0.4)", "rgba(255, 77, 77, 0.3)", "rgba(77, 255, 174, 0.3)"],
+  colors = [
+    "color-mix(in oklch, var(--chart-1) 40%, transparent)",
+    "color-mix(in oklch, var(--chart-2) 30%, transparent)",
+    "color-mix(in oklch, var(--chart-3) 30%, transparent)",
+  ],
   borderRadius = 16,
   ...props
 }: MultiSpotlightCardProps) {
@@ -214,8 +223,8 @@ function MultiSpotlightCard({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative overflow-hidden",
-        "bg-white dark:bg-neutral-950",
-        "border border-neutral-200 dark:border-neutral-800",
+        "bg-card",
+        "border",
         "transition-all duration-500",
         className
       )}
@@ -257,7 +266,7 @@ interface BeamSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
 function BeamSpotlightCard({
   children,
   className,
-  beamColor = "rgba(120, 119, 198, 0.5)",
+  beamColor = "color-mix(in oklch, var(--primary) 50%, transparent)",
   beamWidth = 200,
   borderRadius = 16,
   ...props
@@ -284,8 +293,8 @@ function BeamSpotlightCard({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative overflow-hidden",
-        "bg-white dark:bg-neutral-950",
-        "border border-neutral-200 dark:border-neutral-800",
+        "bg-card",
+        "border",
         "transition-all duration-500",
         className
       )}
@@ -350,7 +359,7 @@ interface GradientFollowCardProps extends React.HTMLAttributes<HTMLDivElement> {
 function GradientFollowCard({
   children,
   className,
-  gradientColors = ["#7877c6", "#5eead4", "#f472b6"],
+  gradientColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"],
   borderRadius = 16,
   ...props
 }: GradientFollowCardProps) {
@@ -384,17 +393,17 @@ function GradientFollowCard({
           background: `
             radial-gradient(
               600px circle at ${position.x}% ${position.y}%,
-              ${gradientColors[0]}40,
+              color-mix(in oklch, ${gradientColors[0]} 25%, transparent),
               transparent 40%
             ),
             radial-gradient(
               400px circle at ${position.x + 10}% ${position.y - 10}%,
-              ${gradientColors[1]}30,
+              color-mix(in oklch, ${gradientColors[1]} 20%, transparent),
               transparent 40%
             ),
             radial-gradient(
               300px circle at ${position.x - 10}% ${position.y + 10}%,
-              ${gradientColors[2]}20,
+              color-mix(in oklch, ${gradientColors[2]} 12%, transparent),
               transparent 40%
             )
           `,
@@ -403,10 +412,7 @@ function GradientFollowCard({
       />
 
       {/* Base background */}
-      <div
-        className="absolute inset-0 bg-white/90 dark:bg-neutral-950/90"
-        style={{ borderRadius: `${borderRadius}px` }}
-      />
+      <div className="absolute inset-0 bg-card/90" style={{ borderRadius: `${borderRadius}px` }} />
 
       {/* Border */}
       <div
@@ -414,7 +420,9 @@ function GradientFollowCard({
         style={{
           borderRadius: `${borderRadius}px`,
           border: "1px solid",
-          borderColor: isHovered ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)",
+          borderColor: isHovered
+            ? "color-mix(in oklch, var(--foreground) 20%, transparent)"
+            : "color-mix(in oklch, var(--foreground) 10%, transparent)",
         }}
       />
 
@@ -443,7 +451,7 @@ function TiltSpotlightCard({
   scale = 1.02,
   borderRadius = 16,
   glareOpacity = 0.2,
-  spotlightColor = "rgba(120, 119, 198, 0.3)",
+  spotlightColor = "color-mix(in oklch, var(--primary) 30%, transparent)",
   ...props
 }: TiltSpotlightCardProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -495,10 +503,10 @@ function TiltSpotlightCard({
       onMouseLeave={handleMouseLeave}
       className={cn(
         "relative overflow-hidden",
-        "bg-white dark:bg-neutral-950",
-        "border border-neutral-200 dark:border-neutral-800",
+        "bg-card",
+        "border",
         "transition-[border-color] duration-500",
-        isHovered && "border-neutral-300 dark:border-neutral-700",
+        isHovered && "border-ring",
         className
       )}
       style={{
@@ -521,7 +529,7 @@ function TiltSpotlightCard({
           background: `
             radial-gradient(
               circle at ${glarePosition.x}% ${glarePosition.y}%,
-              rgba(255, 255, 255, ${glareOpacity}) 0%,
+              color-mix(in oklch, var(--foreground) ${glareOpacity * 100}%, transparent) 0%,
               transparent 50%
             )
           `,

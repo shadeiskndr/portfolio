@@ -43,7 +43,7 @@ export function ResumeDialog({ children }: ResumeDialogProps) {
             Shahathir Iskandar — Software Developer
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
-        <ResumeViewer fileUrl={RESUME_URL} />
+        <ResumeViewer fileUrl={RESUME_URL} label="resume" />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

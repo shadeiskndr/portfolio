@@ -63,6 +63,13 @@
         "components": "@/components/ui/kibo-ui",
         "ui": "@/components/ui/kibo-ui"
       }
+    },
+    "@unlumen-ui": {
+      "url": "https://ui.unlumen.com/r/{name}.json",
+      "aliases": {
+        "components": "@/components/ui/unlumen-ui",
+        "ui": "@/components/ui/unlumen-ui"
+      }
     }
   }
 }

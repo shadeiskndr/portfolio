@@ -41,6 +41,11 @@ export type CareerEntry = {
   endDate?: Date;
   current?: boolean;
 };
+export type ExperienceEntry = CareerEntry & {
+  logoAlt: string;
+  summary: string[];
+  attachedFile?: string;
+};
 export type Tool = { label: string; logo: string; url?: string };
 export type Quote = { text: string; author?: string };
 export type Project = {
@@ -111,7 +116,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Thoughts", href: "/thoughts" },
   { label: "TIL", href: "/til" },
   { label: "Bookmarks", href: "/bookmarks" },
-  { label: "Readings", href: "/readings" },
+  { label: "Experience", href: "/experience" },
   { label: "Projects", href: "/projects" },
   { label: "Accolades", href: "/accolades" },
   { label: "Photography", href: "/photography" },
@@ -136,6 +141,53 @@ export const CAREER_TIMELINE: CareerEntry[] = [
     position: "Software Engineer Intern",
     startDate: new Date(2024, 8),
     endDate: new Date(2025, 2),
+  },
+];
+
+export const EXPERIENCES: ExperienceEntry[] = [
+  {
+    company: "Financial Risk Group",
+    logo: "/images/logos/logo-frg-light.png",
+    darkLogo: "/images/logos/logo-frg-dark.png",
+    logoAlt: "Financial Risk Group logo",
+    position: "Assistant Software Developer",
+    startDate: new Date(2025, 5),
+    current: true,
+    summary: [
+      "Contributing to the development and maintenance of Financial Risk Group's Visualization of Risk (VOR) product and other internal tooling.",
+      "Developed an internal AI agent web application from scratch to improve the onboarding of financial portfolio data for the business analytics team, using technologies such as React.js, Django, PostgreSQL, Strands Agents SDK, AWS Bedrock, Docker Compose.",
+      "Performing root cause analysis and investigation for bug fixes.",
+      "Creating detailed pull requests that includes summary, problem statement, solution and reviewer test plans to reduce technical debt and improve code documentation.",
+      "Assisting with code reviews and testing to ensure high-quality software delivery.",
+    ],
+  },
+  {
+    company: "The Estée Lauder Companies",
+    logo: "/images/logos/logo-estee.png",
+    darkLogo: "/images/logos/logo-estee-dark.png",
+    logoAlt: "The Estée Lauder Companies logo",
+    position: "Software Engineer Intern",
+    startDate: new Date(2024, 9),
+    endDate: new Date(2025, 1),
+    summary: [
+      "Contributed significantly to the development and delivery of an internal Support Portal full-stack web application to support Estée Lauder Companies' retail operations.",
+      "Gained hands-on experience with retail software architecture and best practices in a production environment.",
+      "Assisted in troubleshooting and resolving critical issues to ensure smooth operations for retail clients.",
+      "Participated in code reviews and implemented improvements to enhance system performance and reliability.",
+    ],
+    attachedFile: "/files/Shahathir_Internship_Estee_Lauder_Malaysia.pdf",
+  },
+  {
+    company: "99 Speedmart",
+    logo: "/images/logos/logo-99.png",
+    logoAlt: "99 Speedmart logo",
+    position: "Logistics Associate",
+    startDate: new Date(2020, 1),
+    endDate: new Date(2020, 5),
+    summary: [
+      "Coordinated with the store manager to restock inventory as needed, performed regular stock checks and reported any issues to the store manager immediately.",
+      "Organized the store area for ease of access and optimal space utilization.",
+    ],
   },
 ];
 

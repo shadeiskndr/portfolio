@@ -26,7 +26,7 @@ export default function CareerTimeline() {
       <ol className="space-y-2.5">
         {CAREER_TIMELINE.map((entry) => (
           <li key={entry.company} className="flex gap-2.5">
-            <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-muted">
               <Image
                 src={entry.logo}
                 alt={`${entry.company} logo`}
@@ -55,7 +55,7 @@ export default function CareerTimeline() {
                     </span>
                   ) : null}
                 </p>
-                <span className="flex-shrink-0 text-[10px] text-muted-foreground">
+                <span className="shrink-0 text-[10px] text-muted-foreground">
                   {formatDuration(entry.startDate, entry.endDate)}
                 </span>
               </div>
