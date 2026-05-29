@@ -3,6 +3,16 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+/** Resolve a `borderRadius` prop to a CSS value, or `undefined` to defer to the
+ * card's `rounded-*` class. Lets every variant accept Tailwind rounding while
+ * keeping an explicit numeric/string override. */
+function resolveRadius(borderRadius?: number | string): string | undefined {
+  if (borderRadius === undefined) {
+    return undefined;
+  }
+  return typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
+}
+
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   /** Base accent color. Defaults to the theme's `--primary` token; the
@@ -11,6 +21,9 @@ interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   spotlightColor?: string;
   borderColor?: string;
   borderWidth?: number;
+  /** Explicit radius override (number → px, or any CSS value). When omitted, the
+   * radius comes from the card's `rounded-*` class (default `rounded-2xl`) and
+   * the inner border/glow layers inherit it. */
   borderRadius?: number | string;
   glowIntensity?: number;
 }
@@ -22,7 +35,7 @@ function SpotlightCard({
   spotlightColor,
   borderColor,
   borderWidth = 1,
-  borderRadius = 16,
+  borderRadius,
   glowIntensity = 0.15,
   ...props
 }: SpotlightCardProps) {
@@ -51,7 +64,10 @@ function SpotlightCard({
     setOpacity(0);
   }, []);
 
-  const radius = typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
+  // An explicit borderRadius wins; otherwise the root is rounded by its
+  // `rounded-*` class and the inner layers inherit that computed radius.
+  const radius = resolveRadius(borderRadius);
+  const layerRadius = radius ?? "inherit";
   const spotlight = spotlightColor ?? `color-mix(in oklch, ${accentColor} 30%, transparent)`;
   const borderGradient =
     borderColor ??
@@ -71,7 +87,11 @@ function SpotlightCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={cn("relative overflow-hidden bg-card", "transition-all duration-500", className)}
+      className={cn(
+        "relative overflow-hidden rounded-2xl bg-card",
+        "transition-all duration-500",
+        className
+      )}
       style={{
         borderRadius: radius,
       }}
@@ -81,7 +101,7 @@ function SpotlightCard({
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
-          borderRadius: radius,
+          borderRadius: layerRadius,
           padding: `${borderWidth}px`,
           background: borderGradient,
           mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
@@ -112,7 +132,7 @@ function SpotlightCard({
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
-          borderRadius: radius,
+          borderRadius: layerRadius,
           opacity: isHovered ? 0.5 : 0,
           boxShadow: `inset 0 0 30px ${glow}, 0 0 30px ${glow}`,
         }}
@@ -187,7 +207,7 @@ function SpotlightCardDescription({
 interface MultiSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   colors?: string[];
-  borderRadius?: number;
+  borderRadius?: number | string;
 }
 
 function MultiSpotlightCard({
@@ -198,9 +218,10 @@ function MultiSpotlightCard({
     "color-mix(in oklch, var(--chart-2) 30%, transparent)",
     "color-mix(in oklch, var(--chart-3) 30%, transparent)",
   ],
-  borderRadius = 16,
+  borderRadius,
   ...props
 }: MultiSpotlightCardProps) {
+  const radius = resolveRadius(borderRadius);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = React.useState(false);
@@ -223,12 +244,13 @@ function MultiSpotlightCard({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative overflow-hidden",
+        "rounded-2xl",
         "bg-card",
         "border",
         "transition-all duration-500",
         className
       )}
-      style={{ borderRadius: `${borderRadius}px` }}
+      style={{ borderRadius: radius }}
       {...props}
     >
       {/* Multiple spotlight layers */}
@@ -260,7 +282,7 @@ interface BeamSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   beamColor?: string;
   beamWidth?: number;
-  borderRadius?: number;
+  borderRadius?: number | string;
 }
 
 function BeamSpotlightCard({
@@ -268,9 +290,10 @@ function BeamSpotlightCard({
   className,
   beamColor = "color-mix(in oklch, var(--primary) 50%, transparent)",
   beamWidth = 200,
-  borderRadius = 16,
+  borderRadius,
   ...props
 }: BeamSpotlightCardProps) {
+  const radius = resolveRadius(borderRadius);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = React.useState(false);
@@ -293,12 +316,13 @@ function BeamSpotlightCard({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative overflow-hidden",
+        "rounded-2xl",
         "bg-card",
         "border",
         "transition-all duration-500",
         className
       )}
-      style={{ borderRadius: `${borderRadius}px` }}
+      style={{ borderRadius: radius }}
       {...props}
     >
       {/* Vertical beam */}
@@ -353,16 +377,18 @@ function BeamSpotlightCard({
 interface GradientFollowCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   gradientColors?: [string, string, string];
-  borderRadius?: number;
+  borderRadius?: number | string;
 }
 
 function GradientFollowCard({
   children,
   className,
   gradientColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"],
-  borderRadius = 16,
+  borderRadius,
   ...props
 }: GradientFollowCardProps) {
+  const radius = resolveRadius(borderRadius);
+  const layerRadius = radius ?? "inherit";
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [position, setPosition] = React.useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = React.useState(false);
@@ -382,8 +408,12 @@ function GradientFollowCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={cn("relative overflow-hidden", "transition-all duration-500", className)}
-      style={{ borderRadius: `${borderRadius}px` }}
+      className={cn(
+        "relative overflow-hidden rounded-2xl",
+        "transition-all duration-500",
+        className
+      )}
+      style={{ borderRadius: radius }}
       {...props}
     >
       {/* Animated gradient background */}
@@ -412,13 +442,13 @@ function GradientFollowCard({
       />
 
       {/* Base background */}
-      <div className="absolute inset-0 bg-card/90" style={{ borderRadius: `${borderRadius}px` }} />
+      <div className="absolute inset-0 bg-card/90" style={{ borderRadius: layerRadius }} />
 
       {/* Border */}
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
-          borderRadius: `${borderRadius}px`,
+          borderRadius: layerRadius,
           border: "1px solid",
           borderColor: isHovered
             ? "color-mix(in oklch, var(--foreground) 20%, transparent)"
@@ -438,7 +468,7 @@ interface TiltSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   maxTilt?: number;
   perspective?: number;
   scale?: number;
-  borderRadius?: number;
+  borderRadius?: number | string;
   glareOpacity?: number;
   spotlightColor?: string;
 }
@@ -449,11 +479,12 @@ function TiltSpotlightCard({
   maxTilt = 10,
   perspective = 1000,
   scale = 1.02,
-  borderRadius = 16,
+  borderRadius,
   glareOpacity = 0.2,
   spotlightColor = "color-mix(in oklch, var(--primary) 30%, transparent)",
   ...props
 }: TiltSpotlightCardProps) {
+  const radius = resolveRadius(borderRadius);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [transform, setTransform] = React.useState({
     rotateX: 0,
@@ -503,6 +534,7 @@ function TiltSpotlightCard({
       onMouseLeave={handleMouseLeave}
       className={cn(
         "relative overflow-hidden",
+        "rounded-2xl",
         "bg-card",
         "border",
         "transition-[border-color] duration-500",
@@ -510,7 +542,7 @@ function TiltSpotlightCard({
         className
       )}
       style={{
-        borderRadius: `${borderRadius}px`,
+        borderRadius: radius,
         perspective: `${perspective}px`,
         transform: `
           perspective(${perspective}px)

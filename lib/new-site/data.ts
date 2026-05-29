@@ -351,3 +351,134 @@ export const PROJECTS: Project[] = [
     image: ProjectEduCafe,
   },
 ];
+
+export type Certificate = {
+  name: string;
+  issuer: string;
+  description: string;
+  /** Public path to a brand/badge logo for the list + card header. Falls back to `image`. */
+  logo?: string;
+  /** Public path to the full certificate image shown in the expanded card, if available. */
+  image?: string;
+  /** Verification / credential URL, if available. */
+  url?: string;
+};
+
+// Combined from the resume (source of truth for names + descriptions) and the
+// old site (which contributes the Coursera certificate images + verify links).
+// `image`/`url` are present only where an asset or credential link exists.
+export const CERTIFICATES: Certificate[] = [
+  {
+    name: "AWS Certified Solutions Architect – Associate",
+    issuer: "Amazon Web Services",
+    description:
+      "Gained a comprehensive understanding of AWS services and technologies, and the ability to design secure, robust solutions using architectural best practices based on customer requirements.",
+    logo: "/awssaa.png",
+    image: "/awssaa2.png",
+    url: "https://www.credly.com/badges/72b9a211-838b-4fd7-99ba-1c6029206bca",
+  },
+  {
+    name: "Build REST APIs with Django REST Framework and Python",
+    issuer: "Udemy",
+    description: "Learned to build robust REST APIs in Django using the Django REST Framework.",
+    logo: "/udemy.png",
+    image: "/udemydjango.png",
+    url: "https://www.udemy.com/certificate/UC-16a218ea-34f7-4aa5-a081-ee57ab8e8ca6/",
+  },
+  {
+    name: "Go: The Complete Developer's Guide (Golang)",
+    issuer: "Udemy",
+    description: "Learned the fundamentals of Go and its type-safe syntax.",
+    logo: "/udemy.png",
+    image: "/udemygo.png",
+    url: "https://www.udemy.com/certificate/UC-90d4d6c9-914b-4106-804e-d4396c14e615/",
+  },
+  {
+    name: "Google IT Automation with Python",
+    issuer: "Coursera",
+    description:
+      "Used Python scripting to automate tasks and manage IT resources across physical and cloud-based VMs.",
+    logo: "/images/certificate-ITAP.png",
+    image: "/google-automation-cert.png",
+    url: "https://www.coursera.org/account/accomplishments/specialization/KWQAJCAQAYY2",
+  },
+  {
+    name: "Google UX Design",
+    issuer: "Coursera",
+    description: "Conducted UX research and applied user-centered design principles.",
+    logo: "/images/certificate-UXD.png",
+    image: "/google-ux-cert.png",
+    url: "https://www.coursera.org/account/accomplishments/specialization/JD7XZR37DJSU",
+  },
+  {
+    name: "Google Project Management",
+    issuer: "Coursera",
+    description:
+      "Covered the practices and skills for an entry-level project management role — project documentation across phases, Agile/Scrum fundamentals, and stakeholder management.",
+    logo: "/images/certificate-GPM.png",
+    image: "/google-proj-cert.png",
+    url: "https://www.coursera.org/account/accomplishments/specialization/8L4C2AHPPWMP",
+  },
+  {
+    name: "Google IT Support",
+    issuer: "Coursera",
+    // TODO(shahathir): confirm wording — rewritten from the old site's placeholder text.
+    description:
+      "Covered IT support fundamentals — troubleshooting, customer service, networking, operating systems, system administration, and security.",
+    logo: "/images/certificate-ITS.png",
+    image: "/google-support-cert.png",
+    url: "https://www.coursera.org/account/accomplishments/specialization/SF3NTQPRQZLB",
+  },
+  {
+    name: "Google Cybersecurity",
+    issuer: "Coursera",
+    // TODO(shahathir): confirm wording — rewritten from the old site's placeholder text.
+    description:
+      "Covered cybersecurity fundamentals — security frameworks, network security, Linux, SQL, Python, and threat detection and response.",
+    logo: "/images/certificate-SEC.png",
+    image: "/google-cyber-cert.png",
+    url: "https://www.coursera.org/account/accomplishments/specialization/KWPRBNTZCGKK",
+  },
+];
+
+export type Recognition = {
+  title: string;
+  detail: string;
+  meta?: string;
+};
+
+// Academic highlights pulled from the resume.
+export const RECOGNITIONS: Recognition[] = [
+  {
+    title: "Bachelor of Information Technology (Hons.) — Software Engineering",
+    detail: "CGPA 3.78 / 4.00",
+    meta: "Universiti Kuala Lumpur (MIIT)",
+  },
+  {
+    title: "Foundation in Science",
+    detail: "CGPA 3.67 / 4.00",
+    meta: "Universiti Teknologi MARA",
+  },
+  {
+    title: "Sijil Pelajaran Malaysia (SPM)",
+    detail: "3A+, 6A, 1B+",
+    meta: "High school certificate",
+  },
+  {
+    title: "Malaysian University English Test (MUET)",
+    detail: "Band 4.5",
+    meta: "English proficiency",
+  },
+];
+
+export type Testimonial = {
+  name: string;
+  role: string;
+  quote: string;
+  /** Public path to an avatar image, if available. */
+  avatar?: string;
+};
+
+// Intentionally empty: the old site's testimonials were placeholder template
+// data. Real quotes from Shahathir go here; the section hides itself when empty.
+export const TESTIMONIALS: Testimonial[] = [];

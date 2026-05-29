@@ -85,10 +85,9 @@ function GalleryImage({
       whileInView={{ opacity: 1, y: 0 }}
     >
       <motion.div
-        className="w-full cursor-pointer overflow-hidden shadow-lg transition-[filter] duration-300 ease-out group-hover:blur-[3px]"
+        className="w-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-[filter] duration-300 ease-out group-hover:blur-[3px]"
         layoutId={layoutId}
         onClick={onClick}
-        style={{ borderRadius: 16 }}
         whileTap={{ scale: 0.98, transition: { duration: 0.15 } }}
       >
         <Image
@@ -100,14 +99,10 @@ function GalleryImage({
           width={width}
         />
       </motion.div>
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}
-      >
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end rounded-b-2xl p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/70 via-black/30 to-transparent"
-          style={{ borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}
+          className="absolute inset-x-0 bottom-0 h-1/2 rounded-b-2xl bg-linear-to-t from-black/70 via-black/30 to-transparent"
         />
         <p className="relative font-medium text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
           {title}
@@ -160,7 +155,7 @@ function ImageModal({
           <motion.div
             animate={{ opacity: 1 }}
             aria-label="Close"
-            className="absolute inset-0 bg-background/90 backdrop-blur-sm"
+            className="absolute inset-0 cursor-default bg-background/90 backdrop-blur-sm"
             exit={{ opacity: 0 }}
             initial={{ opacity: 0 }}
             onClick={onClose}
@@ -205,14 +200,16 @@ function ImageModal({
             <ChevronRight className="h-5 w-5" />
           </motion.button>
 
-          <div className="relative flex min-h-0 flex-1 items-center justify-center px-16 pt-12 pb-2">
+          {/* pointer-events-none lets clicks in the empty area around the image
+              fall through to the backdrop (which closes); the image re-enables
+              pointer events so clicking the photo itself doesn't close. */}
+          <div className="pointer-events-none relative flex min-h-0 flex-1 items-center justify-center px-16 pt-12 pb-2">
             {activePhoto ? (
               <motion.div
-                className="relative max-h-full max-w-full overflow-hidden shadow-2xl"
+                className="pointer-events-auto relative max-h-full max-w-full overflow-hidden rounded-2xl shadow-2xl"
                 layoutId={morphLayoutId ?? undefined}
                 style={{
                   aspectRatio: `${activePhoto.width} / ${activePhoto.height}`,
-                  borderRadius: 28,
                   height: "min(100%, calc((100vh - 240px)))",
                   width: "auto",
                 }}

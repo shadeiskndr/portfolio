@@ -81,11 +81,7 @@ function ExperienceCard({
       initial={false}
       style={{ originX: 0.5, originY: 0 }}
     >
-      <SpotlightCard
-        borderRadius="var(--radius-2xl)"
-        borderColor="var(--border)"
-        className="shadow-md dark:shadow-2xl"
-      >
+      <SpotlightCard borderColor="var(--border)" className="shadow-md dark:shadow-2xl">
         <button
           id={itemId}
           type="button"
