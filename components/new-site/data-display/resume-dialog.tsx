@@ -10,8 +10,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-
-const RESUME_URL = "/files/Resume_ShahathirIskandar.pdf";
+import { useAsset } from "@/lib/assets-provider";
 
 const ResumeViewer = dynamic(() => import("./resume-viewer"), {
   ssr: false,
@@ -27,6 +26,7 @@ interface ResumeDialogProps {
 }
 
 export function ResumeDialog({ children }: ResumeDialogProps) {
+  const resumeUrl = useAsset("resume")?.url;
   return (
     <ResponsiveDialog>
       <ResponsiveDialogTrigger asChild>
@@ -43,7 +43,13 @@ export function ResumeDialog({ children }: ResumeDialogProps) {
             Shahathir Iskandar — Software Developer
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
-        <ResumeViewer fileUrl={RESUME_URL} label="resume" />
+        {resumeUrl ? (
+          <ResumeViewer fileUrl={resumeUrl} label="resume" />
+        ) : (
+          <div className="flex min-h-0 flex-1 items-center justify-center bg-muted/50 text-muted-foreground text-sm">
+            Resume unavailable.
+          </div>
+        )}
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

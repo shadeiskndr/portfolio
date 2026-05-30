@@ -1,8 +1,8 @@
+import { AssetImage } from "@/components/asset-image";
 import Tag from "@/components/old-portfolio/data-display/tag";
-import TechDetails from "@/components/old-portfolio/data-display/tech-details";
 import Typography from "@/components/old-portfolio/general/typography";
 import Container from "@/components/old-portfolio/layout/container";
-import { BACKEND, CLOUDDEVOPS, DATABASES, FRONTEND, LANGUAGES } from "@/lib/data";
+import { TOOLS } from "@/lib/new-site/data";
 
 const SkillsSection = () => {
   return (
@@ -12,61 +12,23 @@ const SkillsSection = () => {
           <Tag label="Technical Skills" />
         </div>
         <Typography variant="subtitleskils" className="max-w-xl text-center">
-          Programming Languages:
+          Tools &amp; technologies I work with:
         </Typography>
       </div>
 
-      <div className="grid grid-cols-3 gap-y-4 md:grid-cols-6 md:gap-y-8 lg:grid-cols-8 lg:gap-y-12">
-        {LANGUAGES.map((technology, index) => (
-          <TechDetails {...technology} key={index} />
-        ))}
-      </div>
-
-      <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center">
-          Frontend:
-        </Typography>
-      </div>
-
-      <div className="grid grid-cols-3 gap-y-4 md:grid-cols-6 md:gap-y-8 lg:grid-cols-8 lg:gap-y-12">
-        {FRONTEND.map((technology, index) => (
-          <TechDetails {...technology} key={index} />
-        ))}
-      </div>
-
-      <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center">
-          Backend:
-        </Typography>
-      </div>
-
-      <div className="grid grid-cols-3 gap-y-4 md:grid-cols-6 md:gap-y-8 lg:grid-cols-8 lg:gap-y-12">
-        {BACKEND.map((technology, index) => (
-          <TechDetails {...technology} key={index} />
-        ))}
-      </div>
-
-      <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center">
-          Databases:
-        </Typography>
-      </div>
-
-      <div className="grid grid-cols-3 gap-y-4 md:grid-cols-6 md:gap-y-8 lg:grid-cols-8 lg:gap-y-12">
-        {DATABASES.map((technology, index) => (
-          <TechDetails {...technology} key={index} />
-        ))}
-      </div>
-
-      <div className="flex flex-col items-center gap-4">
-        <Typography variant="subtitleskils" className="max-w-xl text-center">
-          Developer Tools:
-        </Typography>
-      </div>
-
-      <div className="grid grid-cols-3 gap-y-4 md:grid-cols-6 md:gap-y-8 lg:grid-cols-8 lg:gap-y-12">
-        {CLOUDDEVOPS.map((technology, index) => (
-          <TechDetails {...technology} key={index} />
+      <div className="grid grid-cols-3 gap-y-8 md:grid-cols-6 md:gap-y-10 lg:grid-cols-8">
+        {TOOLS.map((tool) => (
+          <div key={tool.label} className="flex flex-col items-center gap-2">
+            <AssetImage
+              assetKey={tool.logoKey}
+              alt={tool.label}
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+              unoptimized
+            />
+            <span className="text-center text-muted-foreground text-xs">{tool.label}</span>
+          </div>
         ))}
       </div>
     </Container>

@@ -1,10 +1,11 @@
 "use client";
 
 import { Paperclip } from "lucide-react";
-import ImageWrapper from "@/components/old-portfolio/data-display/image-wrapper";
+import { AssetImage } from "@/components/asset-image";
 import IconButton from "@/components/old-portfolio/general/icon-button";
 import Typography from "@/components/old-portfolio/general/typography";
 import Card from "@/components/old-portfolio/layout/card";
+import { useAsset } from "@/lib/assets-provider";
 import type { ExperienceDetails as ExperienceDetailsProps } from "@/lib/types";
 
 const dateFormatOptions: Intl.DateTimeFormatOptions = {
@@ -13,20 +14,35 @@ const dateFormatOptions: Intl.DateTimeFormatOptions = {
 };
 
 const ExperienceDetails = ({
-  logo,
-  darkModeLogo,
+  logoKey,
+  darkLogoKey,
   logoAlt,
   position,
   currentlyWorkHere,
   startDate,
   endDate,
   summary,
-  attachedFile,
+  attachedFileKey,
 }: ExperienceDetailsProps) => {
+  const attachment = useAsset(attachedFileKey);
   return (
     <Card className="relative mx-auto flex w-full max-w-4xl flex-col justify-between gap-4 border p-8 md:flex-row md:gap-8">
       <div className="max-md:order-1 md:w-1/4">
-        <ImageWrapper src={logo} srcForDarkMode={darkModeLogo} alt={logoAlt} className="max-w-30" />
+        <AssetImage
+          assetKey={logoKey}
+          alt={logoAlt}
+          sizes="120px"
+          className={darkLogoKey ? "max-w-30 dark:hidden" : "max-w-30"}
+        />
+        {darkLogoKey ? (
+          <AssetImage
+            assetKey={darkLogoKey}
+            alt=""
+            aria-hidden
+            sizes="120px"
+            className="hidden max-w-30 dark:block"
+          />
+        ) : null}
       </div>
       <div className="flex flex-col gap-4 max-md:order-3 md:w-2/4">
         <Typography variant="subtitle" className="font-semibold text-foreground">
@@ -50,10 +66,10 @@ const ExperienceDetails = ({
               : "NA"}
         </Typography>
       </div>
-      {attachedFile && (
+      {attachment && (
         <IconButton
           className="top absolute right-4 md:right-4 md:bottom-4"
-          onClick={() => window.open(attachedFile, "_blank")}
+          onClick={() => window.open(attachment.url, "_blank")}
           size="md"
         >
           <Paperclip />

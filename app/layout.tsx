@@ -1,10 +1,13 @@
+import { preloadQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import { Caveat, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 
 import "@/app/globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { api } from "@/convex/_generated/api";
 import { buildThemeCSSText, THEME_VARS_STYLE_ID } from "@/lib/apply-theme-css-vars";
+import { AssetsProvider } from "@/lib/assets-provider";
 import { ColorThemeProvider } from "@/lib/color-provider";
 import { DEFAULT_COLOR_THEME } from "@/lib/color-themes";
 import { ConvexClientProvider } from "@/lib/convex-client-provider";
@@ -53,25 +56,6 @@ export const metadata: Metadata = {
     "Java Developer",
   ],
   creator: "Shahathir Iskandar",
-  openGraph: {
-    type: "website",
-    url,
-    title,
-    description,
-    siteName: title,
-    images: [
-      {
-        url: "/images/open-graph-shahathir.jpg",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title,
-    description,
-    creator: "@shadeiskndr",
-    images: "/images/open-graph-shahathir.jpg",
-  },
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon-16x16.png",
@@ -81,7 +65,8 @@ export const metadata: Metadata = {
 
 const googleAnalyticsId = process.env.GOOGLE_ANALYTICS_ID;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const preloadedAssets = await preloadQuery(api.assets.list, {});
   return (
     <html
       lang="en"
@@ -122,13 +107,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased">
         <ConvexClientProvider>
-          <QueryProvider>
-            <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
-              <Providers>
-                <TooltipProvider>{children}</TooltipProvider>
-              </Providers>
-            </ColorThemeProvider>
-          </QueryProvider>
+          <AssetsProvider preloaded={preloadedAssets}>
+            <QueryProvider>
+              <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
+                <Providers>
+                  <TooltipProvider>{children}</TooltipProvider>
+                </Providers>
+              </ColorThemeProvider>
+            </QueryProvider>
+          </AssetsProvider>
         </ConvexClientProvider>
       </body>
     </html>

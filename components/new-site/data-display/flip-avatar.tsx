@@ -1,16 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
+import { AssetImage } from "@/components/asset-image";
 import { cn } from "@/lib/utils";
 
 export default function FlipAvatar({
-  frontSrc,
-  backSrc,
+  frontKey,
+  backKey,
   alt,
 }: {
-  frontSrc: string;
-  backSrc: string;
+  frontKey: string;
+  backKey: string;
   alt: string;
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -30,10 +30,17 @@ export default function FlipAvatar({
         )}
       >
         <div className="backface-hidden absolute inset-0 overflow-hidden rounded-xl bg-muted">
-          <Image alt={alt} className="object-cover" fill priority sizes="240px" src={frontSrc} />
+          <AssetImage
+            alt={alt}
+            assetKey={frontKey}
+            className="object-cover"
+            fill
+            priority
+            sizes="240px"
+          />
         </div>
         <div className="backface-hidden transform-[rotateY(180deg)] absolute inset-0 overflow-hidden rounded-xl bg-muted">
-          <Image alt={alt} className="object-cover" fill sizes="240px" src={backSrc} />
+          <AssetImage alt={alt} assetKey={backKey} className="object-cover" fill sizes="240px" />
         </div>
       </div>
     </button>

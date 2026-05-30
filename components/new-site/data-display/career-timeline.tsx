@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import { CAREER_TIMELINE } from "@/lib/new-site/data";
 
 function formatDuration(start: Date, end?: Date): string {
@@ -27,16 +27,16 @@ export default function CareerTimeline() {
         {CAREER_TIMELINE.map((entry) => (
           <li key={entry.company} className="flex gap-2.5">
             <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-muted">
-              <Image
-                src={entry.logo}
+              <AssetImage
+                assetKey={entry.logoKey}
                 alt={`${entry.company} logo`}
                 fill
                 sizes="32px"
                 className="object-contain dark:hidden"
               />
-              {entry.darkLogo ? (
-                <Image
-                  src={entry.darkLogo}
+              {entry.darkLogoKey ? (
+                <AssetImage
+                  assetKey={entry.darkLogoKey}
                   alt=""
                   aria-hidden
                   fill

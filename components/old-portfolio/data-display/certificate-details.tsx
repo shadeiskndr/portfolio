@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import Typography from "@/components/old-portfolio/general/typography";
 import Card from "@/components/old-portfolio/layout/card";
 import Link from "@/components/old-portfolio/navigation/link";
@@ -6,18 +6,21 @@ import type { CertificateDetails as CertificateDetailsProps } from "@/lib/types"
 
 const CertificateDetails = ({
   certificateName,
-  certificateImage,
+  certificateImageKey,
   certificateSource,
   url,
 }: CertificateDetailsProps) => {
   return (
     <Card className="mx-auto flex flex-col items-center gap-6 border p-8 md:w-2/3 md:p-12 lg:w-1/3">
       <Link noCustomization href={url} externalLink>
-        <Image
-          src={certificateImage!}
-          alt={`${certificateName} image`}
-          className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
-        ></Image>
+        {certificateImageKey ? (
+          <AssetImage
+            assetKey={certificateImageKey}
+            alt={`${certificateName} image`}
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 66vw, 100vw"
+            className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
+          />
+        ) : null}
       </Link>
       <div className="flex w-full flex-col gap-1">
         <Typography variant="body1" className="w-full text-center font-semibold text-foreground">

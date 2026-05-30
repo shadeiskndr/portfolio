@@ -2,8 +2,8 @@
 
 import { Award, ChevronRight, ExternalLink } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import Image from "next/image";
 import { useRef, useState } from "react";
+import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
@@ -11,18 +11,19 @@ import { CERTIFICATES, type Certificate } from "@/lib/new-site/data";
 
 function CertLogo({ cert, size }: { cert: Certificate; size: number }) {
   const style = { width: size, height: size };
-  const logo = cert.logo ?? cert.image;
-  if (logo) {
+  const logoKey = cert.logoKey ?? cert.imageKey;
+  if (logoKey) {
     return (
       <span
         className="flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted/50 p-1 ring-1 ring-border"
         style={style}
       >
-        <Image
-          src={logo}
+        <AssetImage
+          assetKey={logoKey}
           alt=""
           width={size}
           height={size}
+          sizes={`${size}px`}
           priority
           className="size-full object-contain"
         />
@@ -94,13 +95,12 @@ export default function CertificatesList() {
                 </div>
               </div>
 
-              {active.image ? (
+              {active.imageKey ? (
                 <div className="flex items-center justify-center rounded-lg bg-muted/30 p-4">
-                  <Image
-                    src={active.image}
+                  <AssetImage
+                    assetKey={active.imageKey}
                     alt={`${active.name} certificate`}
-                    width={340}
-                    height={340}
+                    sizes="220px"
                     priority
                     className="h-auto w-full max-w-55 rounded-md shadow-md"
                   />

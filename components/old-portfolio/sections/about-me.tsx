@@ -1,10 +1,9 @@
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import Tag from "@/components/old-portfolio/data-display/tag";
 import Typography from "@/components/old-portfolio/general/typography";
 import Container from "@/components/old-portfolio/layout/container";
 import Link from "@/components/old-portfolio/navigation/link";
 import { EXTERNAL_LINKS } from "@/lib/data";
-import ShahathirFullPose from "@/public/images/shahathir-full-pose.png";
 
 const AboutMeSection = () => {
   return (
@@ -17,14 +16,13 @@ const AboutMeSection = () => {
         {/* Image */}
         <div className="flex justify-center md:order-first md:justify-end">
           <div className="relative h-95 w-[320px] md:h-115 md:w-95 lg:h-130 lg:w-110">
-            <Image
-              src={ShahathirFullPose}
+            <AssetImage
+              assetKey="full-pose"
               alt="Fullpose of Shahathir"
-              loading="eager"
-              fetchPriority="high"
+              priority
               className="absolute z-10 h-90 w-70 border-8 bg-background max-md:left-5 md:top-0 md:right-0 md:h-105 md:w-85 lg:h-120 lg:w-100"
               style={{ objectFit: "cover" }}
-            ></Image>
+            />
             <div className="absolute h-90 w-[320px] border-8 bg-background max-md:top-5 md:bottom-0 md:left-0 md:h-105 md:w-85 lg:h-120 lg:w-100"></div>
           </div>
         </div>

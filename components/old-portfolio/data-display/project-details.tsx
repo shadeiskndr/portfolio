@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import Typography from "@/components/old-portfolio/general/typography";
 import Card from "@/components/old-portfolio/layout/card";
 import Link from "@/components/old-portfolio/navigation/link";
@@ -16,8 +16,7 @@ const ProjectDetails = ({
   description,
   technologies,
   url,
-  previewImage,
-  gifUrl, // Add this line
+  previewImageKey,
   layoutType = "default",
 }: ProjectDetailsProps) => {
   return (
@@ -32,21 +31,12 @@ const ProjectDetails = ({
         )}
       >
         <Link noCustomization href={url} externalLink>
-          {gifUrl ? (
-            <img
-              src={gifUrl}
-              alt={`${name} preview`}
-              className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
-              style={{ objectFit: "cover" }}
-            />
-          ) : (
-            <Image
-              src={previewImage}
-              alt={`${name} preview`}
-              className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
-              style={{ objectFit: "cover" }}
-            />
-          )}
+          <AssetImage
+            assetKey={previewImageKey}
+            alt={`${name} preview`}
+            className="rounded-xl shadow-lg transition-transform duration-500 md:hover:scale-105"
+            style={{ objectFit: "cover" }}
+          />
         </Link>
       </div>
 

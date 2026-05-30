@@ -1,43 +1,32 @@
-import type { StaticImageData } from "next/image";
-
-export type TechDetails = {
-  logo: string | StaticImageData;
-  darkModeLogo?: string | StaticImageData;
-  label: string;
-  url: string;
-};
-
 export type ExperienceDetails = {
-  logo: string | StaticImageData;
-  darkModeLogo?: string | StaticImageData;
+  logoKey: string;
+  darkLogoKey?: string;
   logoAlt: string;
   position: string;
   currentlyWorkHere?: boolean;
   startDate: Date;
   endDate?: Date;
   summary: string[];
-  attachedFile?: string;
+  attachedFileKey?: string;
 };
 
 export type ProjectDetails = {
   name: string;
   description: string;
   url: string;
-  previewImage: string | StaticImageData;
+  previewImageKey: string;
   technologies: string[];
-  gifUrl?: string; // Add this line
 };
 
 export type TestimonialDetails = {
   personName: string;
-  personAvatar?: string | StaticImageData;
   testimonial: string;
   title: string;
 };
 
 export type CertificateDetails = {
   certificateName: string;
-  certificateImage?: string | StaticImageData;
+  certificateImageKey?: string;
   certificateDescription: string;
   certificateSource: string;
   url: string;

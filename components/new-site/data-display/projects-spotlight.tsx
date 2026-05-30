@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
-import Image from "next/image";
 import { useRef, useState } from "react";
+import { AssetImage } from "@/components/asset-image";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { PROJECTS, type Project } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
@@ -100,13 +100,12 @@ function Card({ project, dimmed, onHoverStart, onHoverEnd }: CardProps) {
       />
 
       <div className="relative aspect-video w-full overflow-hidden bg-muted/40">
-        <Image
-          src={project.image}
+        <AssetImage
+          assetKey={project.imageKey}
           alt={`${project.title} screenshot`}
           fill
           sizes="(min-width: 640px) 320px, 100vw"
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          placeholder="blur"
         />
       </div>
 

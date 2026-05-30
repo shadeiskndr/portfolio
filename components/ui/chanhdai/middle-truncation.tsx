@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useLayoutEffect, useRef, useState } from "react"
+import type React from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-let cachedCanvas: HTMLCanvasElement | null = null
-let cachedCtx: CanvasRenderingContext2D | null = null
+let cachedCanvas: HTMLCanvasElement | null = null;
+let cachedCtx: CanvasRenderingContext2D | null = null;
 
 /**
  * Returns a singleton canvas 2D context for text measurement.
@@ -16,25 +16,25 @@ let cachedCtx: CanvasRenderingContext2D | null = null
  */
 function getCanvas(): CanvasRenderingContext2D {
   if (!cachedCtx) {
-    cachedCanvas = document.createElement("canvas")
-    const ctx = cachedCanvas.getContext("2d")
+    cachedCanvas = document.createElement("canvas");
+    const ctx = cachedCanvas.getContext("2d");
     if (!ctx) {
-      throw new Error("Failed to get 2d context from canvas")
+      throw new Error("Failed to get 2d context from canvas");
     }
-    cachedCtx = ctx
+    cachedCtx = ctx;
   }
-  return cachedCtx
+  return cachedCtx;
 }
 
 function measureText(text: string, font: string) {
-  const ctx = getCanvas()
-  ctx.font = font
-  return ctx.measureText(text).width
+  const ctx = getCanvas();
+  ctx.font = font;
+  return ctx.measureText(text).width;
 }
 
 function getComputedFont(el: HTMLElement) {
-  const cs = window.getComputedStyle(el)
-  return `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+  const cs = window.getComputedStyle(el);
+  return `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
 }
 
 /**
@@ -57,23 +57,23 @@ function debounceWithRAF<Args extends unknown[], Return = void>(
   fn: (...args: Args) => Return,
   delay: number
 ): (...args: Args) => void {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined
-  let rafId: number | undefined
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let rafId: number | undefined;
 
   return (...args: Args): void => {
     if (timeoutId !== undefined) {
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
     }
     if (rafId !== undefined) {
-      cancelAnimationFrame(rafId)
+      cancelAnimationFrame(rafId);
     }
 
     timeoutId = setTimeout(() => {
       rafId = requestAnimationFrame(() => {
-        fn(...args)
-      })
-    }, delay)
-  }
+        fn(...args);
+      });
+    }, delay);
+  };
 }
 
 /**
@@ -114,93 +114,93 @@ function computeTruncated(
   font: string,
   ellipsis: string
 ): string {
-  const fullW = measureText(text, font)
-  if (fullW <= containerW) return text
+  const fullW = measureText(text, font);
+  if (fullW <= containerW) return text;
 
   // Strategy 1: Fixed end (always preserve exactly X chars at the end)
   if (end !== undefined) {
-    const endStr = text.slice(-end)
-    const endW = measureText(ellipsis + endStr, font)
-    const available = containerW - endW
+    const endStr = text.slice(-end);
+    const endW = measureText(ellipsis + endStr, font);
+    const available = containerW - endW;
 
-    let lo = 0
-    let hi = text.length - end
+    let lo = 0;
+    let hi = text.length - end;
     while (lo < hi) {
-      const mid = Math.ceil((lo + hi) / 2)
-      if (measureText(text.slice(0, mid), font) <= available) lo = mid
-      else hi = mid - 1
+      const mid = Math.ceil((lo + hi) / 2);
+      if (measureText(text.slice(0, mid), font) <= available) lo = mid;
+      else hi = mid - 1;
     }
 
-    return text.slice(0, lo) + ellipsis + endStr
+    return text.slice(0, lo) + ellipsis + endStr;
   }
 
   // Strategy 2: Split evenly (with optional minEnd constraint)
-  const ellipsisW = measureText(ellipsis, font)
-  const availableForText = containerW - ellipsisW
+  const ellipsisW = measureText(ellipsis, font);
+  const availableForText = containerW - ellipsisW;
 
-  let lo = 0
-  let hi = text.length
+  let lo = 0;
+  let hi = text.length;
   while (lo < hi) {
-    const mid = Math.ceil((lo + hi) / 2)
+    const mid = Math.ceil((lo + hi) / 2);
 
-    let startLen: number
-    let endLen: number
+    let startLen: number;
+    let endLen: number;
 
     if (minEnd !== undefined) {
-      endLen = Math.max(Math.ceil(mid / 2), minEnd)
-      startLen = Math.max(0, mid - endLen)
+      endLen = Math.max(Math.ceil(mid / 2), minEnd);
+      startLen = Math.max(0, mid - endLen);
     } else {
-      startLen = Math.floor(mid / 2)
-      endLen = Math.ceil(mid / 2)
+      startLen = Math.floor(mid / 2);
+      endLen = Math.ceil(mid / 2);
     }
 
-    const startStr = text.slice(0, startLen)
-    const endStr = text.slice(-endLen)
-    const combinedW = measureText(startStr + endStr, font)
+    const startStr = text.slice(0, startLen);
+    const endStr = text.slice(-endLen);
+    const combinedW = measureText(startStr + endStr, font);
 
-    if (combinedW <= availableForText) lo = mid
-    else hi = mid - 1
+    if (combinedW <= availableForText) lo = mid;
+    else hi = mid - 1;
   }
 
-  let startLen: number
-  let endLen: number
+  let startLen: number;
+  let endLen: number;
 
   if (minEnd !== undefined) {
-    endLen = Math.max(Math.ceil(lo / 2), minEnd)
-    startLen = Math.max(0, lo - endLen)
+    endLen = Math.max(Math.ceil(lo / 2), minEnd);
+    startLen = Math.max(0, lo - endLen);
   } else {
-    startLen = Math.floor(lo / 2)
-    endLen = Math.ceil(lo / 2)
+    startLen = Math.floor(lo / 2);
+    endLen = Math.ceil(lo / 2);
   }
 
-  return text.slice(0, startLen) + ellipsis + text.slice(-endLen)
+  return text.slice(0, startLen) + ellipsis + text.slice(-endLen);
 }
 
 type BaseProps = React.ComponentPropsWithoutRef<"span"> & {
   /** The text content to truncate. */
-  children: string
+  children: string;
   /** Custom ellipsis string to show in the middle. @default "..." */
-  ellipsis?: string
-}
+  ellipsis?: string;
+};
 
 export type MiddleTruncationProps = BaseProps &
   (
     | {
         /** Fixed number of characters to always preserve at the end. Cannot be used with minEnd. */
-        end: number
-        minEnd?: never
+        end: number;
+        minEnd?: never;
       }
     | {
         /** When splitting evenly, ensure at least this many characters at the end. Cannot be used with end. */
-        minEnd: number
-        end?: never
+        minEnd: number;
+        end?: never;
       }
     | {
         /** When neither end nor minEnd is provided, splits text evenly in the middle. */
-        end?: never
-        minEnd?: never
+        end?: never;
+        minEnd?: never;
       }
-  )
+  );
 
 export function MiddleTruncation({
   className,
@@ -210,43 +210,38 @@ export function MiddleTruncation({
   ellipsis = "...",
   ...props
 }: MiddleTruncationProps) {
-  const containerRef = useRef<HTMLSpanElement>(null)
-  const [displayed, setDisplayed] = useState<string>(children)
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const [displayed, setDisplayed] = useState<string>(children);
 
   useLayoutEffect(() => {
-    const el = containerRef.current
-    if (!el) return
+    const el = containerRef.current;
+    if (!el) return;
 
     const recalculate = (width: number) => {
-      const font = getComputedFont(el)
-      setDisplayed(
-        computeTruncated(children, end, minEnd, width, font, ellipsis)
-      )
-    }
+      const font = getComputedFont(el);
+      setDisplayed(computeTruncated(children, end, minEnd, width, font, ellipsis));
+    };
 
-    const debouncedRecalculate = debounceWithRAF(recalculate, 150)
+    const debouncedRecalculate = debounceWithRAF(recalculate, 150);
 
     const ro = new ResizeObserver(([entry]) => {
-      debouncedRecalculate(entry.contentRect.width)
-    })
+      debouncedRecalculate(entry.contentRect.width);
+    });
 
-    recalculate(el.offsetWidth)
-    ro.observe(el)
+    recalculate(el.offsetWidth);
+    ro.observe(el);
 
-    return () => ro.disconnect()
-  }, [children, end, minEnd, ellipsis])
+    return () => ro.disconnect();
+  }, [children, end, minEnd, ellipsis]);
 
   return (
     <span
       ref={containerRef}
-      className={cn(
-        "block overflow-hidden text-ellipsis whitespace-nowrap",
-        className
-      )}
+      className={cn("block overflow-hidden text-ellipsis whitespace-nowrap", className)}
       title={children}
       {...props}
     >
       {displayed}
     </span>
-  )
+  );
 }

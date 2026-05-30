@@ -1,8 +1,7 @@
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import Tag from "@/components/old-portfolio/data-display/tag";
 import Typography from "@/components/old-portfolio/general/typography";
 import Container from "@/components/old-portfolio/layout/container";
-import UniKLImage from "@/public/images/logos/unikl-image.jpg";
 
 const EducationSection = () => {
   return (
@@ -15,12 +14,12 @@ const EducationSection = () => {
         {/* Image */}
         <div className="flex justify-center md:justify-end">
           <div className="relative h-[380px] w-[320px] md:h-[460px] md:w-[380px] lg:h-[520px] lg:w-[440px]">
-            <Image
-              src={UniKLImage}
+            <AssetImage
+              assetKey="unikl-campus"
               alt="Image of UniKL MIIT Campus"
               className="absolute z-10 h-[360px] w-[280px] border-8 border-gray bg-background max-md:left-5 md:top-0 md:left-0 md:h-[420px] md:w-[340px] lg:h-[480px] lg:w-[400px]"
               style={{ objectFit: "cover" }}
-            ></Image>
+            />
             <div className="absolute h-[360px] w-[320px] border-8 border-transparent bg-background max-md:top-5 md:right-0 md:bottom-0 md:h-[420px] md:w-[340px] lg:h-[480px] lg:w-[400px]"></div>
           </div>
         </div>

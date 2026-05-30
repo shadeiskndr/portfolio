@@ -2,8 +2,8 @@
 
 import { Paperclip } from "lucide-react";
 import { motion } from "motion/react";
-import Image from "next/image";
 import * as React from "react";
+import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { EXPERIENCES, type ExperienceEntry } from "@/lib/new-site/data";
 import AttachmentDialog from "./attachment-dialog";
@@ -91,18 +91,18 @@ function ExperienceCard({
           className="flex w-full cursor-pointer select-none items-center gap-4 px-6 py-5 text-left"
         >
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted/50 ring-1 ring-border">
-            <Image
-              src={experience.logo}
+            <AssetImage
+              assetKey={experience.logoKey}
               alt={experience.logoAlt}
               fill
               sizes="44px"
               className={
-                experience.darkLogo ? "object-contain p-1.5 dark:hidden" : "object-contain p-1.5"
+                experience.darkLogoKey ? "object-contain p-1.5 dark:hidden" : "object-contain p-1.5"
               }
             />
-            {experience.darkLogo ? (
-              <Image
-                src={experience.darkLogo}
+            {experience.darkLogoKey ? (
+              <AssetImage
+                assetKey={experience.darkLogoKey}
                 alt=""
                 aria-hidden
                 fill
@@ -155,9 +155,9 @@ function ExperienceCard({
                 <li key={sentence}>{sentence}</li>
               ))}
             </ul>
-            {experience.attachedFile ? (
+            {experience.attachedFileKey ? (
               <AttachmentDialog
-                fileUrl={experience.attachedFile}
+                fileKey={experience.attachedFileKey}
                 title={experience.company}
                 description={experience.position}
               >

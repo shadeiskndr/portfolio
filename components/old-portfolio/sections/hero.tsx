@@ -1,10 +1,9 @@
 import { MapPin } from "lucide-react";
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import SocialIcons from "@/components/old-portfolio/data-display/social-icons";
 import DownloadCV from "@/components/old-portfolio/general/download-cv";
 import Typography from "@/components/old-portfolio/general/typography";
 import Container from "@/components/old-portfolio/layout/container";
-import ShahathirHeadshot4 from "@/public/images/flipped-transparent-selfie.png";
 
 const HeroSection = () => {
   return (
@@ -13,12 +12,12 @@ const HeroSection = () => {
         {/* Image */}
         <div className="flex items-center justify-center md:order-last md:grow md:justify-end">
           <div className="relative h-75 w-70 md:h-87.5 md:w-[320px]">
-            <Image
-              src={ShahathirHeadshot4}
+            <AssetImage
+              assetKey="avatar-alt"
               alt="Headshot of Shahathir"
               className="absolute z-10 h-70 w-60 border-8 border-gray bg-background max-md:left-5 md:top-0 md:left-0 md:h-80 md:w-70"
               style={{ objectFit: "cover" }}
-            ></Image>
+            />
             <div className="absolute h-70 w-70 border-8 border-transparent bg-background max-md:top-5 md:right-0 md:bottom-0 md:h-80 md:w-70"></div>
           </div>
         </div>

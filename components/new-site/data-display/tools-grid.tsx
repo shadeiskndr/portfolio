@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AssetImage } from "@/components/asset-image";
 import { Marquee, MarqueeContent, MarqueeItem } from "@/components/ui/diceui/marquee";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TOOLS } from "@/lib/new-site/data";
@@ -9,14 +9,14 @@ const MID = Math.ceil(TOOLS.length / 2);
 const ROW_ONE = TOOLS.slice(0, MID);
 const ROW_TWO = TOOLS.slice(MID);
 
-function ToolChip({ label, logo }: { label: string; logo: string }) {
+function ToolChip({ label, logoKey }: { label: string; logoKey: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
         render={
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted/40 p-1.5">
-            <Image
-              src={logo}
+            <AssetImage
+              assetKey={logoKey}
               alt={label}
               width={16}
               height={16}
@@ -52,7 +52,7 @@ function ToolsRow({
       <MarqueeContent>
         {items.map((tool) => (
           <MarqueeItem key={tool.label}>
-            <ToolChip label={tool.label} logo={tool.logo} />
+            <ToolChip label={tool.label} logoKey={tool.logoKey} />
           </MarqueeItem>
         ))}
       </MarqueeContent>

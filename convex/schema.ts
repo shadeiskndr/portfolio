@@ -73,10 +73,15 @@ export default defineSchema({
 
   assets: defineTable({
     storageId: v.id("_storage"),
+    key: v.string(),
     title: v.string(),
     kind: v.string(),
     description: v.string(),
-  }).index("by_kind", ["kind"]),
+    width: v.optional(v.number()),
+    height: v.optional(v.number()),
+  })
+    .index("by_kind", ["kind"])
+    .index("by_key", ["key"]),
 
   songs: defineTable({
     storageId: v.id("_storage"),

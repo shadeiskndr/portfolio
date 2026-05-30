@@ -9,6 +9,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { useAsset } from "@/lib/assets-provider";
 
 const PdfViewer = dynamic(() => import("./resume-viewer"), {
   ssr: false,
@@ -20,7 +21,8 @@ const PdfViewer = dynamic(() => import("./resume-viewer"), {
 });
 
 interface AttachmentDialogProps {
-  fileUrl: string;
+  /** Assets-table key for the document to view. */
+  fileKey: string;
   title: string;
   description?: string;
   /** Noun used in the viewer's loading text and download label. @default "document" */
@@ -30,12 +32,13 @@ interface AttachmentDialogProps {
 }
 
 export function AttachmentDialog({
-  fileUrl,
+  fileKey,
   title,
   description,
   label = "document",
   children,
 }: AttachmentDialogProps) {
+  const fileUrl = useAsset(fileKey)?.url;
   return (
     <ResponsiveDialog>
       <ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
@@ -48,7 +51,13 @@ export function AttachmentDialog({
             </ResponsiveDialogDescription>
           ) : null}
         </ResponsiveDialogHeader>
-        <PdfViewer fileUrl={fileUrl} label={label} maxPageWidth={1200} />
+        {fileUrl ? (
+          <PdfViewer fileUrl={fileUrl} label={label} maxPageWidth={1200} />
+        ) : (
+          <div className="flex min-h-60 flex-auto items-center justify-center bg-muted/50 text-muted-foreground text-sm">
+            Attachment unavailable.
+          </div>
+        )}
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

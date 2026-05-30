@@ -10,7 +10,6 @@ import {
   Sparkles,
   Utensils,
 } from "lucide-react";
-import type { StaticImageData } from "next/image";
 import type * as React from "react";
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { InstagramIcon } from "@/components/icons/lucide-instagram";
@@ -21,21 +20,14 @@ import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
 import { SteamIcon } from "@/components/icons/simple-icons-steam";
 import { ThreadsIcon } from "@/components/icons/simple-icons-threads";
 import { WhatsappIcon } from "@/components/icons/simple-icons-whatsapp";
-import ProjectAIGame from "@/public/images/project-aigamerecommender.jpg";
-import ProjectCatalogd from "@/public/images/project-catalogd.png";
-import ProjectCountryEconomic from "@/public/images/project-countryeconomicdashboard.png";
-import ProjectEduCafe from "@/public/images/project-educafe.jpg";
-import ProjectPHPDocker from "@/public/images/project-phpdocker.png";
-import ProjectShahathirme from "@/public/images/project-shahathirme.jpg";
-import ProjectTodoList from "@/public/images/project-todolist.png";
 
 export type SocialIcon = React.ComponentType<{ className?: string }>;
 export type SocialLink = { label: string; icon: SocialIcon; url: string };
 export type NavLink = { label: string; href: string };
 export type CareerEntry = {
   company: string;
-  logo: string;
-  darkLogo?: string;
+  logoKey: string;
+  darkLogoKey?: string;
   position: string;
   startDate: Date;
   endDate?: Date;
@@ -44,9 +36,9 @@ export type CareerEntry = {
 export type ExperienceEntry = CareerEntry & {
   logoAlt: string;
   summary: string[];
-  attachedFile?: string;
+  attachedFileKey?: string;
 };
-export type Tool = { label: string; logo: string; url?: string };
+export type Tool = { label: string; logoKey: string };
 export type Quote = { text: string; author?: string };
 export type Project = {
   title: string;
@@ -55,7 +47,7 @@ export type Project = {
   technologies: string[];
   icon: LucideIcon;
   color: string;
-  image: StaticImageData;
+  imageKey: string;
 };
 export type IdeaColor = "yellow" | "pink" | "blue" | "green";
 export type Idea = {
@@ -77,8 +69,8 @@ export const PERSONAL = {
   flag: "🇲🇾",
   tagline: "professionally distracted",
   taglineSuffixes: ["software developer", "tinkerer", "problem solver", "pixel pusher", "gamer"],
-  avatar: "/images/shahathir-headshot-transparent.png",
-  avatarAlt: "/images/flipped-transparent-selfie.png",
+  avatarKey: "avatar",
+  avatarAltKey: "avatar-alt",
 };
 
 export const SOCIAL_LINKS: SocialLink[] = [
@@ -108,7 +100,9 @@ export const SOCIAL_LINKS: SocialLink[] = [
   },
   { label: "Email", icon: Mail, url: "mailto:shahathiriskandar43@gmail.com" },
   { label: "WhatsApp", icon: WhatsappIcon, url: "https://wa.me/601153787564" },
-  { label: "Resume", icon: FileText, url: "/files/Resume_ShahathirIskandar.pdf" },
+  // `url` is unused: SocialRow renders this entry as a <ResumeDialog> trigger
+  // (the PDF is resolved from the assets table via the "resume" key).
+  { label: "Resume", icon: FileText, url: "#" },
 ];
 
 export const NAV_LINKS: NavLink[] = [
@@ -128,16 +122,16 @@ export const NAV_LINKS: NavLink[] = [
 export const CAREER_TIMELINE: CareerEntry[] = [
   {
     company: "Financial Risk Group",
-    logo: "/images/logos/logo-frg-light.png",
-    darkLogo: "/images/logos/logo-frg-dark.png",
+    logoKey: "logo-frg",
+    darkLogoKey: "logo-frg-dark",
     position: "Assistant Software Developer",
     startDate: new Date(2025, 5),
     current: true,
   },
   {
     company: "Estee Lauder Companies",
-    logo: "/images/logos/logo-estee.png",
-    darkLogo: "/images/logos/logo-estee-dark.png",
+    logoKey: "logo-estee",
+    darkLogoKey: "logo-estee-dark",
     position: "Software Engineer Intern",
     startDate: new Date(2024, 8),
     endDate: new Date(2025, 2),
@@ -147,8 +141,8 @@ export const CAREER_TIMELINE: CareerEntry[] = [
 export const EXPERIENCES: ExperienceEntry[] = [
   {
     company: "Financial Risk Group",
-    logo: "/images/logos/logo-frg-light.png",
-    darkLogo: "/images/logos/logo-frg-dark.png",
+    logoKey: "logo-frg",
+    darkLogoKey: "logo-frg-dark",
     logoAlt: "Financial Risk Group logo",
     position: "Assistant Software Developer",
     startDate: new Date(2025, 5),
@@ -163,8 +157,8 @@ export const EXPERIENCES: ExperienceEntry[] = [
   },
   {
     company: "The Estée Lauder Companies",
-    logo: "/images/logos/logo-estee.png",
-    darkLogo: "/images/logos/logo-estee-dark.png",
+    logoKey: "logo-estee",
+    darkLogoKey: "logo-estee-dark",
     logoAlt: "The Estée Lauder Companies logo",
     position: "Software Engineer Intern",
     startDate: new Date(2024, 9),
@@ -175,11 +169,11 @@ export const EXPERIENCES: ExperienceEntry[] = [
       "Assisted in troubleshooting and resolving critical issues to ensure smooth operations for retail clients.",
       "Participated in code reviews and implemented improvements to enhance system performance and reliability.",
     ],
-    attachedFile: "/files/Shahathir_Internship_Estee_Lauder_Malaysia.pdf",
+    attachedFileKey: "internship-estee",
   },
   {
     company: "99 Speedmart",
-    logo: "/images/logos/logo-99.png",
+    logoKey: "logo-99",
     logoAlt: "99 Speedmart logo",
     position: "Logistics Associate",
     startDate: new Date(2020, 1),
@@ -191,35 +185,51 @@ export const EXPERIENCES: ExperienceEntry[] = [
   },
 ];
 
-const DEVICON = (name: string, variant = "original") =>
-  `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${name}/${name}-${variant}.svg`;
-const SIMPLE = (slug: string) => `https://cdn.simpleicons.org/${slug}`;
-
+// Consolidated tools & skills (union of the old-site categorized skills and the
+// previous CDN-backed tools list). Logos are local; resolved to Convex keys later.
 export const TOOLS: Tool[] = [
-  { label: "TypeScript", logo: DEVICON("typescript") },
-  { label: "Python", logo: DEVICON("python") },
-  { label: "Java", logo: DEVICON("java") },
-  { label: "Go", logo: DEVICON("go") },
-  { label: "HTML5", logo: DEVICON("html5") },
-  { label: "CSS3", logo: DEVICON("css3") },
-  { label: "React", logo: DEVICON("react") },
-  { label: "Next.js", logo: DEVICON("nextjs") },
-  { label: "Vite", logo: DEVICON("vitejs") },
-  { label: "Angular", logo: DEVICON("angular") },
-  { label: "Tailwind CSS", logo: DEVICON("tailwindcss") },
-  { label: "shadcn/ui", logo: "/icons/shadcn.svg" },
-  { label: "Material UI", logo: DEVICON("materialui") },
-  { label: "Sass", logo: DEVICON("sass") },
-  { label: "Node.js", logo: DEVICON("nodejs") },
-  { label: "Bun", logo: DEVICON("bun") },
-  { label: "Django", logo: "/icons/django.svg" },
-  { label: "FastAPI", logo: DEVICON("fastapi") },
-  { label: "Spring Boot", logo: DEVICON("spring") },
-  { label: "PostgreSQL", logo: DEVICON("postgresql") },
-  { label: "SQLite", logo: DEVICON("sqlite") },
-  { label: "AWS", logo: "/icons/aws.svg" },
-  { label: "Cloudflare", logo: SIMPLE("cloudflare") },
-  { label: "Docker", logo: DEVICON("docker") },
+  { label: "TypeScript", logoKey: "tool-typescript" },
+  { label: "JavaScript", logoKey: "tool-javascript" },
+  { label: "Java", logoKey: "tool-java" },
+  { label: "Python", logoKey: "tool-python" },
+  { label: "PHP", logoKey: "tool-php" },
+  { label: "Go", logoKey: "tool-go" },
+  { label: "HTML5", logoKey: "tool-html" },
+  { label: "CSS3", logoKey: "tool-css" },
+  { label: "React", logoKey: "tool-react" },
+  { label: "Next.js", logoKey: "tool-nextjs" },
+  { label: "Vite", logoKey: "tool-vite" },
+  { label: "Angular", logoKey: "tool-angular" },
+  { label: "Redux", logoKey: "tool-redux" },
+  { label: "React Router", logoKey: "tool-reactrouter" },
+  { label: "Tailwind CSS", logoKey: "tool-tailwind" },
+  { label: "shadcn/ui", logoKey: "tool-shadcn" },
+  { label: "Material UI", logoKey: "tool-mui" },
+  { label: "Sass", logoKey: "tool-sass" },
+  { label: "Bootstrap", logoKey: "tool-bootstrap" },
+  { label: "React Native", logoKey: "tool-reactnative" },
+  { label: "Node.js", logoKey: "tool-nodejs" },
+  { label: "Bun", logoKey: "tool-bun" },
+  { label: "Django", logoKey: "tool-django" },
+  { label: "FastAPI", logoKey: "tool-fastapi" },
+  { label: "Spring Boot", logoKey: "tool-springboot" },
+  { label: "Java Servlets", logoKey: "tool-jakarta" },
+  { label: "Express", logoKey: "tool-express" },
+  { label: "PostgreSQL", logoKey: "tool-postgres" },
+  { label: "MySQL", logoKey: "tool-mysql" },
+  { label: "MS SQL Server", logoKey: "tool-mssql" },
+  { label: "SQLite", logoKey: "tool-sqlite" },
+  { label: "Appwrite", logoKey: "tool-appwrite" },
+  { label: "Docker", logoKey: "tool-docker" },
+  { label: "AWS", logoKey: "tool-aws" },
+  { label: "Cloudflare", logoKey: "tool-cloudflare" },
+  { label: "Nginx", logoKey: "tool-nginx" },
+  { label: "Vercel", logoKey: "tool-vercel" },
+  { label: "Netlify", logoKey: "tool-netlify" },
+  { label: "DigitalOcean", logoKey: "tool-digitalocean" },
+  { label: "Git", logoKey: "tool-git" },
+  { label: "DBeaver", logoKey: "tool-dbeaver" },
+  { label: "Postman", logoKey: "tool-postman" },
 ];
 
 export const QUOTES: Quote[] = [
@@ -288,7 +298,7 @@ export const PROJECTS: Project[] = [
     technologies: ["Next.js", "TypeScript", "Appwrite", "Tailwind CSS"],
     icon: Gamepad2,
     color: "#a78bfa",
-    image: ProjectCatalogd,
+    imageKey: "project-catalogd",
   },
   {
     title: "shahathir.me",
@@ -298,7 +308,7 @@ export const PROJECTS: Project[] = [
     technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Convex"],
     icon: Globe,
     color: "#38bdf8",
-    image: ProjectShahathirme,
+    imageKey: "project-shahathirme",
   },
   {
     title: "AI Game Recommender",
@@ -308,7 +318,7 @@ export const PROJECTS: Project[] = [
     technologies: ["Next.js", "TypeScript", "DataStax", "OpenAI Embeddings"],
     icon: Sparkles,
     color: "#f472b6",
-    image: ProjectAIGame,
+    imageKey: "project-aigamerecommender",
   },
   {
     title: "Country Economic Dashboard",
@@ -318,7 +328,7 @@ export const PROJECTS: Project[] = [
     technologies: ["Spring Boot", "Java", "React", "TypeScript", "MySQL", "JWT"],
     icon: BarChart3,
     color: "#34d399",
-    image: ProjectCountryEconomic,
+    imageKey: "project-countryeconomic",
   },
   {
     title: "PHP Starter",
@@ -328,7 +338,7 @@ export const PROJECTS: Project[] = [
     technologies: ["PHP", "Apache", "MySQL", "Docker", "Tailwind CSS"],
     icon: FileCode,
     color: "#22d3ee",
-    image: ProjectPHPDocker,
+    imageKey: "project-phpdocker",
   },
   {
     title: "COBOL Todo List",
@@ -338,7 +348,7 @@ export const PROJECTS: Project[] = [
     technologies: ["COBOL", "Angular", "Express", "Node.js", "Docker"],
     icon: ListChecks,
     color: "#60a5fa",
-    image: ProjectTodoList,
+    imageKey: "project-todolist",
   },
   {
     title: "EduCafe Booking",
@@ -348,7 +358,7 @@ export const PROJECTS: Project[] = [
     technologies: ["Java EE", "JSP", "Servlets", "MySQL", "Tailwind CSS"],
     icon: Utensils,
     color: "#f59e0b",
-    image: ProjectEduCafe,
+    imageKey: "project-educafe",
   },
 ];
 
@@ -356,10 +366,10 @@ export type Certificate = {
   name: string;
   issuer: string;
   description: string;
-  /** Public path to a brand/badge logo for the list + card header. Falls back to `image`. */
-  logo?: string;
-  /** Public path to the full certificate image shown in the expanded card, if available. */
-  image?: string;
+  /** Asset key for a brand/badge logo for the list + card header. Falls back to `imageKey`. */
+  logoKey?: string;
+  /** Asset key for the full certificate image shown in the expanded card, if available. */
+  imageKey?: string;
   /** Verification / credential URL, if available. */
   url?: string;
 };
@@ -373,24 +383,24 @@ export const CERTIFICATES: Certificate[] = [
     issuer: "Amazon Web Services",
     description:
       "Gained a comprehensive understanding of AWS services and technologies, and the ability to design secure, robust solutions using architectural best practices based on customer requirements.",
-    logo: "/awssaa.png",
-    image: "/awssaa2.png",
+    logoKey: "cert-logo-aws",
+    imageKey: "cert-aws-saa",
     url: "https://www.credly.com/badges/72b9a211-838b-4fd7-99ba-1c6029206bca",
   },
   {
     name: "Build REST APIs with Django REST Framework and Python",
     issuer: "Udemy",
     description: "Learned to build robust REST APIs in Django using the Django REST Framework.",
-    logo: "/udemy.png",
-    image: "/udemydjango.png",
+    logoKey: "cert-logo-udemy",
+    imageKey: "cert-udemy-django",
     url: "https://www.udemy.com/certificate/UC-16a218ea-34f7-4aa5-a081-ee57ab8e8ca6/",
   },
   {
     name: "Go: The Complete Developer's Guide (Golang)",
     issuer: "Udemy",
     description: "Learned the fundamentals of Go and its type-safe syntax.",
-    logo: "/udemy.png",
-    image: "/udemygo.png",
+    logoKey: "cert-logo-udemy",
+    imageKey: "cert-udemy-go",
     url: "https://www.udemy.com/certificate/UC-90d4d6c9-914b-4106-804e-d4396c14e615/",
   },
   {
@@ -398,16 +408,16 @@ export const CERTIFICATES: Certificate[] = [
     issuer: "Coursera",
     description:
       "Used Python scripting to automate tasks and manage IT resources across physical and cloud-based VMs.",
-    logo: "/images/certificate-ITAP.png",
-    image: "/google-automation-cert.png",
+    logoKey: "cert-logo-google-automation",
+    imageKey: "cert-google-automation",
     url: "https://www.coursera.org/account/accomplishments/specialization/KWQAJCAQAYY2",
   },
   {
     name: "Google UX Design",
     issuer: "Coursera",
     description: "Conducted UX research and applied user-centered design principles.",
-    logo: "/images/certificate-UXD.png",
-    image: "/google-ux-cert.png",
+    logoKey: "cert-logo-google-ux",
+    imageKey: "cert-google-ux",
     url: "https://www.coursera.org/account/accomplishments/specialization/JD7XZR37DJSU",
   },
   {
@@ -415,8 +425,8 @@ export const CERTIFICATES: Certificate[] = [
     issuer: "Coursera",
     description:
       "Covered the practices and skills for an entry-level project management role — project documentation across phases, Agile/Scrum fundamentals, and stakeholder management.",
-    logo: "/images/certificate-GPM.png",
-    image: "/google-proj-cert.png",
+    logoKey: "cert-logo-google-pm",
+    imageKey: "cert-google-pm",
     url: "https://www.coursera.org/account/accomplishments/specialization/8L4C2AHPPWMP",
   },
   {
@@ -425,8 +435,8 @@ export const CERTIFICATES: Certificate[] = [
     // TODO(shahathir): confirm wording — rewritten from the old site's placeholder text.
     description:
       "Covered IT support fundamentals — troubleshooting, customer service, networking, operating systems, system administration, and security.",
-    logo: "/images/certificate-ITS.png",
-    image: "/google-support-cert.png",
+    logoKey: "cert-logo-google-support",
+    imageKey: "cert-google-support",
     url: "https://www.coursera.org/account/accomplishments/specialization/SF3NTQPRQZLB",
   },
   {
@@ -435,8 +445,8 @@ export const CERTIFICATES: Certificate[] = [
     // TODO(shahathir): confirm wording — rewritten from the old site's placeholder text.
     description:
       "Covered cybersecurity fundamentals — security frameworks, network security, Linux, SQL, Python, and threat detection and response.",
-    logo: "/images/certificate-SEC.png",
-    image: "/google-cyber-cert.png",
+    logoKey: "cert-logo-google-cyber",
+    imageKey: "cert-google-cyber",
     url: "https://www.coursera.org/account/accomplishments/specialization/KWPRBNTZCGKK",
   },
 ];
