@@ -67,7 +67,13 @@ http.route({
       return new Response("ignored", { status: 200 });
     }
 
-    const payload = JSON.parse(rawBody) as GitHubPushPayload;
+    // GitHub sends the body as raw JSON (application/json) or form-encoded
+    // (application/x-www-form-urlencoded -> "payload=<url-encoded JSON>").
+    const contentType = request.headers.get("content-type") ?? "";
+    const payloadText = contentType.includes("application/x-www-form-urlencoded")
+      ? (new URLSearchParams(rawBody).get("payload") ?? rawBody)
+      : rawBody;
+    const payload = JSON.parse(payloadText) as GitHubPushPayload;
     const trackedRef = `refs/heads/${process.env.GITHUB_BRANCH ?? "main"}`;
     if (payload.ref !== trackedRef) {
       return new Response("ignored branch", { status: 200 });
