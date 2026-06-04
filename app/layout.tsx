@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   },
 };
 
-const googleAnalyticsId = process.env.GOOGLE_ANALYTICS_ID;
+const umamiWebsiteId = process.env.UMAMI_WEBSITE_ID;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const preloadedAssets = await preloadQuery(api.assets.list, {});
@@ -87,22 +87,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           // biome-ignore lint/security/noDangerouslySetInnerHtml: Built from typed theme data
           dangerouslySetInnerHTML={{ __html: initialThemeCSS }}
         />
-        {googleAnalyticsId ? (
-          <>
-            <Script
-              async
-              src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
-            ></Script>
-            <Script id="google-anayltics-script">
-              {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', '${googleAnalyticsId}');
-          `}
-            </Script>
-          </>
+        {umamiWebsiteId ? (
+          <Script
+            defer
+            src="https://analytics.shahathir.me/script.js"
+            data-website-id={umamiWebsiteId}
+          />
         ) : null}
       </head>
       <body className="antialiased">
