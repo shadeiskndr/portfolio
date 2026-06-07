@@ -117,6 +117,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Songs", href: "/songs" },
   { label: "Uses", href: "/uses" },
   { label: "Networks", href: "/networks" },
+  { label: "Chat", href: "/chat" },
 ];
 
 export const CAREER_TIMELINE: CareerEntry[] = [

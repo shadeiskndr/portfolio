@@ -129,6 +129,19 @@
           }
         }
       }
+    },
+    {
+      "includes": ["components/ui/shadcn-io/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
     }
   ]
 }
