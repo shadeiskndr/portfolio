@@ -1,9 +1,8 @@
 "use client";
 
-import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, memo, useContext, useEffect, useState } from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -48,15 +47,19 @@ export const Reasoning = memo(
     children,
     ...props
   }: ReasoningProps) => {
-    const [isOpen, setIsOpen] = useControllableState({
-      prop: open,
-      defaultProp: defaultOpen,
-      onChange: onOpenChange,
-    });
-    const [duration, setDuration] = useControllableState({
-      prop: durationProp,
-      defaultProp: undefined,
-    });
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+    const isOpen = open ?? uncontrolledOpen;
+    const setIsOpen = useCallback(
+      (next: boolean) => {
+        if (open === undefined) {
+          setUncontrolledOpen(next);
+        }
+        onOpenChange?.(next);
+      },
+      [open, onOpenChange]
+    );
+    const [measuredDuration, setDuration] = useState<number | undefined>(undefined);
+    const duration = durationProp ?? measuredDuration;
 
     const [hasAutoClosed, setHasAutoClosed] = useState(false);
     const [startTime, setStartTime] = useState<number | null>(null);
@@ -152,20 +155,23 @@ export const ReasoningTrigger = memo(
 
 export type ReasoningContentProps = ComponentProps<typeof CollapsibleContent> & {
   children: string;
+  plugins?: ComponentProps<typeof Streamdown>["plugins"];
 };
 
-export const ReasoningContent = memo(({ className, children, ...props }: ReasoningContentProps) => (
-  <CollapsibleContent
-    className={cn(
-      "mt-4 text-sm",
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-      className
-    )}
-    {...props}
-  >
-    <Streamdown>{children}</Streamdown>
-  </CollapsibleContent>
-));
+export const ReasoningContent = memo(
+  ({ className, children, plugins, ...props }: ReasoningContentProps) => (
+    <CollapsibleContent
+      className={cn(
+        "mt-4 text-sm",
+        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+        className
+      )}
+      {...props}
+    >
+      <Streamdown plugins={plugins}>{children}</Streamdown>
+    </CollapsibleContent>
+  )
+);
 
 Reasoning.displayName = "Reasoning";
 ReasoningTrigger.displayName = "ReasoningTrigger";

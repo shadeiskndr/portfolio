@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
-import { math } from "@streamdown/math";
+import { createMathPlugin } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { DefaultChatTransport } from "ai";
 import "katex/dist/katex.min.css";
@@ -31,7 +31,12 @@ import {
   ReasoningTrigger,
 } from "@/components/ui/shadcn-io/ai/reasoning";
 
-const streamdownPlugins = { code, math, mermaid, cjk };
+const streamdownPlugins = {
+  code,
+  math: createMathPlugin({ singleDollarTextMath: true }),
+  mermaid,
+  cjk,
+};
 
 const CHAT_API = `${process.env.NEXT_PUBLIC_CONVEX_SITE_URL}/chat`;
 
@@ -75,7 +80,9 @@ export default function Chat() {
                       return (
                         <Reasoning isStreaming={isStreaming} key={key}>
                           <ReasoningTrigger />
-                          <ReasoningContent>{part.text}</ReasoningContent>
+                          <ReasoningContent plugins={streamdownPlugins}>
+                            {part.text}
+                          </ReasoningContent>
                         </Reasoning>
                       );
                     }

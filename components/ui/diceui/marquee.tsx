@@ -1,7 +1,7 @@
 "use client";
 
+import { useDirection } from "@base-ui/react/direction-provider";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Direction as DirectionPrimitive, Slot as SlotPrimitive } from "radix-ui";
 import * as React from "react";
 import { useComposedRefs } from "@/lib/compose-refs";
 import { cn } from "@/lib/utils";
@@ -213,9 +213,7 @@ function useResizeObserverStore(
   return React.useSyncExternalStore(onSubscribe, getSnapshot, getSnapshot);
 }
 
-interface DivProps extends React.ComponentProps<"div"> {
-  asChild?: boolean;
-}
+type DivProps = React.ComponentProps<"div">;
 
 interface MarqueeContextValue {
   side: Side;
@@ -263,7 +261,6 @@ function Marquee(props: MarqueeProps) {
     delay = 0,
     loopCount = 0,
     gap = "1rem",
-    asChild,
     autoFill = false,
     pauseOnHover = false,
     pauseOnKeyboard = false,
@@ -276,7 +273,8 @@ function Marquee(props: MarqueeProps) {
 
   const orientation: Orientation = side === "top" || side === "bottom" ? "vertical" : "horizontal";
 
-  const dir = DirectionPrimitive.useDirection(dirProp);
+  const contextDir = useDirection();
+  const dir: Direction = dirProp ?? contextDir;
 
   const rootRef = React.useRef<RootElement>(null);
   const contentRef = React.useRef<ContentElement>(null);
@@ -355,12 +353,10 @@ function Marquee(props: MarqueeProps) {
     ]
   );
 
-  const MarqueePrimitive = asChild ? SlotPrimitive.Slot : "div";
-
   return (
     <MarqueeContext.Provider value={contextValue}>
       <div data-slot="marquee-wrapper" className="grid">
-        <MarqueePrimitive
+        <div
           role="marquee"
           aria-live="off"
           data-orientation={orientation}
@@ -373,7 +369,7 @@ function Marquee(props: MarqueeProps) {
             "relative flex overflow-hidden motion-reduce:animate-none",
             orientation === "vertical" && "h-full flex-col",
             orientation === "horizontal" && "w-full",
-            paused && "[&_*]:[animation-play-state:paused]",
+            paused && "**:paused",
             pauseOnHover && "group",
             pauseOnKeyboard &&
               "rounded-md focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
@@ -429,7 +425,7 @@ const marqueeContentVariants = cva("flex min-w-full shrink-0 gap-(--marquee-gap)
 });
 
 function MarqueeContent(props: DivProps) {
-  const { className, asChild, ref, children, style: styleProp, ...contentProps } = props;
+  const { className, ref, children, style: styleProp, ...contentProps } = props;
 
   const context = useMarqueeContext(CONTENT_NAME);
   const composedRef = useComposedRefs(ref, context.contentRef);
@@ -482,11 +478,9 @@ function MarqueeContent(props: DivProps) {
     [styleProp, context.reverse]
   );
 
-  const ContentPrimitive = asChild ? SlotPrimitive.Slot : "div";
-
   return (
     <>
-      <ContentPrimitive
+      <div
         data-orientation={context.orientation}
         data-slot="marquee-content"
         {...contentProps}
@@ -510,8 +504,8 @@ function MarqueeContent(props: DivProps) {
           {children}
         </div>
         {onMultipliedChildrenRender(multiplier - 1)}
-      </ContentPrimitive>
-      <ContentPrimitive
+      </div>
+      <div
         role="presentation"
         aria-hidden="true"
         {...contentProps}
@@ -528,19 +522,15 @@ function MarqueeContent(props: DivProps) {
         )}
       >
         {onMultipliedChildrenRender(multiplier)}
-      </ContentPrimitive>
+      </div>
     </>
   );
 }
 
 function MarqueeItem(props: DivProps) {
-  const { className, asChild, ...itemProps } = props;
+  const { className, ...itemProps } = props;
 
-  const ItemPrimitive = asChild ? SlotPrimitive.Slot : "div";
-
-  return (
-    <ItemPrimitive data-slot="marquee-item" {...itemProps} className={cn("shrink-0", className)} />
-  );
+  return <div data-slot="marquee-item" {...itemProps} className={cn("shrink-0", className)} />;
 }
 
 const marqueeEdgeVariants = cva("pointer-events-none absolute z-10", {
@@ -597,12 +587,10 @@ const marqueeEdgeVariants = cva("pointer-events-none absolute z-10", {
 interface MarqueeEdgeProps extends VariantProps<typeof marqueeEdgeVariants>, DivProps {}
 
 function MarqueeEdge(props: MarqueeEdgeProps) {
-  const { side, size, className, asChild, ...edgeProps } = props;
-
-  const EdgePrimitive = asChild ? SlotPrimitive.Slot : "div";
+  const { side, size, className, ...edgeProps } = props;
 
   return (
-    <EdgePrimitive
+    <div
       data-size={size}
       data-slot="marquee-edge"
       {...edgeProps}
