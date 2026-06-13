@@ -1,11 +1,11 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { useChatTransport } from "@convex-dev/agent/vercel/react";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { createMathPlugin } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
-import { DefaultChatTransport } from "ai";
 import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 import { useState } from "react";
@@ -30,6 +30,7 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from "@/components/ui/shadcn-io/ai/reasoning";
+import { api } from "@/convex/_generated/api";
 
 const streamdownPlugins = {
   code,
@@ -38,14 +39,23 @@ const streamdownPlugins = {
   cjk,
 };
 
-const CHAT_API = `${process.env.NEXT_PUBLIC_CONVEX_SITE_URL}/chat`;
-
 export default function Chat() {
   const [hasText, setHasText] = useState(false);
-  const { messages, sendMessage, status, stop } = useChat({
-    transport: new DefaultChatTransport({ api: CHAT_API }),
-    onError: (err) => toast.error(err.message || "Chat request failed"),
-  });
+  const [sessionId] = useState(() => crypto.randomUUID());
+  const { messages, sendMessage, status, stop } = useChat(
+    useChatTransport(
+      api.chat,
+      { sessionId },
+      {
+        id: sessionId,
+        cancelOnAbort: true,
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : "Chat request failed");
+          return "Something went wrong reaching the model. Please try again.";
+        },
+      }
+    )
+  );
 
   const isBusy = status === "submitted" || status === "streaming";
 

@@ -1,12 +1,4 @@
-import {
-  convertToModelMessages,
-  createUIMessageStreamResponse,
-  streamText,
-  toUIMessageStream,
-  type UIMessage,
-} from "ai";
 import { httpRouter } from "convex/server";
-import { getChatModel } from "../lib/chat/provider";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
@@ -96,78 +88,6 @@ http.route({
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json" },
-    });
-  }),
-});
-
-const SYSTEM_PROMPT =
-  "You are a friendly assistant embedded on Shahathir Iskandar's personal portfolio site. " +
-  "Be concise, helpful, and conversational. If you don't know something, say so. " +
-  "Do not use emojis. " +
-  "When presenting two or more items that share the same attributes (row-like data), use a " +
-  "markdown table instead of repeating the same field labels under nested bullets. Use bullet " +
-  "lists for prose or when items have different fields. " +
-  "When you write mathematical expressions, use LaTeX: wrap inline math in single dollar " +
-  "signs ($...$) and block/display math in double dollar signs ($$...$$). Do not use " +
-  "parentheses or square brackets as math delimiters. " +
-  "When you produce a Mermaid diagram, always wrap node labels in double quotes if they " +
-  "contain spaces or any special characters such as parentheses, ampersands, slashes, or " +
-  'commas — e.g. write A["Source Database (e.g., PostgreSQL)"] not A[Source Database (e.g., PostgreSQL)]. ' +
-  "Unquoted special characters cause Mermaid parse errors.";
-
-const CHAT_CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-http.route({
-  path: "/chat",
-  method: "OPTIONS",
-  handler: httpAction(async () => new Response(null, { status: 204, headers: CHAT_CORS_HEADERS })),
-});
-
-http.route({
-  path: "/chat",
-  method: "POST",
-  handler: httpAction(async (_ctx, request) => {
-    let messages: UIMessage[];
-    try {
-      ({ messages } = await request.json());
-    } catch {
-      return new Response("Invalid request body", {
-        status: 400,
-        headers: CHAT_CORS_HEADERS,
-      });
-    }
-
-    const result = streamText({
-      model: getChatModel(),
-      system: SYSTEM_PROMPT,
-      messages: await convertToModelMessages(messages),
-      providerOptions: {
-        openai: {
-          // Gemma 4 E2B isn't in the SDK's reasoning-model id allowlist, so the
-          // reasoning config is dropped unless we force it on.
-          forceReasoning: true,
-          // Model card recommends `high` to keep reasoning in its own channel.
-          reasoningEffort: "high",
-          // Ask for the reasoning summary so it streams back to the client.
-          reasoningSummary: "auto",
-        },
-      },
-    });
-
-    return createUIMessageStreamResponse({
-      stream: toUIMessageStream({
-        stream: result.stream,
-        sendReasoning: true,
-        onError: (error) => {
-          console.error("[chat] stream error", error);
-          return "Something went wrong reaching the model. Please try again.";
-        },
-      }),
-      headers: CHAT_CORS_HEADERS,
     });
   }),
 });
