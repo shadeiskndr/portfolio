@@ -16,6 +16,7 @@ import type * as crons from "../crons.js";
 import type * as github from "../github.js";
 import type * as http from "../http.js";
 import type * as photos from "../photos.js";
+import type * as sessions from "../sessions.js";
 import type * as songs from "../songs.js";
 import type * as spotify from "../spotify.js";
 import type * as storage from "../storage.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   github: typeof github;
   http: typeof http;
   photos: typeof photos;
+  sessions: typeof sessions;
   songs: typeof songs;
   spotify: typeof spotify;
   storage: typeof storage;

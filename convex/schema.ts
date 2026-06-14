@@ -90,4 +90,17 @@ export default defineSchema({
     artist: v.string(),
     order: v.number(),
   }).index("by_order", ["order"]),
+
+  // Chat sessions map a public, client-generated UUIDv7 (`sessionId`) to an
+  // Agent-component thread. `clientId` (also a UUIDv7) scopes sessions to a
+  // single browser so a visitor can list/switch/delete their own chats. Neither
+  // id is a secret beyond being unguessable — the /chat endpoint is unauthed.
+  chatSessions: defineTable({
+    sessionId: v.string(),
+    clientId: v.string(),
+    threadId: v.string(),
+    title: v.optional(v.string()),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_client", ["clientId"]),
 });
