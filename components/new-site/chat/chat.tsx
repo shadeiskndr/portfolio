@@ -23,6 +23,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Context,
+  ContextCacheUsage,
+  ContextContent,
+  ContextContentBody,
+  ContextContentFooter,
+  ContextContentHeader,
+  ContextInputUsage,
+  ContextOutputUsage,
+  ContextTrigger,
+} from "@/components/ui/shadcn-io/ai/context";
+import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
@@ -56,6 +67,10 @@ const streamdownPlugins = {
 
 const CLIENT_ID_KEY = "portfolio-chat-client-id";
 const SESSION_ID_KEY = "portfolio-chat-session-id";
+// Gemma 4 E2B (google.gemma-4-e2b) context window: 128K tokens — gauge denominator.
+const MODEL_CONTEXT_TOKENS = 131_072;
+// Gemma 4 E2B list price (USD per 1M tokens), per the Bedrock model card.
+const GEMMA_PRICING = { inputPer1M: 0.04, outputPer1M: 0.08 };
 
 export default function Chat() {
   // Stable per-browser id scoping the visitor's sessions; and the currently
@@ -65,6 +80,10 @@ export default function Chat() {
     uuidv7()
   );
   const sessions = useQuery(api.sessions.list, clientId ? { clientId } : "skip");
+  const usage = useQuery(
+    api.chat.usage,
+    clientId ? { sessionId: activeSessionId, clientId } : "skip"
+  );
   const removeSession = useMutation(api.sessions.remove);
 
   function handleNewChat() {
@@ -124,10 +143,31 @@ export default function Chat() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button onClick={handleNewChat} size="sm" variant="outline">
-          <MessageSquarePlusIcon className="size-4" />
-          New chat
-        </Button>
+        <div className="flex items-center gap-1">
+          {usage ? (
+            <Context
+              maxTokens={MODEL_CONTEXT_TOKENS}
+              pricing={GEMMA_PRICING}
+              usage={usage.usage}
+              usedTokens={usage.usedTokens}
+            >
+              <ContextTrigger />
+              <ContextContent>
+                <ContextContentHeader />
+                <ContextContentBody>
+                  <ContextInputUsage />
+                  <ContextOutputUsage />
+                  <ContextCacheUsage />
+                </ContextContentBody>
+                <ContextContentFooter />
+              </ContextContent>
+            </Context>
+          ) : null}
+          <Button onClick={handleNewChat} size="sm" variant="outline">
+            <MessageSquarePlusIcon className="size-4" />
+            New chat
+          </Button>
+        </div>
       </div>
 
       <ChatSession
