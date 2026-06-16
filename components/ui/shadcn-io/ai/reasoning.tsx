@@ -1,10 +1,11 @@
 "use client";
 
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useCallback, useContext, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "./shimmer";
 
@@ -47,7 +48,10 @@ export const Reasoning = memo(
     children,
     ...props
   }: ReasoningProps) => {
-    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+    // Open at mount only while actively streaming. Historical reasoning (e.g.
+    // after switching sessions) must start collapsed — otherwise it opens for a
+    // moment and then auto-closes, which reads as a jarring flash.
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen && isStreaming);
     const isOpen = open ?? uncontrolledOpen;
     const setIsOpen = useCallback(
       (next: boolean) => {
@@ -62,6 +66,10 @@ export const Reasoning = memo(
     const duration = durationProp ?? measuredDuration;
 
     const [hasAutoClosed, setHasAutoClosed] = useState(false);
+    // Whether this block has streamed during its lifetime. Historical blocks
+    // (opened after the fact) never stream, so they must never auto-close —
+    // otherwise manually opening one starts the close timer and it collapses.
+    const [hasStreamed, setHasStreamed] = useState(isStreaming);
     const [startTime, setStartTime] = useState<number | null>(null);
 
     // Track duration when streaming starts and ends
@@ -76,9 +84,21 @@ export const Reasoning = memo(
       }
     }, [isStreaming, startTime, setDuration]);
 
-    // Auto-open when streaming starts, auto-close when streaming ends (once only)
+    // Auto-open when streaming starts (also records that it streamed) — covers a
+    // block that mounts before its stream begins.
     useEffect(() => {
-      if (defaultOpen && !isStreaming && isOpen && !hasAutoClosed) {
+      if (isStreaming) {
+        setHasStreamed(true);
+        if (defaultOpen && !hasAutoClosed) {
+          setIsOpen(true);
+        }
+      }
+    }, [defaultOpen, isStreaming, hasAutoClosed, setIsOpen]);
+
+    // Auto-close shortly after streaming ends (once only), and only for a block
+    // that actually streamed — never for a historical block opened by hand.
+    useEffect(() => {
+      if (defaultOpen && hasStreamed && !isStreaming && isOpen && !hasAutoClosed) {
         // Add a small delay before closing to allow user to see the content
         const timer = setTimeout(() => {
           setIsOpen(false);
@@ -87,7 +107,7 @@ export const Reasoning = memo(
 
         return () => clearTimeout(timer);
       }
-    }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosed]);
+    }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosed, hasStreamed]);
 
     const handleOpenChange = (newOpen: boolean) => {
       setIsOpen(newOpen);
@@ -153,24 +173,44 @@ export const ReasoningTrigger = memo(
   }
 );
 
-export type ReasoningContentProps = ComponentProps<typeof CollapsibleContent> & {
+export type ReasoningContentProps = {
+  className?: string;
   children: string;
   plugins?: ComponentProps<typeof Streamdown>["plugins"];
+  animated?: ComponentProps<typeof Streamdown>["animated"];
+  isAnimating?: ComponentProps<typeof Streamdown>["isAnimating"];
 };
 
 export const ReasoningContent = memo(
-  ({ className, children, plugins, ...props }: ReasoningContentProps) => (
-    <CollapsibleContent
-      className={cn(
-        "mt-4 text-sm",
-        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-        className
-      )}
-      {...props}
-    >
-      <Streamdown plugins={plugins}>{children}</Streamdown>
-    </CollapsibleContent>
-  )
+  ({ className, children, plugins, animated, isAnimating }: ReasoningContentProps) => {
+    const { isOpen } = useReasoning();
+    const shouldReduceMotion = useReducedMotion();
+
+    return (
+      <AnimatePresence initial={false}>
+        {isOpen ? (
+          <motion.div
+            animate={{ height: "auto", opacity: 1 }}
+            className="overflow-hidden"
+            // Height snaps to `auto` after the tween, so streaming content that
+            // grows while the panel is open keeps expanding without clipping.
+            exit={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0 }}
+            key="reasoning-content"
+            transition={
+              shouldReduceMotion ? { duration: 0 } : { duration: 0.25, ease: [0.4, 0, 0.2, 1] }
+            }
+          >
+            <div className={cn("mt-4 text-muted-foreground text-sm", className)}>
+              <Streamdown animated={animated} isAnimating={isAnimating} plugins={plugins}>
+                {children}
+              </Streamdown>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    );
+  }
 );
 
 Reasoning.displayName = "Reasoning";

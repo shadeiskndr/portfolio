@@ -9,7 +9,9 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
       </div>
       <div className="flex min-h-screen min-w-0 flex-col">
         <TopNav />
-        <main className="flex-1 px-6 py-10 lg:px-12 lg:py-14">{children}</main>
+        <main className="flex flex-1 flex-col px-6 py-10 lg:px-12 lg:py-14 [&>*]:w-full">
+          {children}
+        </main>
       </div>
     </div>
   );

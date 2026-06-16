@@ -15,8 +15,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
-      initial={skipInitial ? false : { opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
       animate={{ opacity: 1, y: 0 }}
+      className="flex flex-1 flex-col *:w-full"
+      initial={skipInitial ? false : { opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       {children}
