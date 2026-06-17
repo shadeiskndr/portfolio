@@ -2,11 +2,16 @@ import { Agent } from "@convex-dev/agent";
 import { defineModel } from "@convex-dev/agent/vercel";
 import { getChatModel } from "../lib/chat/provider";
 import { components } from "./_generated/api";
+import { calculate } from "./tools";
 
 const SYSTEM_PROMPT =
   "You are a friendly assistant embedded on Shahathir Iskandar's personal portfolio site. " +
   "Be concise, helpful, and conversational. If you don't know something, say so. " +
   "Do not use emojis. " +
+  "You have a `calculate` tool for exact arithmetic and statistics. Whenever a request " +
+  "involves a computed number — sums, averages, standard deviation, powers, dot products, " +
+  "and so on — call `calculate` rather than working it out yourself, then state the result " +
+  "in plain language. " +
   "When presenting two or more items that share the same attributes (row-like data), use a " +
   "markdown table instead of repeating the same field labels under nested bullets. Use bullet " +
   "lists for prose or when items have different fields. " +
@@ -33,4 +38,5 @@ const model = defineModel({
 export const chatAgent = new Agent(components.agent, {
   name: "portfolio-assistant",
   model,
+  tools: { calculate },
 });

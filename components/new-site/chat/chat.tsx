@@ -6,11 +6,12 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { createMathPlugin } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
+import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } from "ai";
 import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowDownIcon, CheckIcon, Plus, SparklesIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v7 as uuidv7 } from "uuid";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -48,6 +49,13 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from "@/components/ui/shadcn-io/ai/reasoning";
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from "@/components/ui/shadcn-io/ai/tool";
 import { api } from "@/convex/_generated/api";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -87,6 +95,46 @@ const HERO_SEQUENCES = [
 // elevated shadow (arbitrary value) that reads clearly on the near-white card.
 const COMPOSER_CARD =
   "border-radius border-border/60 bg-background p-1 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_28px_-8px_rgba(0,0,0,0.22)] transition-shadow focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_20px_44px_-10px_rgba(0,0,0,0.30)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_20px_44px_-10px_rgba(0,0,0,0.30)] has-[[data-slot=input-group-control]:focus-visible]:border-border/60 has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-disabled:bg-background has-disabled:opacity-100 dark:bg-background dark:has-disabled:bg-background dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_12px_28px_-8px_rgba(0,0,0,0.6)]";
+
+type AnyToolPart = ToolUIPart | DynamicToolUIPart;
+
+type MergedToolCall = {
+  toolCallId: string;
+  toolName: string;
+  state: ToolUIPart["state"];
+  input: unknown;
+  output: unknown;
+  errorText?: string;
+};
+
+// Higher = further along. A tool call's input and output stream in as one
+// evolving part live, but reload from history as two parts sharing a
+// toolCallId; merging on the highest-ranked state renders each call once, fully
+// resolved.
+const TOOL_STATE_RANK: Record<ToolUIPart["state"], number> = {
+  "input-streaming": 0,
+  "input-available": 1,
+  "approval-requested": 2,
+  "approval-responded": 3,
+  "output-available": 4,
+  "output-error": 4,
+  "output-denied": 4,
+};
+
+function mergeToolPart(prev: MergedToolCall | undefined, part: AnyToolPart): MergedToolCall {
+  const output = (part as { output?: unknown }).output;
+  const errorText = (part as { errorText?: string }).errorText;
+  const state =
+    prev && TOOL_STATE_RANK[prev.state] > TOOL_STATE_RANK[part.state] ? prev.state : part.state;
+  return {
+    toolCallId: part.toolCallId,
+    toolName: getToolName(part),
+    state,
+    input: (part as { input?: unknown }).input ?? prev?.input,
+    output: output ?? prev?.output,
+    errorText: errorText ?? prev?.errorText,
+  };
+}
 
 export default function Chat() {
   // Stable per-browser id scoping the visitor's sessions; and the currently
@@ -238,6 +286,21 @@ function ChatSession({
 
   const { scrollToBottom, showScrollButton } = useWindowStickToBottom();
 
+  // Collapse each tool call's parts (input, then output) into one entry keyed by
+  // toolCallId so the transcript shows a single card per call. See TOOL_STATE_RANK.
+  const toolCalls = useMemo(() => {
+    const byId = new Map<string, MergedToolCall>();
+    for (const message of messages) {
+      for (const part of message.parts) {
+        if (part.type === "dynamic-tool" || isToolUIPart(part)) {
+          const toolPart = part as AnyToolPart;
+          byId.set(toolPart.toolCallId, mergeToolPart(byId.get(toolPart.toolCallId), toolPart));
+        }
+      }
+    }
+    return byId;
+  }, [messages]);
+
   const isBusy = status === "submitted" || status === "streaming";
   const isEmpty = messages.length === 0;
 
@@ -295,6 +358,10 @@ function ChatSession({
     );
   }
 
+  // Tool calls can appear as multiple parts (and across messages); render each
+  // toolCallId once, at its first occurrence.
+  const renderedToolCallIds = new Set<string>();
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-8 px-4 pb-16" role="log">
@@ -335,6 +402,30 @@ function ChatSession({
                       >
                         {part.text}
                       </MessageResponse>
+                    );
+                  }
+                  if (part.type === "dynamic-tool" || isToolUIPart(part)) {
+                    const id = (part as AnyToolPart).toolCallId;
+                    if (renderedToolCallIds.has(id)) {
+                      return null;
+                    }
+                    renderedToolCallIds.add(id);
+                    const tool = toolCalls.get(id);
+                    if (!tool) {
+                      return null;
+                    }
+                    return (
+                      <Tool key={key}>
+                        <ToolHeader
+                          state={tool.state}
+                          title={tool.toolName}
+                          type={`tool-${tool.toolName}`}
+                        />
+                        <ToolContent>
+                          <ToolInput input={tool.input} />
+                          <ToolOutput errorText={tool.errorText} output={tool.output} />
+                        </ToolContent>
+                      </Tool>
                     );
                   }
                   return null;
