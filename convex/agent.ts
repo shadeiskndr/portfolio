@@ -1,6 +1,7 @@
 import { Agent } from "@convex-dev/agent";
 import { defineModel } from "@convex-dev/agent/vercel";
-import { getChatModel } from "../lib/chat/provider";
+import { getChatModelInfo } from "../lib/chat/models";
+import { effectiveModelId, getChatModel } from "../lib/chat/provider";
 import { components } from "./_generated/api";
 import { calculate } from "./tools";
 
@@ -23,20 +24,27 @@ const SYSTEM_PROMPT =
   'commas — e.g. write A["Source Database (e.g., PostgreSQL)"] not A[Source Database (e.g., PostgreSQL)]. ' +
   "Unquoted special characters cause Mermaid parse errors.";
 
-const model = defineModel({
-  model: getChatModel(),
-  instructions: SYSTEM_PROMPT,
-  providerOptions: {
-    openai: {
-      forceReasoning: true,
-      reasoningEffort: "high",
-      reasoningSummary: "auto",
-    },
-  },
-});
+export function defineChatModel(modelId?: string) {
+  const usesResponsesApi = getChatModelInfo(effectiveModelId(modelId)).api === "responses";
+  return defineModel({
+    model: getChatModel(modelId),
+    instructions: SYSTEM_PROMPT,
+    ...(usesResponsesApi
+      ? {
+          providerOptions: {
+            openai: {
+              forceReasoning: true,
+              reasoningEffort: "high",
+              reasoningSummary: "auto",
+            },
+          },
+        }
+      : {}),
+  });
+}
 
 export const chatAgent = new Agent(components.agent, {
   name: "portfolio-assistant",
-  model,
+  model: defineChatModel(),
   tools: { calculate },
 });

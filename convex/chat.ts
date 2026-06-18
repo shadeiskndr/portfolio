@@ -2,6 +2,7 @@ import { vAgentMessageInput } from "@convex-dev/agent/validators";
 import { streamQueryArgsValidator } from "@convex-dev/stream";
 import { streamText } from "ai";
 import { v } from "convex/values";
+import { resolveModelId } from "../lib/chat/models";
 import { getChatModel } from "../lib/chat/provider";
 import { internal } from "./_generated/api";
 import {
@@ -12,7 +13,7 @@ import {
   type QueryCtx,
   query,
 } from "./_generated/server";
-import { chatAgent } from "./agent";
+import { chatAgent, defineChatModel } from "./agent";
 
 // Gemma 4 E2B has a 128K-token context window. When a turn's prompt exceeds
 // COMPACT_AT_TOKENS (~73% of it), older turns are summarized so the next run
@@ -128,7 +129,11 @@ export const send = mutation({
       // `chatId` here collides on the 2nd message in a session (conflictingRunKey).
       key: args.message.clientKey ?? args.messageId ?? args.chatId,
     });
-    await ctx.scheduler.runAfter(0, internal.chat.execute, { runId: run.runId });
+    // The composer sends its selected model in `body.modelId`. Whitelist it here
+    // (public endpoint) so an unknown id can't reach Bedrock; falls back to the
+    // registry default.
+    const modelId = resolveModelId((args.body as { modelId?: string } | undefined)?.modelId);
+    await ctx.scheduler.runAfter(0, internal.chat.execute, { runId: run.runId, modelId });
     return run;
   },
 });
@@ -169,7 +174,11 @@ function messageRole(m: { message?: { author?: { type?: string } } }): string {
  * older than the KEEP_RECENT_MESSAGES window into a single brief. Returns null
  * when compaction isn't needed (so the run uses the default context window).
  */
-async function summarizeOlderTurns(ctx: ActionCtx, threadId: string): Promise<string | null> {
+async function summarizeOlderTurns(
+  ctx: ActionCtx,
+  threadId: string,
+  modelId?: string
+): Promise<string | null> {
   const recent = await chatAgent.messages.list(ctx, {
     threadId,
     order: "desc",
@@ -193,7 +202,7 @@ async function summarizeOlderTurns(ctx: ActionCtx, threadId: string): Promise<st
   if (!transcript) return null;
 
   const result = streamText({
-    model: getChatModel(),
+    model: getChatModel(modelId),
     prompt:
       "Summarize the earlier part of this conversation into a concise brief that " +
       "preserves facts, names, preferences, and decisions. Output only the summary, " +
@@ -206,14 +215,16 @@ async function summarizeOlderTurns(ctx: ActionCtx, threadId: string): Promise<st
 }
 
 export const execute = internalAction({
-  args: { runId: v.string() },
-  handler: async (ctx, { runId }) => {
+  args: { runId: v.string(), modelId: v.optional(v.string()) },
+  handler: async (ctx, { runId, modelId }) => {
+    const model = defineChatModel(modelId);
     const run = await chatAgent.runs.get(ctx, { runId });
-    const summary = run ? await summarizeOlderTurns(ctx, run.threadId) : null;
+    const summary = run ? await summarizeOlderTurns(ctx, run.threadId, modelId) : null;
     if (summary) {
       // Compact: feed a summary of older turns + only the recent window verbatim.
       await chatAgent.runs.execute(ctx, {
         runId,
+        model,
         recentMessages: KEEP_RECENT_MESSAGES,
         context: () =>
           Promise.resolve([
@@ -226,6 +237,6 @@ export const execute = internalAction({
       });
       return;
     }
-    await chatAgent.runs.execute(ctx, { runId });
+    await chatAgent.runs.execute(ctx, { runId, model });
   },
 });

@@ -1,4 +1,5 @@
 import { createBedrockMantle } from "@ai-sdk/amazon-bedrock/mantle";
+import { DEFAULT_MODEL_ID, getChatModelInfo } from "./models";
 
 function rewriteSseLine(line: string): string {
   if (line.startsWith("event:")) {
@@ -56,7 +57,12 @@ const bridgeReasoningFetch = async (
   });
 };
 
-export function getChatModel() {
+/** Explicit per-run selection wins; else the env override, else the registry default. */
+export function effectiveModelId(modelId?: string) {
+  return modelId ?? process.env.BEDROCK_MANTLE_MODEL ?? DEFAULT_MODEL_ID;
+}
+
+export function getChatModel(modelId?: string) {
   const region = process.env.AWS_REGION ?? "us-east-1";
   const bedrockMantle = createBedrockMantle({
     region,
@@ -64,5 +70,6 @@ export function getChatModel() {
       process.env.BEDROCK_MANTLE_BASE_URL ?? `https://bedrock-mantle.${region}.api.aws/openai/v1`,
     fetch: bridgeReasoningFetch as typeof fetch,
   });
-  return bedrockMantle.responses(process.env.BEDROCK_MANTLE_MODEL ?? "google.gemma-4-e2b");
+  const id = effectiveModelId(modelId);
+  return getChatModelInfo(id).api === "chat" ? bedrockMantle.chat(id) : bedrockMantle.responses(id);
 }

@@ -60,14 +60,32 @@ export const calculate = defineTool({
     result: v.any(),
   }),
   execute: async (input): Promise<CalcResult> => {
-    if (typeof input.expression === "string" && input.expression.trim()) {
-      return evaluateExpression(input.expression);
+    // A tool `execute` that THROWS is fatal to the whole run in the agent's V2
+    // runs executor: `handleToolCall` doesn't catch it, so the throw propagates
+    // to `runs.execute` → `runs.fail`, which patches the run's stream doc and
+    // races the just-recorded tool events on the same doc — surfacing as the
+    // "streams table ... appendEvents" OCC write conflict. The model calls
+    // `calculate` with empty/malformed input often enough that this aborts turns
+    // constantly. So never throw: return the reason as a normal tool result the
+    // model can read and retry from (bounded by the executor's step cap).
+    try {
+      if (typeof input.expression === "string" && input.expression.trim()) {
+        return evaluateExpression(input.expression);
+      }
+      if (input.operation && input.values) {
+        return runCalculation(input.operation, input.values, input.operand);
+      }
+      return {
+        formatted:
+          "Error: no calculation provided. Call `calculate` again with either an `expression` " +
+          "string, or both an `operation` and a `values` list. See the tool description.",
+        result: null,
+      };
+    } catch (error) {
+      return {
+        formatted: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        result: null,
+      };
     }
-    if (input.operation && input.values) {
-      return runCalculation(input.operation, input.values, input.operand);
-    }
-    throw new Error(
-      "Provide either `expression`, or both `operation` and `values`. See the tool description."
-    );
   },
 });

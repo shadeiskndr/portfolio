@@ -84,7 +84,9 @@ function list(xs: number[]): string {
 
 /**
  * Evaluate one curated calculator operation with numpy-ts. Throws on malformed
- * input so the agent surfaces the reason as a tool error and can correct itself.
+ * input; the `calculate` tool boundary catches the throw and returns the reason
+ * as a normal tool result (a thrown tool error would abort the whole run), so
+ * the model still sees the message and can correct itself.
  */
 export function runCalculation(
   operation: string,

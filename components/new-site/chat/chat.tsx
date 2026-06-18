@@ -41,6 +41,11 @@ import {
   PromptInputBody,
   PromptInputFooter,
   type PromptInputMessage,
+  PromptInputSelect,
+  PromptInputSelectContent,
+  PromptInputSelectItem,
+  PromptInputSelectTrigger,
+  PromptInputSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ui/shadcn-io/ai/prompt-input";
@@ -60,6 +65,7 @@ import { api } from "@/convex/_generated/api";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { usePersistentId } from "@/hooks/use-persistent-id";
+import { CHAT_MODELS, DEFAULT_MODEL_ID, getChatModelInfo } from "@/lib/chat/models";
 import { cn } from "@/lib/utils";
 
 const streamdownPlugins = {
@@ -78,10 +84,13 @@ const CHAT_ANIMATION = {
 
 const CLIENT_ID_KEY = "portfolio-chat-client-id";
 const SESSION_ID_KEY = "portfolio-chat-session-id";
-// Gemma 4 E2B (google.gemma-4-e2b) context window: 128K tokens — gauge denominator.
-const MODEL_CONTEXT_TOKENS = 131_072;
-// Gemma 4 E2B list price (USD per 1M tokens), per the Bedrock model card.
-const GEMMA_PRICING = { inputPer1M: 0.04, outputPer1M: 0.08 };
+const MODEL_ID_KEY = "portfolio-chat-model-id";
+
+// base-ui Select renders the label for the selected value from this map, so the
+// trigger stays compact (just the name) while the dropdown items are richer.
+const MODEL_LABELS: Record<string, string> = Object.fromEntries(
+  CHAT_MODELS.map((model) => [model.id, model.name])
+);
 
 // Empty-state hero: cycles a few friendly greetings under the "Hi there" line.
 const HERO_SEQUENCES = [
@@ -136,6 +145,34 @@ function mergeToolPart(prev: MergedToolCall | undefined, part: AnyToolPart): Mer
   };
 }
 
+function ModelSelector({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  return (
+    <PromptInputSelect
+      items={MODEL_LABELS}
+      onValueChange={(next) => {
+        if (typeof next === "string") {
+          onChange(next);
+        }
+      }}
+      value={value}
+    >
+      <PromptInputSelectTrigger aria-label="Model" className="h-8 gap-1 px-2 text-xs">
+        <PromptInputSelectValue />
+      </PromptInputSelectTrigger>
+      <PromptInputSelectContent align="start" className="min-w-56">
+        {CHAT_MODELS.map((model) => (
+          <PromptInputSelectItem key={model.id} value={model.id}>
+            <span className="flex flex-col">
+              <span className="font-medium text-foreground">{model.name}</span>
+              <span className="text-muted-foreground text-xs">{model.provider}</span>
+            </span>
+          </PromptInputSelectItem>
+        ))}
+      </PromptInputSelectContent>
+    </PromptInputSelect>
+  );
+}
+
 export default function Chat() {
   // Stable per-browser id scoping the visitor's sessions; and the currently
   // open session, persisted so a reload resumes the last conversation.
@@ -143,6 +180,15 @@ export default function Chat() {
   const [activeSessionId, setActiveSessionId] = useLocalStorage<string>(SESSION_ID_KEY, () =>
     uuidv7()
   );
+  // Model choice is a per-browser preference (persisted), applied to the next
+  // message. `initializeWithValue: false` renders the default on the server and
+  // first client paint (the model name is shown as text, so reading localStorage
+  // eagerly would cause a hydration mismatch), then syncs after mount. Resolve
+  // through the registry so a removed/stale id falls back.
+  const [modelId, setModelId] = useLocalStorage<string>(MODEL_ID_KEY, DEFAULT_MODEL_ID, {
+    initializeWithValue: false,
+  });
+  const activeModel = getChatModelInfo(modelId);
   const sessions = useQuery(api.sessions.list, clientId ? { clientId } : "skip");
   const usage = useQuery(
     api.chat.usage,
@@ -166,6 +212,8 @@ export default function Chat() {
 
   const controls = (
     <div className="flex items-center gap-0.5">
+      <ModelSelector onChange={setModelId} value={activeModel.id} />
+
       <Button
         className="text-muted-foreground"
         onClick={handleNewChat}
@@ -224,8 +272,8 @@ export default function Chat() {
 
       {usage ? (
         <Context
-          maxTokens={MODEL_CONTEXT_TOKENS}
-          pricing={GEMMA_PRICING}
+          maxTokens={activeModel.contextTokens}
+          pricing={activeModel.pricing}
           usage={usage.usage}
           usedTokens={usage.usedTokens}
         >
@@ -249,6 +297,7 @@ export default function Chat() {
       <ChatSession
         clientId={clientId}
         key={activeSessionId}
+        modelId={activeModel.id}
         onSent={() => setActiveSessionId(activeSessionId)}
         sessionId={activeSessionId}
         toolbar={controls}
@@ -260,11 +309,13 @@ export default function Chat() {
 function ChatSession({
   clientId,
   sessionId,
+  modelId,
   onSent,
   toolbar,
 }: {
   clientId: string;
   sessionId: string;
+  modelId: string;
   onSent: () => void;
   toolbar: ReactNode;
 }) {
@@ -307,7 +358,9 @@ function ChatSession({
   function handleSubmit(message: PromptInputMessage) {
     const text = message.text?.trim();
     if (!text || isBusy || !clientId) return;
-    sendMessage({ text });
+    // The selected model rides along in the request body; the `send` mutation
+    // reads and whitelists `body.modelId` before scheduling the run.
+    sendMessage({ text }, { body: { modelId } });
     onSent();
     setHasText(false);
     scrollToBottom();
