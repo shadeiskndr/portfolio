@@ -1,5 +1,28 @@
+import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { createBedrockMantle } from "@ai-sdk/amazon-bedrock/mantle";
 import { DEFAULT_MODEL_ID, getChatModelInfo } from "./models";
+
+/**
+ * RAG embedding model: Amazon Nova 2 multimodal embeddings. Supported output
+ * dimensions are 256 / 384 / 1024 / 3072; 1024 is the Nova default. This value
+ * MUST match the `dimensions` of the `portfolioChunks` vector index in
+ * `convex/schema.ts` — changing it means re-creating the index and re-ingesting.
+ */
+export const EMBEDDING_MODEL_ID = "amazon.nova-2-multimodal-embeddings-v1:0";
+export const EMBEDDING_DIMENSION = 1024;
+
+/**
+ * Embedding model for RAG, via the STANDARD Bedrock provider (SigV4). This is
+ * deliberately not the Mantle provider used for chat — Mantle exposes no
+ * embedding models (`embeddingModel()` throws NoSuchModelError). It signs with
+ * the AWS credentials already in the deployment env and hits
+ * `bedrock-runtime.<region>.amazonaws.com`. Nova multimodal embeddings launched
+ * in us-east-1, so allow an embedding-specific region override.
+ */
+export function getEmbeddingModel() {
+  const region = process.env.AWS_EMBEDDING_REGION ?? process.env.AWS_REGION ?? "us-east-1";
+  return createAmazonBedrock({ region }).embeddingModel(EMBEDDING_MODEL_ID);
+}
 
 function rewriteSseLine(line: string): string {
   if (line.startsWith("event:")) {

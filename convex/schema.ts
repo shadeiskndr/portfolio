@@ -103,4 +103,28 @@ export default defineSchema({
   })
     .index("by_session", ["sessionId"])
     .index("by_client", ["clientId"]),
+
+  // RAG knowledge base for the /chat assistant: one embedded chunk per portfolio
+  // item (experience / project / certificate), serialized from `lib/data.tsx` by
+  // `scripts/ingest-rag.ts`. `dimensions` MUST equal EMBEDDING_DIMENSION in
+  // `lib/chat/provider.ts` (Amazon Nova embeddings, 1024). Queried in
+  // `convex/rag.ts` via `ctx.vectorSearch` and injected as context in the chat run.
+  portfolioChunks: defineTable({
+    source: v.string(),
+    refKey: v.string(),
+    text: v.string(),
+    embedding: v.array(v.float64()),
+    // Cross-modal: text chunks vs. image chunks (gallery photos). Absent =
+    // "text". Photo chunks carry the storage blob; project text chunks carry
+    // their screenshot's asset key — both resolve to a URL on retrieval.
+    modality: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
+    imageKey: v.optional(v.string()),
+  })
+    .index("by_ref", ["refKey"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1024,
+      filterFields: ["source"],
+    }),
 });

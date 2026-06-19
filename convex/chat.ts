@@ -14,6 +14,7 @@ import {
   query,
 } from "./_generated/server";
 import { chatAgent, defineChatModel } from "./agent";
+import { retrievePortfolioContext } from "./rag";
 
 // Gemma 4 E2B has a 128K-token context window. When a turn's prompt exceeds
 // COMPACT_AT_TOKENS (~73% of it), older turns are summarized so the next run
@@ -214,29 +215,80 @@ async function summarizeOlderTurns(
   return summary || null;
 }
 
+/** The current user turn's prompt text, for RAG retrieval (empty if none). */
+async function latestUserQuery(ctx: ActionCtx, threadId: string): Promise<string> {
+  const page = await chatAgent.messages.list(ctx, {
+    threadId,
+    order: "desc",
+    excludeToolMessages: true,
+    paginationOpts: { cursor: null, numItems: 10 },
+  });
+  const userMessage = page.page.find((m) => m.message?.author?.type === "user");
+  return userMessage?.text ?? "";
+}
+
+type ContextBlock = { type: "text"; name: string; text: string };
+
 export const execute = internalAction({
   args: { runId: v.string(), modelId: v.optional(v.string()) },
   handler: async (ctx, { runId, modelId }) => {
     const model = defineChatModel(modelId);
     const run = await chatAgent.runs.get(ctx, { runId });
-    const summary = run ? await summarizeOlderTurns(ctx, run.threadId, modelId) : null;
-    if (summary) {
-      // Compact: feed a summary of older turns + only the recent window verbatim.
-      await chatAgent.runs.execute(ctx, {
-        runId,
-        model,
-        recentMessages: KEEP_RECENT_MESSAGES,
-        context: () =>
-          Promise.resolve([
-            {
-              type: "text" as const,
-              name: "conversation_summary",
-              text: `Summary of earlier conversation:\n${summary}`,
-            },
-          ]),
-      });
+    if (!run) {
+      await chatAgent.runs.execute(ctx, { runId, model });
       return;
     }
-    await chatAgent.runs.execute(ctx, { runId, model });
+
+    const contextBlocks: ContextBlock[] = [];
+
+    // Prompt-based RAG: always retrieve portfolio facts relevant to the current
+    // question and inject them as context (see convex/rag.ts). Gemma is small,
+    // so we retrieve unconditionally rather than relying on a search tool call.
+    // Cross-modal: retrieval returns text facts AND relevant image URLs (gallery
+    // photos / project screenshots), ranked together from one vector space.
+    const query = await latestUserQuery(ctx, run.threadId);
+    const retrieved = query ? await retrievePortfolioContext(ctx, query) : { text: "", images: [] };
+    if (retrieved.text) {
+      contextBlocks.push({
+        type: "text",
+        name: "portfolio_facts",
+        text:
+          "Relevant facts about Shahathir Iskandar, retrieved for this question. Ground your " +
+          `answer in them; if they do not cover it, say you do not know.\n\n${retrieved.text}`,
+      });
+    }
+    if (retrieved.images.length > 0) {
+      const list = retrieved.images.map((image) => `- ${image.title}: ${image.url}`).join("\n");
+      contextBlocks.push({
+        type: "text",
+        name: "portfolio_images",
+        text:
+          "Relevant images from Shahathir's portfolio (title: URL), matched to this question. " +
+          "If the user wants to see them, asks about a photo/screenshot, or an image clearly " +
+          "helps, show the relevant ones as markdown images. CRITICAL formatting rule: put each " +
+          "image on its OWN line as `![title](URL)`, with a blank line before and after it. Never " +
+          "place an image on the same line as text or inside a sentence — write any commentary on " +
+          "a separate line. Only include images that are genuinely relevant; do not list URLs as " +
+          `plain text.\n\n${list}`,
+      });
+    }
+
+    // Token-based compaction: when the last prompt neared the window, summarize
+    // older turns and keep only the recent window verbatim.
+    const summary = await summarizeOlderTurns(ctx, run.threadId, modelId);
+    if (summary) {
+      contextBlocks.push({
+        type: "text",
+        name: "conversation_summary",
+        text: `Summary of earlier conversation:\n${summary}`,
+      });
+    }
+
+    await chatAgent.runs.execute(ctx, {
+      runId,
+      model,
+      ...(summary ? { recentMessages: KEEP_RECENT_MESSAGES } : {}),
+      ...(contextBlocks.length > 0 ? { context: () => Promise.resolve(contextBlocks) } : {}),
+    });
   },
 });

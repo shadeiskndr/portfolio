@@ -203,7 +203,7 @@ export const CERTIFICATES: CertificateDetails[] = [
     certificateImageKey: "cert-logo-google-pm",
     certificateSource: "Coursera",
     certificateDescription:
-      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+      "Gained a foundation in project management across the full project life cycle — initiation, planning, execution, and closure. Covered both traditional (Waterfall) and Agile approaches, including Scrum roles, events, and artifacts. Practiced creating project documentation, managing budgets and risks, and applying strategic communication and stakeholder management through real-world scenarios.",
     url: "https://www.coursera.org/account/accomplishments/specialization/8L4C2AHPPWMP",
   },
   {
@@ -211,7 +211,7 @@ export const CERTIFICATES: CertificateDetails[] = [
     certificateImageKey: "cert-logo-google-automation",
     certificateSource: "Coursera",
     certificateDescription:
-      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+      "Learned to write Python scripts that automate common system administration and IT tasks. Covered Python fundamentals, using Git and GitHub for version control, and automating work at scale with configuration management and the cloud. Practiced troubleshooting and debugging, and interacting with web services through APIs.",
     url: "https://www.coursera.org/account/accomplishments/specialization/KWQAJCAQAYY2",
   },
   {
@@ -219,7 +219,7 @@ export const CERTIFICATES: CertificateDetails[] = [
     certificateImageKey: "cert-logo-google-support",
     certificateSource: "Coursera",
     certificateDescription:
-      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+      "Built a foundation in entry-level IT support, covering computer networking, operating systems, system administration, and IT infrastructure services. Learned to troubleshoot and resolve technical problems, provide end-user customer support, and apply security best practices to protect systems and data.",
     url: "https://www.coursera.org/account/accomplishments/specialization/SF3NTQPRQZLB",
   },
   {
@@ -227,7 +227,7 @@ export const CERTIFICATES: CertificateDetails[] = [
     certificateImageKey: "cert-logo-google-cyber",
     certificateSource: "Coursera",
     certificateDescription:
-      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+      "Developed foundational cybersecurity skills, including identifying and mitigating threats, risks, and vulnerabilities and applying security frameworks and controls. Covered network security, Linux and SQL, and using SIEM tools and intrusion detection systems to detect and respond to incidents, plus automating security tasks with Python.",
     url: "https://www.coursera.org/account/accomplishments/specialization/KWPRBNTZCGKK",
   },
   {
@@ -235,7 +235,7 @@ export const CERTIFICATES: CertificateDetails[] = [
     certificateImageKey: "cert-logo-google-ux",
     certificateSource: "Coursera",
     certificateDescription:
-      " Acquired an understanding of the practices and skills essential for an entry-level project management role, including the creation of effective project documentation and artifacts throughout various project phases. Gained foundational knowledge of Agile project management, with a focus on understanding Scrum roles and events. Further honed strategic communication, problem-solving, and stakeholder management skills through real-world scenarios.",
+      "Learned the end-to-end UX design process — empathizing with users, defining pain points, ideating solutions, and creating wireframes and prototypes. Practiced building low- and high-fidelity prototypes in Figma and Adobe XD, conducting usability studies, applying feedback, and designing responsive websites for multiple screen sizes.",
     url: "https://www.coursera.org/account/accomplishments/specialization/JD7XZR37DJSU",
   },
 ];
