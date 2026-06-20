@@ -1,6 +1,6 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { createBedrockMantle } from "@ai-sdk/amazon-bedrock/mantle";
-import { DEFAULT_MODEL_ID, getChatModelInfo } from "./models";
+import type { ChatModel } from "./models";
 
 /**
  * RAG embedding model: Amazon Nova 2 multimodal embeddings. Supported output
@@ -80,19 +80,28 @@ const bridgeReasoningFetch = async (
   });
 };
 
-/** Explicit per-run selection wins; else the env override, else the registry default. */
-export function effectiveModelId(modelId?: string) {
-  return modelId ?? process.env.BEDROCK_MANTLE_MODEL ?? DEFAULT_MODEL_ID;
-}
-
-export function getChatModel(modelId?: string) {
+/**
+ * Build the AI SDK model for a concrete Bedrock Mantle id. `api` selects the
+ * serving surface (`.chat()` vs `.responses()`) and is resolved from the
+ * `chatModels` registry by the caller — this stays a plain, ctx-free function
+ * so it works both in Convex functions and at module load.
+ */
+export function getChatModel(
+  modelId: string,
+  surface: ChatModel["surface"],
+  api: ChatModel["api"]
+) {
   const region = process.env.AWS_REGION ?? "us-east-1";
+  // Native Bedrock Converse API (standard provider) for models not exposed on
+  // the Mantle OpenAI-compat endpoint (e.g. GLM).
+  if (surface === "converse") {
+    return createAmazonBedrock({ region })(modelId);
+  }
   const bedrockMantle = createBedrockMantle({
     region,
     baseURL:
       process.env.BEDROCK_MANTLE_BASE_URL ?? `https://bedrock-mantle.${region}.api.aws/openai/v1`,
     fetch: bridgeReasoningFetch as typeof fetch,
   });
-  const id = effectiveModelId(modelId);
-  return getChatModelInfo(id).api === "chat" ? bedrockMantle.chat(id) : bedrockMantle.responses(id);
+  return api === "chat" ? bedrockMantle.chat(modelId) : bedrockMantle.responses(modelId);
 }

@@ -15,6 +15,7 @@ import type * as commits from "../commits.js";
 import type * as crons from "../crons.js";
 import type * as github from "../github.js";
 import type * as http from "../http.js";
+import type * as models from "../models.js";
 import type * as photos from "../photos.js";
 import type * as rag from "../rag.js";
 import type * as sessions from "../sessions.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   github: typeof github;
   http: typeof http;
+  models: typeof models;
   photos: typeof photos;
   rag: typeof rag;
   sessions: typeof sessions;

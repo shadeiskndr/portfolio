@@ -10,8 +10,8 @@ import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } fr
 import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowDownIcon, CheckIcon, Plus, SparklesIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, useMemo, useRef, useState } from "react";
+import { ArrowDownIcon, BrainIcon, CheckIcon, Plus, SparklesIcon, Trash2Icon } from "lucide-react";
+import { type ReactNode, useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v7 as uuidv7 } from "uuid";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -61,11 +61,12 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ui/shadcn-io/ai/tool";
+import { Switch } from "@/components/ui/switch";
 import { api } from "@/convex/_generated/api";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { usePersistentId } from "@/hooks/use-persistent-id";
-import { CHAT_MODELS, DEFAULT_MODEL_ID, getChatModelInfo } from "@/lib/chat/models";
+import { type ChatModel, DEFAULT_REASONING } from "@/lib/chat/models";
 import { cn } from "@/lib/utils";
 
 const streamdownPlugins = {
@@ -85,12 +86,7 @@ const CHAT_ANIMATION = {
 const CLIENT_ID_KEY = "portfolio-chat-client-id";
 const SESSION_ID_KEY = "portfolio-chat-session-id";
 const MODEL_ID_KEY = "portfolio-chat-model-id";
-
-// base-ui Select renders the label for the selected value from this map, so the
-// trigger stays compact (just the name) while the dropdown items are richer.
-const MODEL_LABELS: Record<string, string> = Object.fromEntries(
-  CHAT_MODELS.map((model) => [model.id, model.name])
-);
+const REASONING_KEY = "portfolio-chat-reasoning";
 
 // Empty-state hero: cycles a few friendly greetings under the "Hi there" line.
 const HERO_SEQUENCES = [
@@ -145,10 +141,22 @@ function mergeToolPart(prev: MergedToolCall | undefined, part: AnyToolPart): Mer
   };
 }
 
-function ModelSelector({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+function ModelSelector({
+  models,
+  labels,
+  value,
+  onChange,
+}: {
+  models: readonly ChatModel[];
+  // base-ui Select renders the selected value's label from this map, so the
+  // trigger stays compact (just the name) while the dropdown items are richer.
+  labels: Record<string, string>;
+  value: string;
+  onChange: (id: string) => void;
+}) {
   return (
     <PromptInputSelect
-      items={MODEL_LABELS}
+      items={labels}
       onValueChange={(next) => {
         if (typeof next === "string") {
           onChange(next);
@@ -160,7 +168,7 @@ function ModelSelector({ value, onChange }: { value: string; onChange: (id: stri
         <PromptInputSelectValue />
       </PromptInputSelectTrigger>
       <PromptInputSelectContent align="start" className="min-w-56">
-        {CHAT_MODELS.map((model) => (
+        {models.map((model) => (
           <PromptInputSelectItem key={model.id} value={model.id}>
             <span className="flex flex-col">
               <span className="font-medium text-foreground">{model.name}</span>
@@ -173,6 +181,22 @@ function ModelSelector({ value, onChange }: { value: string; onChange: (id: stri
   );
 }
 
+// Reasoning is binary for these models (off / on=high), so a switch rather than
+// an effort menu. Rendered only when the selected model supports reasoning.
+function ReasoningToggle({ on, onChange }: { on: boolean; onChange: (on: boolean) => void }) {
+  const id = useId();
+  return (
+    <label
+      className="flex h-8 cursor-pointer select-none items-center gap-1.5 px-2 text-muted-foreground text-xs"
+      htmlFor={id}
+    >
+      <BrainIcon className="size-3.5" />
+      <span className="hidden pt-0.5 sm:inline">Reasoning</span>
+      <Switch checked={on} id={id} onCheckedChange={onChange} size="sm" />
+    </label>
+  );
+}
+
 export default function Chat() {
   // Stable per-browser id scoping the visitor's sessions; and the currently
   // open session, persisted so a reload resumes the last conversation.
@@ -180,15 +204,36 @@ export default function Chat() {
   const [activeSessionId, setActiveSessionId] = useLocalStorage<string>(SESSION_ID_KEY, () =>
     uuidv7()
   );
-  // Model choice is a per-browser preference (persisted), applied to the next
-  // message. `initializeWithValue: false` renders the default on the server and
-  // first client paint (the model name is shown as text, so reading localStorage
-  // eagerly would cause a hydration mismatch), then syncs after mount. Resolve
-  // through the registry so a removed/stale id falls back.
-  const [modelId, setModelId] = useLocalStorage<string>(MODEL_ID_KEY, DEFAULT_MODEL_ID, {
+  // Model choice is a per-browser preference, applied to the next message. Seed
+  // as null = "no explicit pick" so the client holds no default of its own; an
+  // un-chosen visitor defers to the backend's current default (from the registry
+  // query below), and the server coerces anything unknown to it regardless.
+  // `initializeWithValue: false` skips reading localStorage during the server /
+  // first-client render.
+  const [modelId, setModelId] = useLocalStorage<string | null>(MODEL_ID_KEY, null, {
     initializeWithValue: false,
   });
-  const activeModel = getChatModelInfo(modelId);
+  // Reasoning on/off is also a persisted per-browser preference, applied to the
+  // next message. Same deferred-hydration treatment as the model choice.
+  const [reasoning, setReasoning] = useLocalStorage<boolean>(REASONING_KEY, DEFAULT_REASONING, {
+    initializeWithValue: false,
+  });
+  // The model registry lives on the backend now; the dropdown, the usage gauge
+  // (per-model context window + pricing), and the default all render from this
+  // query. Undefined until it loads — the toolbar shows a placeholder until then.
+  const modelData = useQuery(api.chat.models, {});
+  const models = modelData?.models;
+  const modelLabels = useMemo(
+    () => Object.fromEntries((models ?? []).map((model) => [model.id, model.name])),
+    [models]
+  );
+  // Resolve the stored choice against the served list: an explicit, still-valid
+  // pick wins; otherwise fall back to the backend's default. A stale/removed id —
+  // or no pick yet — lands on the default. Undefined only until the list loads.
+  const activeModel =
+    models?.find((model) => model.id === modelId) ??
+    models?.find((model) => model.id === modelData?.defaultId);
+  const selectedModelId = activeModel?.id;
   const sessions = useQuery(api.sessions.list, clientId ? { clientId } : "skip");
   const usage = useQuery(
     api.chat.usage,
@@ -212,7 +257,29 @@ export default function Chat() {
 
   const controls = (
     <div className="flex items-center gap-0.5">
-      <ModelSelector onChange={setModelId} value={activeModel.id} />
+      {models && selectedModelId ? (
+        <ModelSelector
+          labels={modelLabels}
+          models={models}
+          onChange={setModelId}
+          value={selectedModelId}
+        />
+      ) : (
+        <Button
+          aria-label="Model"
+          className="h-8 gap-1 px-2 text-muted-foreground text-xs"
+          disabled
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Model
+        </Button>
+      )}
+
+      {activeModel?.supportsReasoning ? (
+        <ReasoningToggle on={reasoning} onChange={setReasoning} />
+      ) : null}
 
       <Button
         className="text-muted-foreground"
@@ -272,9 +339,10 @@ export default function Chat() {
 
       {usage ? (
         <Context
-          maxTokens={activeModel.contextTokens}
-          pricing={activeModel.pricing}
+          cost={usage.cost}
+          maxTokens={usage.maxTokens}
           usage={usage.usage}
+          usedPercent={usage.usedPercent}
           usedTokens={usage.usedTokens}
         >
           <ContextTrigger />
@@ -297,8 +365,9 @@ export default function Chat() {
       <ChatSession
         clientId={clientId}
         key={activeSessionId}
-        modelId={activeModel.id}
+        modelId={selectedModelId}
         onSent={() => setActiveSessionId(activeSessionId)}
+        reasoning={reasoning}
         sessionId={activeSessionId}
         toolbar={controls}
       />
@@ -310,12 +379,16 @@ function ChatSession({
   clientId,
   sessionId,
   modelId,
+  reasoning,
   onSent,
   toolbar,
 }: {
   clientId: string;
   sessionId: string;
-  modelId: string;
+  // Undefined only in the brief window before the model registry query loads;
+  // an empty modelId in the request body makes the server use its default.
+  modelId: string | undefined;
+  reasoning: boolean;
   onSent: () => void;
   toolbar: ReactNode;
 }) {
@@ -358,9 +431,9 @@ function ChatSession({
   function handleSubmit(message: PromptInputMessage) {
     const text = message.text?.trim();
     if (!text || isBusy || !clientId) return;
-    // The selected model rides along in the request body; the `send` mutation
-    // reads and whitelists `body.modelId` before scheduling the run.
-    sendMessage({ text }, { body: { modelId } });
+    // The selected model and reasoning toggle ride along in the request body;
+    // the `send` mutation reads and whitelists both before scheduling the run.
+    sendMessage({ text }, { body: { modelId, reasoning } });
     onSent();
     setHasText(false);
     scrollToBottom();

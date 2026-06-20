@@ -100,9 +100,41 @@ export default defineSchema({
     clientId: v.string(),
     threadId: v.string(),
     title: v.optional(v.string()),
+    // Model id of the most recent turn, recorded in `chat.send`. The usage query
+    // prices the latest turn against the model that actually produced it (the
+    // Agent component doesn't store a per-message model). Optional: sessions
+    // predating this field, or before their first turn, fall back to the default.
+    lastModelId: v.optional(v.string()),
   })
     .index("by_session", ["sessionId"])
     .index("by_client", ["clientId"]),
+
+  // Chat model registry, owner-editable at runtime (Convex dashboard / mutation)
+  // without a code deploy. Seeded from lib/chat/models.ts via `models:seed`. The
+  // client dropdown reads it through `chat.models`; the server prices/whitelists
+  // turns against it. `api` is the Bedrock Mantle surface (chat vs responses),
+  // `isDefault` marks the fallback model, `order` sets dropdown position.
+  chatModels: defineTable({
+    modelId: v.string(),
+    name: v.string(),
+    provider: v.string(),
+    contextTokens: v.number(),
+    pricing: v.object({ inputPer1M: v.number(), outputPer1M: v.number() }),
+    // Provider surface: "mantle" (OpenAI-compat gateway) or "converse" (native
+    // Bedrock Converse API). Optional so adding it to a seeded table validates;
+    // `models:seed` backfills existing rows and reads default to "mantle".
+    surface: v.optional(v.union(v.literal("mantle"), v.literal("converse"))),
+    // Mantle OpenAI-compat route; only meaningful when surface is "mantle".
+    api: v.union(v.literal("responses"), v.literal("chat")),
+    // Binary reasoning capability (off / on=high). Optional so adding it to an
+    // already-seeded table validates; `models:seed` backfills existing rows and
+    // reads default to true.
+    supportsReasoning: v.optional(v.boolean()),
+    isDefault: v.boolean(),
+    order: v.number(),
+  })
+    .index("by_modelId", ["modelId"])
+    .index("by_order", ["order"]),
 
   // RAG knowledge base for the /chat assistant: one embedded chunk per portfolio
   // item (experience / project / certificate), serialized from `lib/data.tsx` by

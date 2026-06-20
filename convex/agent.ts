@@ -1,7 +1,7 @@
 import { Agent } from "@convex-dev/agent";
 import { defineModel } from "@convex-dev/agent/vercel";
-import { getChatModelInfo } from "../lib/chat/models";
-import { effectiveModelId, getChatModel } from "../lib/chat/provider";
+import { type ChatModel, DEFAULT_MODEL, DEFAULT_REASONING } from "../lib/chat/models";
+import { getChatModel } from "../lib/chat/provider";
 import { components } from "./_generated/api";
 import { calculate } from "./tools";
 
@@ -24,19 +24,31 @@ const SYSTEM_PROMPT =
   'commas — e.g. write A["Source Database (e.g., PostgreSQL)"] not A[Source Database (e.g., PostgreSQL)]. ' +
   "Unquoted special characters cause Mermaid parse errors.";
 
-export function defineChatModel(modelId?: string) {
-  const usesResponsesApi = getChatModelInfo(effectiveModelId(modelId)).api === "responses";
+export function defineChatModel(
+  modelId: string,
+  surface: ChatModel["surface"],
+  api: ChatModel["api"],
+  reasoning: boolean = DEFAULT_REASONING
+) {
+  // Reasoning provider options ride on the Mantle responses route only.
+  const usesResponsesApi = surface === "mantle" && api === "responses";
+  const reasoningOn = usesResponsesApi && reasoning;
   return defineModel({
-    model: getChatModel(modelId),
+    model: getChatModel(modelId, surface, api),
     instructions: SYSTEM_PROMPT,
+    // Reasoning is a responses-API feature and binary for these models. When on,
+    // force it at high effort (the only supported mode); when off, disable it so
+    // the model answers plainly. The caller gates `reasoning` on model support.
     ...(usesResponsesApi
       ? {
           providerOptions: {
-            openai: {
-              forceReasoning: true,
-              reasoningEffort: "high",
-              reasoningSummary: "auto",
-            },
+            openai: reasoningOn
+              ? {
+                  forceReasoning: true,
+                  reasoningEffort: "high",
+                  reasoningSummary: "auto",
+                }
+              : { forceReasoning: false },
           },
         }
       : {}),
@@ -45,6 +57,8 @@ export function defineChatModel(modelId?: string) {
 
 export const chatAgent = new Agent(components.agent, {
   name: "portfolio-assistant",
-  model: defineChatModel(),
+  // Bootstrap model for Agent construction only; every real run passes an
+  // explicit model resolved from the chatModels table (see chat.execute).
+  model: defineChatModel(DEFAULT_MODEL.id, DEFAULT_MODEL.surface, DEFAULT_MODEL.api),
   tools: { calculate },
 });

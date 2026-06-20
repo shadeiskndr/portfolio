@@ -24,12 +24,30 @@ export interface ContextPricing {
   reasoningPer1M?: number;
 }
 
+/**
+ * Pre-computed per-category costs (USD). When provided, the component displays
+ * these directly and skips all client-side pricing math (`pricing`/`modelId`
+ * are then unused). Compute this server-side to price against the model that
+ * actually ran, and to keep the pricing table off the client.
+ */
+export interface ContextCost {
+  total?: number;
+  input?: number;
+  output?: number;
+  reasoning?: number;
+  cache?: number;
+}
+
 interface ContextSchema {
   usedTokens: number;
   maxTokens: number;
   usage?: LanguageModelUsage;
   modelId?: ModelId;
   pricing?: ContextPricing;
+  /** Pre-computed usage fraction (0–1). Falls back to `usedTokens / maxTokens`. */
+  usedPercent?: number;
+  /** Pre-computed costs. When set, overrides client-side pricing math. */
+  cost?: ContextCost;
 }
 
 const ContextContext = createContext<ContextSchema | null>(null);
@@ -86,6 +104,8 @@ export const Context = ({
   usage,
   modelId,
   pricing,
+  usedPercent,
+  cost,
   ...props
 }: ContextProps) => (
   <ContextContext.Provider
@@ -95,6 +115,8 @@ export const Context = ({
       usage,
       modelId,
       pricing,
+      usedPercent,
+      cost,
     }}
   >
     <HoverCard {...props} />
@@ -102,10 +124,10 @@ export const Context = ({
 );
 
 const ContextIcon = () => {
-  const { usedTokens, maxTokens } = useContextValue();
+  const { usedTokens, maxTokens, usedPercent } = useContextValue();
   const circumference = 2 * Math.PI * ICON_RADIUS;
-  const usedPercent = usedTokens / maxTokens;
-  const dashOffset = circumference * (1 - usedPercent);
+  const percent = usedPercent ?? usedTokens / maxTokens;
+  const dashOffset = circumference * (1 - percent);
 
   return (
     <svg
@@ -145,12 +167,12 @@ const ContextIcon = () => {
 export type ContextTriggerProps = ComponentProps<typeof Button>;
 
 export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
-  const { usedTokens, maxTokens } = useContextValue();
-  const usedPercent = usedTokens / maxTokens;
+  const { usedTokens, maxTokens, usedPercent } = useContextValue();
+  const percent = usedPercent ?? usedTokens / maxTokens;
   const renderedPercent = new Intl.NumberFormat("en-US", {
     style: "percent",
     maximumFractionDigits: 1,
-  }).format(usedPercent);
+  }).format(percent);
 
   return (
     <HoverCardTrigger closeDelay={0} delay={0}>
@@ -177,12 +199,12 @@ export const ContextContentHeader = ({
   className,
   ...props
 }: ContextContentHeaderProps) => {
-  const { usedTokens, maxTokens } = useContextValue();
-  const usedPercent = usedTokens / maxTokens;
+  const { usedTokens, maxTokens, usedPercent } = useContextValue();
+  const percent = usedPercent ?? usedTokens / maxTokens;
   const displayPct = new Intl.NumberFormat("en-US", {
     style: "percent",
     maximumFractionDigits: 1,
-  }).format(usedPercent);
+  }).format(percent);
   const used = new Intl.NumberFormat("en-US", {
     notation: "compact",
   }).format(usedTokens);
@@ -201,7 +223,7 @@ export const ContextContentHeader = ({
             </p>
           </div>
           <div className="space-y-2">
-            <Progress className="bg-muted" value={usedPercent * PERCENT_MAX} />
+            <Progress className="bg-muted" value={percent * PERCENT_MAX} />
           </div>
         </>
       )}
@@ -224,18 +246,19 @@ export const ContextContentFooter = ({
   className,
   ...props
 }: ContextContentFooterProps) => {
-  const { modelId, usage, pricing } = useContextValue();
-  const costUSD =
-    pricingCostUSD({ input: usage?.inputTokens, output: usage?.outputTokens }, pricing) ??
-    (modelId
-      ? getUsage({
-          modelId,
-          usage: {
-            input: usage?.inputTokens ?? 0,
-            output: usage?.outputTokens ?? 0,
-          },
-        }).costUSD?.totalUSD
-      : undefined);
+  const { modelId, usage, pricing, cost } = useContextValue();
+  const costUSD = cost
+    ? cost.total
+    : (pricingCostUSD({ input: usage?.inputTokens, output: usage?.outputTokens }, pricing) ??
+      (modelId
+        ? getUsage({
+            modelId,
+            usage: {
+              input: usage?.inputTokens ?? 0,
+              output: usage?.outputTokens ?? 0,
+            },
+          }).costUSD?.totalUSD
+        : undefined));
   const totalCost = formatUSD(costUSD);
 
   return (
@@ -259,7 +282,7 @@ export const ContextContentFooter = ({
 export type ContextInputUsageProps = ComponentProps<"div">;
 
 export const ContextInputUsage = ({ className, children, ...props }: ContextInputUsageProps) => {
-  const { usage, modelId, pricing } = useContextValue();
+  const { usage, modelId, pricing, cost } = useContextValue();
   const inputTokens = usage?.inputTokens ?? 0;
 
   if (children) {
@@ -270,14 +293,15 @@ export const ContextInputUsage = ({ className, children, ...props }: ContextInpu
     return null;
   }
 
-  const inputCost =
-    pricingCostUSD({ input: inputTokens }, pricing) ??
-    (modelId
-      ? getUsage({
-          modelId,
-          usage: { input: inputTokens, output: 0 },
-        }).costUSD?.totalUSD
-      : undefined);
+  const inputCost = cost
+    ? cost.input
+    : (pricingCostUSD({ input: inputTokens }, pricing) ??
+      (modelId
+        ? getUsage({
+            modelId,
+            usage: { input: inputTokens, output: 0 },
+          }).costUSD?.totalUSD
+        : undefined));
   const inputCostText = inputCost === undefined ? undefined : formatUSD(inputCost);
 
   return (
@@ -291,7 +315,7 @@ export const ContextInputUsage = ({ className, children, ...props }: ContextInpu
 export type ContextOutputUsageProps = ComponentProps<"div">;
 
 export const ContextOutputUsage = ({ className, children, ...props }: ContextOutputUsageProps) => {
-  const { usage, modelId, pricing } = useContextValue();
+  const { usage, modelId, pricing, cost } = useContextValue();
   const outputTokens = usage?.outputTokens ?? 0;
 
   if (children) {
@@ -302,14 +326,15 @@ export const ContextOutputUsage = ({ className, children, ...props }: ContextOut
     return null;
   }
 
-  const outputCost =
-    pricingCostUSD({ output: outputTokens }, pricing) ??
-    (modelId
-      ? getUsage({
-          modelId,
-          usage: { input: 0, output: outputTokens },
-        }).costUSD?.totalUSD
-      : undefined);
+  const outputCost = cost
+    ? cost.output
+    : (pricingCostUSD({ output: outputTokens }, pricing) ??
+      (modelId
+        ? getUsage({
+            modelId,
+            usage: { input: 0, output: outputTokens },
+          }).costUSD?.totalUSD
+        : undefined));
   const outputCostText = outputCost === undefined ? undefined : formatUSD(outputCost);
 
   return (
@@ -327,7 +352,7 @@ export const ContextReasoningUsage = ({
   children,
   ...props
 }: ContextReasoningUsageProps) => {
-  const { usage, modelId, pricing } = useContextValue();
+  const { usage, modelId, pricing, cost } = useContextValue();
   const reasoningTokens = usage?.outputTokenDetails?.reasoningTokens ?? 0;
 
   if (children) {
@@ -338,14 +363,15 @@ export const ContextReasoningUsage = ({
     return null;
   }
 
-  const reasoningCost =
-    pricingCostUSD({ reasoningTokens }, pricing) ??
-    (modelId
-      ? getUsage({
-          modelId,
-          usage: { reasoningTokens },
-        }).costUSD?.totalUSD
-      : undefined);
+  const reasoningCost = cost
+    ? cost.reasoning
+    : (pricingCostUSD({ reasoningTokens }, pricing) ??
+      (modelId
+        ? getUsage({
+            modelId,
+            usage: { reasoningTokens },
+          }).costUSD?.totalUSD
+        : undefined));
   const reasoningCostText = reasoningCost === undefined ? undefined : formatUSD(reasoningCost);
 
   return (
@@ -359,7 +385,7 @@ export const ContextReasoningUsage = ({
 export type ContextCacheUsageProps = ComponentProps<"div">;
 
 export const ContextCacheUsage = ({ className, children, ...props }: ContextCacheUsageProps) => {
-  const { usage, modelId, pricing } = useContextValue();
+  const { usage, modelId, pricing, cost } = useContextValue();
   const cacheTokens = usage?.inputTokenDetails?.cacheReadTokens ?? 0;
 
   if (children) {
@@ -370,14 +396,15 @@ export const ContextCacheUsage = ({ className, children, ...props }: ContextCach
     return null;
   }
 
-  const cacheCost =
-    pricingCostUSD({ cacheReads: cacheTokens }, pricing) ??
-    (modelId
-      ? getUsage({
-          modelId,
-          usage: { cacheReads: cacheTokens, input: 0, output: 0 },
-        }).costUSD?.totalUSD
-      : undefined);
+  const cacheCost = cost
+    ? cost.cache
+    : (pricingCostUSD({ cacheReads: cacheTokens }, pricing) ??
+      (modelId
+        ? getUsage({
+            modelId,
+            usage: { cacheReads: cacheTokens, input: 0, output: 0 },
+          }).costUSD?.totalUSD
+        : undefined));
   const cacheCostText = cacheCost === undefined ? undefined : formatUSD(cacheCost);
 
   return (
