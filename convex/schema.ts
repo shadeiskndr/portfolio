@@ -91,6 +91,32 @@ export default defineSchema({
     order: v.number(),
   }).index("by_order", ["order"]),
 
+  // Curated bookmarks shown on /bookmarks. Two sections: "reading" (blogs /
+  // articles, sorted by `publishedAt` descending) and "resource" (websites worth
+  // revisiting, sorted by `order`). Each row carries a screenshot preview stored
+  // as a Convex blob (`previewId`, resolved to a URL in `bookmarks.list`) plus an
+  // optional inlined favicon data URI. Seeded/refreshed by
+  // `scripts/ingest-bookmarks.ts` via the `bookmarks:upsertBookmark` mutation,
+  // which snapshots each site with headless Chrome. `url` is unique per row.
+  bookmarks: defineTable({
+    section: v.union(v.literal("reading"), v.literal("resource")),
+    url: v.string(),
+    title: v.string(),
+    domain: v.string(),
+    description: v.optional(v.string()),
+    tags: v.array(v.string()),
+    // Article publish date (ms epoch) — readings only, best-effort from metadata.
+    publishedAt: v.optional(v.number()),
+    // When it was bookmarked (ms epoch) — from the browser export when known.
+    addedAt: v.number(),
+    // Manual sort key within a section (insertion order from the ingest list).
+    order: v.number(),
+    previewId: v.optional(v.id("_storage")),
+    faviconUrl: v.optional(v.string()),
+  })
+    .index("by_section", ["section"])
+    .index("by_url", ["url"]),
+
   // Chat sessions map a public, client-generated UUIDv7 (`sessionId`) to an
   // Agent-component thread. `clientId` (also a UUIDv7) scopes sessions to a
   // single browser so a visitor can list/switch/delete their own chats. Neither
