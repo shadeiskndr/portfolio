@@ -1,0 +1,52 @@
+---
+title: Observing and steering an agent loop you don't own
+date: 2026-07-06
+summary: Once the SDK owns the agent loop, you still need to watch it and gate it. Strands splits that into hooks (observe) and interventions (steer) — and hooks fire synchronously, which changes how you stream.
+tags:
+  - ai
+  - strands
+  - architecture
+---
+
+When you let an SDK own the agent loop, you trade control for a new problem: you still need to *watch* the loop (tally usage, record every tool call with timing and status) and *steer* it (require a human to approve dangerous tools) — without reimplementing the thing you just delegated. [Strands](https://strandsagents.com/) splits that into two mechanisms, and the split turns out to be the useful mental model: **hooks observe, interventions steer.**
+
+**Hooks are read-only taps on the lifecycle.** You subclass `HookProvider` and register callbacks against event classes — `BeforeToolCallEvent`, `AfterToolCallEvent`, `AfterInvocationEvent` — and they fire as the loop runs:
+
+```python
+class ToolObserver(HookProvider):
+    def __init__(self, state): self.state = state
+    def register_hooks(self, registry, **_):
+        registry.add_callback(BeforeToolCallEvent, self._before)
+        registry.add_callback(AfterToolCallEvent, self._after)
+    def _before(self, e):
+        self.state.starts[e.tool_use["toolUseId"]] = time.monotonic()
+        self.state.enqueue("tool_start", {"name": e.tool_use["name"]})   # push, don't stream
+    def _after(self, e):
+        started = self.state.starts.pop(e.tool_use["toolUseId"], None)
+        ms = int((time.monotonic() - started) * 1000) if started else None
+        status = "error" if e.exception else e.result.get("status", "success")
+        self.state.enqueue("tool_end", {"status": status, "duration_ms": ms})
+```
+
+The detail that reshaped my streaming code: <Highlight>hooks fire synchronously, inside the loop.</Highlight> You cannot `yield` an SSE frame from a hook — the hook isn't the async generator that's talking to the browser. So the pattern is a buffer: hooks *push* `(event, data)` tuples onto shared state, and the async stream loop *drains* that buffer between the model events it's already iterating. Hook bodies stay non-blocking; the streaming happens where streaming can happen. Getting this backwards — trying to emit from inside the hook — is the kind of thing that deadlocks quietly.
+
+**Interventions are decision points that can pause the loop.** You subclass the human-in-the-loop intervention and override `before_tool_call`, returning an `InterventionAction`. For a tool on the "needs approval" list, you interrupt — which pauses the entire turn — and on resume you return `Proceed()` or `Deny(reason=...)`, where the reason becomes what the model sees as the tool result:
+
+```python
+class ApprovalGate(HumanInTheLoop):
+    def __init__(self, gated): super().__init__(enable_trust=True); self.gated = gated
+    async def before_tool_call(self, e, **_) -> InterventionAction:
+        if e.tool_use["name"] not in self.gated:
+            return Proceed()
+        answer = e.interrupt("approve-tool", reason={"tool": e.tool_use["name"]})
+        return Proceed() if answer.get("approve") else Deny(reason="User declined.")
+```
+
+`enable_trust` gives you "approve this tool for the rest of the turn/session" for free — stored on the agent's state, reset at the start of each new turn.
+
+Both plug in at `Agent(...)` construction (`hooks=[...]`, `interventions=[...]`), which is the whole point: you shape the loop's behavior from the outside. A couple of things I learned the hard way:
+
+- **Usage arrives twice** — once as streamed metadata during the turn, once on the final result — so a naive "add both" double-counts. Prefer the streamed numbers and treat the result's accumulated usage as a fallback. (The deeper token-accounting trap — that a paused-and-resumed turn restarts its counter — is its own story.)
+- **After a pause, hook state has to be re-seeded.** Resuming builds a fresh agent, so the observer's accumulated text and usage must be re-derived from the agent's message history, or you lose everything from before the pause.
+
+The framing I kept: don't fight the SDK for control of the loop. Tap it to observe (asynchronously, via a buffer, because the taps are synchronous) and gate it to steer (synchronously, because a decision has to block). Two seams, two shapes, and you never had to write the loop.

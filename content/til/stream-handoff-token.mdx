@@ -1,0 +1,59 @@
+---
+title: Handing a browser a live stream without handing it the secret
+date: 2026-07-03
+summary: The token stream comes from a separate service and has to carry a user-scoped credential the browser must never see. A single-use handoff token, redeemed server-to-server, solves it.
+tags:
+  - ai
+  - streaming
+  - security
+  - django
+---
+
+Our AI agent runs in a separate service from the web backend. The browser needs a live token stream from that agent service — but the agent service can't see the user's web session, and the stream has to carry a sensitive, *user-scoped* downstream credential that must never reach the browser. The obvious "give the client an SSE URL to GET" fails both tests: it's forgeable, and it would have to smuggle auth into the URL.
+
+The shape that worked is a **two-step, init-then-stream handoff around a single-use token.**
+
+<Mermaid chart={`
+sequenceDiagram
+  participant B as Browser
+  participant API as Web backend
+  participant P as Reverse proxy
+  participant AG as Agent service
+  B->>API: POST init (authenticated)
+  Note over API: validate → check access → mint credential →<br/>create session + messages (one transaction)
+  API-->>B: { session_id, message_id, stream_token }
+  B->>P: open SSE, token in a HEADER
+  P->>AG: forward stream path (backend not in the byte path)
+  AG->>API: exchange stream_token (server-to-server)
+  API-->>AG: request payload + credential (single-use)
+  AG-->>B: text/event-stream frames
+`} />
+
+**Step one is an authenticated POST** that does *all* the fallible work up front — validate input, check the user's access, mint the user-scoped downstream credential (this can fail), then create the session and messages in one transaction. It packs the whole request — prompt, model config, that credential, and a request context — behind one opaque, single-use `stream_token`, stores it, and returns `{session_id, message_id, stream_token}`. Because every failure path runs *before* the writes, a rejected request never leaves an orphaned half-created turn behind.
+
+**Step two is the stream**, and two details make it safe:
+
+- The browser opens it with `fetch()` + a `ReadableStream` reader, **not `EventSource`** — specifically so the token rides in a request *header* instead of the URL. `EventSource` can't set headers, which would force the token into the query string, where it gets logged, cached, and leaked via `Referer`. This is the single most useful thing I learned here.
+- A reverse proxy routes the stream path straight to the agent service; the web backend is not in the byte path. The agent service takes the header token and **exchanges it server-to-server** for the stored payload — including the credential. The credential is handed off entirely between servers; the browser only ever held an opaque, one-shot, short-lived token.
+
+The crux of the whole design is how "single-use" is enforced — an atomic claim, not a read-then-write:
+
+```python
+def exchange_stream_token(token: str) -> dict:
+    # The UPDATE only matches an unused, unexpired row, so two workers — or a
+    # replay of an already-redeemed token — can't both win. Checking used_at in
+    # Python and then saving would race; the WHERE clause is the lock.
+    claimed = (StreamToken.objects
+               .filter(token=token, used_at__isnull=True, expires_at__gt=Now())
+               .update(used_at=Now()))
+    if claimed != 1:
+        raise InvalidStreamToken("invalid, expired, or already used")
+    return StreamToken.objects.get(token=token).payload
+```
+
+A couple of things that surprised me:
+
+- **The token store has to be a shared table, not an in-process cache** — mint and redeem land on different worker processes, so anything in-memory silently fails under real load.
+- **Garbage collection is opportunistic:** each mint deletes expired rows first (the expiry column is indexed), so there's no separate cron sweeper to forget about.
+
+The reframe: I kept thinking of this as "authenticate the SSE request," which is awkward because SSE has nowhere good to put credentials. Reframing it as *a one-time, server-to-server hand-off with a claim ticket* made both properties fall out for free — a forged or replayed stream can't redeem the ticket, and because all the validation and writes happened in the POST, the stream itself is a pure hand-off with nothing left to fail.

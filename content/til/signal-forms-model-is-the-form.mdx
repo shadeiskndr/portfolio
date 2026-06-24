@@ -1,0 +1,66 @@
+---
+title: "Angular Signal Forms: when the model signal is the form"
+date: 2026-07-09
+summary: We're migrating a large app off Reactive Forms. Signal Forms collapse the parallel form-state + valueChanges dance into one thing — the model signal you already own, with validity and errors as signals you read directly.
+tags:
+  - angular
+  - forms
+  - signals
+---
+
+We're migrating a big Angular app's forms from Reactive Forms to the new **Signal Forms** API (`@angular/forms/signals`, experimental in v21). It's a screen-by-screen migration — dozens of forms moved, plenty still on `FormGroup` — but the new ones are enough of an improvement that I want to write down *why*.
+
+Reactive Forms keep a *parallel* copy of your state. You observe it through the `valueChanges`/`statusChanges` RxJS streams, push data back in with `patchValue`/`setValue`, and read validity and errors imperatively off `AbstractControl`. In an app that's otherwise all signals (`signal`, `computed`, `input`), that's a second reactivity system bolted on, with manual sync at every seam.
+
+Signal Forms collapse the two. <Highlight>Your model signal *is* the form state</Highlight> — `form()` writes straight back to it — and validity, errors, `dirty`, `touched` are all signals you read directly:
+
+```ts
+import { Component, signal } from "@angular/core";
+import { form, FormField, required, email, maxLength } from "@angular/forms/signals";
+
+interface Profile { name: string; email: string; bio: string; }
+
+@Component({
+  selector: "app-profile-form",
+  imports: [FormField],
+  template: `
+    <input [formField]="profileForm.name" />
+    @if (profileForm.name().touched() && profileForm.name().invalid()) {
+      <p class="error">{{ profileForm.name().errors()[0].message }}</p>
+    }
+    <input type="email" [formField]="profileForm.email" />
+    <textarea [formField]="profileForm.bio"></textarea>
+    <button [disabled]="profileForm().invalid()">Save</button>
+  `,
+})
+export class ProfileForm {
+  // The model signal IS the source of truth; form() writes back to it directly.
+  readonly model = signal<Profile>({ name: "", email: "", bio: "" });
+
+  readonly profileForm = form(this.model, (path) => {
+    required(path.name, { message: "Name is required" });
+    required(path.email, { message: "Email is required" });
+    email(path.email);
+    maxLength(path.bio, 300);
+  });
+
+  // Downstream is just signals — no valueChanges, no patchValue.
+  readonly canSave = () => this.profileForm().valid() && this.profileForm().dirty();
+}
+```
+
+Here's that shape as something you can type into — [TanStack Form](https://tanstack.com/form) standing in for `@angular/forms/signals`. The value you edit, validity, errors, `dirty`, and `touched` are all read straight off one form store (the analog of reading them off the model signal), and Save is gated on `valid && dirty` — exactly the `canSave` line above.
+
+<ProfileFormDemo />
+
+The shape is: declare the model as a `signal`, build the form once with `form(model, schemaFn)` where the schema attaches rules to sub-paths (`required(path.x)`, `maxLength(path.y, n)`, `disabled(path.z, () => cond())`), bind a control in the template with `[formField]`, and read everything as signals. The value you edit through the form is the *same object* your `computed`s already read — no bridge.
+
+Because this API is brand-new, here are the exact places I'd have gotten it wrong from memory (all verified against the installed types):
+
+- **The binding is `[formField]`, not `[control]`.** Earlier experimental drafts used a `Control` directive; in 21.2 it's the `FormField` directive and there's no `Control` export.
+- **There is no `field()` function.** You reach a field by *property access* on the form (`profileForm.email`), and *calling* it returns its state (`profileForm.email()`). `Field` is a type, not a factory.
+- **Reading state is a double call:** node → state → signal, e.g. `profileForm.email().errors()`. In the `[formField]` binding you pass the *node* (`profileForm.email`), not the called state.
+- **`valid()` is not `!invalid()`.** A field with a pending async validator is neither `valid()` nor `invalid()` — it's in between. If you gate a button on `!invalid()` you'll enable it during async validation.
+- Everything imports from `@angular/forms/signals` (a separate subpath from `@angular/forms`) and is marked `@experimental` — expect churn.
+
+The honest migration framing: the two APIs coexist, there's a compat layer for interop, and you move a screen at a time. But the payoff on each screen is real — the same form, roughly half the moving parts, and the value living in one signal you already own instead of behind a `valueChanges` subscription you have to remember to unsubscribe.

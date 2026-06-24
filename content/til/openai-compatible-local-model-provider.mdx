@@ -1,0 +1,38 @@
+---
+title: "\"OpenAI-compatible\" is a superpower — dropping in a local model provider"
+date: 2026-06-18
+summary: After building a provider abstraction for our agent, adding a local model server was the simplest provider of all — because it speaks the OpenAI protocol, it reuses the exact same code path as a cloud model with just a base URL.
+tags:
+  - ai
+  - local-models
+  - architecture
+---
+
+Once our agent had a [provider abstraction](/til/why-i-closed-the-copilot-provider-pr) (AWS Bedrock, plus a since-dropped Copilot path), I added a third backend: a **local** model server. It turned out to be the *simplest* of the three, and the whole reason fits in one phrase — **OpenAI-compatible**.
+
+The server is [Kronk](https://github.com/ardanlabs/kronk) (Ardan Labs' Apache-2.0 local inference server). It serves local GGUF models — Gemma 4 in our case — over an OpenAI-compatible HTTP API, on CPU by default (so it "runs anywhere") with optional Vulkan GPU acceleration, including integrated GPUs.
+
+Because it speaks the OpenAI protocol, the agent framework's existing `OpenAIModel` drops straight in. The entire model-build side of the provider is essentially one line:
+
+```python
+# The simplest provider yet: no OAuth, no secret store, no token exchange, no gate.
+def build_model(model_id: str) -> OpenAIModel:
+    return OpenAIModel(
+        base_url=LOCAL_MODEL_URL,   # points at the local server
+        api_key="not-needed",       # local server ignores it, but the client requires one
+        model_id=model_id,
+        timeout=GENEROUS_TIMEOUT,   # see gotcha #1
+    )
+```
+
+No per-user auth, no secret store, no token exchange, no editor-header spoofing, no `/responses` shim. On the *credentials* axis it behaves like Bedrock (there are no per-user creds — the service just holds a base URL); on the *model-build* axis it reuses the OpenAI-compatible path. The provider abstraction did its job: this was a small, well-scoped addition rather than a new integration.
+
+One design choice I liked: **availability is data, not config.** Unlike the flag-gated cloud provider, the local group has no enable flag. If the server is reachable and serving models, a "Local" group appears in the model picker; if the catalog fetch fails, the group just self-hides — and the failure is swallowed so a local-server hiccup never breaks the cloud providers' rows. "Is this backend available?" is answered by *asking it*, not by a config toggle someone has to remember to flip.
+
+Then the gotchas, which are really all one lesson — **"compatible" is a spectrum, not a guarantee:**
+
+1. **Give cold loads room to breathe.** A local model lazy-loads into memory on the first request, which can take many seconds. A normal HTTP client timeout reads that cold start as a failure and you get spurious errors on the first message. Bump the timeout generously and classify a timeout distinctly from a connection error.
+2. **"OpenAI-compatible" doesn't mean *every* OpenAI endpoint exists.** This build returns a `404` for `GET /v1/models` — the standard model-discovery endpoint. Model listing lives under the server's *own* endpoints instead, so I read those and joined them, keeping only models that advertise tool-calling (the agent needs tools). Don't assume the whole OpenAI surface is there; pin your assumptions to the specific endpoints you actually call, and verify them live.
+3. **Model artifacts come from a model hub (GGUF on HuggingFace), not a container registry.** A different pull path than Docker-native model runners — worth knowing before you wire up provisioning.
+
+The takeaway: "OpenAI-compatible" is doing an enormous amount of quiet work across this ecosystem. A local server that speaks it slots into the *exact* code path a cloud provider uses, so "let people run models locally" collapsed from "a new integration" down to a base URL and a throwaway API key. The honest caveat is the flip side of the same coin — compatible is a spectrum, so give local cold-starts a long timeout, let availability be something you *detect* rather than configure, and never assume an endpoint exists just because the protocol says it should. Check the one you depend on.

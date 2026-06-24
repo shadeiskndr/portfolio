@@ -1,0 +1,51 @@
+---
+title: Generating documents without giving the model a sandbox
+date: 2026-07-08
+summary: The default way to make an agent produce an .xlsx is to hand it a Python sandbox. We had it emit a validated JSON spec that a deterministic renderer turns into bytes — no sandbox, reproducible output, no arbitrary code.
+tags:
+  - ai
+  - architecture
+  - security
+---
+
+Users want real files out of the chat — a spreadsheet, a formatted PDF, a Word doc, a slide deck, a chart. The industry-default answer is a hosted **code-execution sandbox**: give the model a Python REPL, let it `import openpyxl`, and let it write the file itself. That's powerful, and it means you now own a sandbox to secure, non-reproducible output, and a model that can run arbitrary code.
+
+We took the opposite bet: <Highlight>the model emits a validated JSON spec, and a deterministic server-side renderer turns it into bytes.</Highlight> The model never runs code.
+
+Each artifact type is a typed tool whose *argument is the spec*. It's validated by strict schemas before anything renders, and the renderers are plain functions over plain data — `openpyxl`, `fpdf2`, `python-docx`, `python-pptx`, `matplotlib`:
+
+```python
+class DocSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")               # reject unknown keys
+    title: str = ""
+    blocks: list[Block] = Field(min_length=1, max_length=200)  # bounded output
+
+def tool_create_pdf(document: dict) -> dict:
+    try:
+        spec = DocSpec.model_validate(document)              # the arg IS the spec
+    except ValidationError as e:                             # typed error → model fixes & retries
+        problems = "; ".join(f"{'.'.join(map(str, x['loc']))}: {x['msg']}" for x in e.errors()[:5])
+        return {"status": "error", "content": [{"text": f"Invalid spec: {problems}"}]}
+    pdf_bytes = render_pdf(spec)                             # deterministic: bytes come from a renderer
+    return persist_and_ack(pdf_bytes)
+```
+
+(The block bodies are discriminated unions on a `type` tag, and spreadsheet formulas are recalculated deterministically before delivery — I wrote about [discriminated-union validation](/til/discriminated-unions-for-llm-output) and [headless recalculation](/til/recalculating-spreadsheets-headless) separately; they slot right in here.)
+
+The contrast is the whole point:
+
+- **No sandbox to secure**, because nothing executes the model's output. The single subprocess anywhere in this path is a headless office binary used only to *recalculate* formulas — a deterministic tool, not a place the model runs code.
+- **Reproducible bytes** — the same spec renders the same file, every time.
+- **The model's entire surface is a validated data structure** — it literally cannot emit an unbounded artifact, because every dimension (cells, sheets, blocks, slides, pages) is capped, and the cap is in the error message it gets back.
+- **A natural repair loop** — a validation or render error goes back to the model as text, so it fixes the spec and retries, instead of a stack trace leaking or a broken file shipping.
+
+Two details show the discipline holding under pressure. Embedded images are referenced by an opaque `artifact:<uuid>` handle that the renderer resolves to bytes already fetched *in this session only* — the model can't point an image at an arbitrary path or URL. And there's an HTML→PDF escape hatch for designed reports (rendered with WeasyPrint) that *proves* the rule rather than breaking it: scripts are ignored, and a custom URL resolver serves only session `artifact:` handles and self-contained `data:` URIs — every other URL (http, file, relative) is blocked mid-render and reported back as a spec error. No network, no filesystem, no execution.
+
+A couple of things I learned the hard way:
+
+- **The renderer libraries have sharp edges the spec layer has to hide.** `fpdf2`'s core fonts are Latin-1 only and *raise* on anything else, so the PDF renderer registers Unicode TTFs up front — the exact kind of paper cut that makes "just let the model write the code" look tempting until you hit it once and realize the sandbox would've hit it too.
+- **"Deterministic" means you own the layout math** — column widths, slide geometry — but the payoff is that the output stays *editable*: native OOXML charts instead of pasted PNGs, real heading and list styles instead of typed approximations.
+
+The same stance carries to the client, which previews these files inline with lazy client-side renderers (pdf.js, a DOM-building docx viewer that never injects raw HTML, an image tag, code/markdown components). The two defensive touches generalize well: zip parsing runs under explicit size limits (the bytes are untrusted — zip-bomb guard), and any *model-authored* HTML preview renders in a locked-down iframe with an opaque origin and scripts stripped unless explicitly opted in — the iframe `sandbox` attribute *is* the security boundary, precisely because an attachment might be LLM-generated.
+
+The reframe I keep: the instinct is to ask "how do I safely *run* the model's code?" The better question is "can the model express what it wants as *data* I render?" For documents, decks, and charts the answer is almost always yes — and once it's data, there's no code to run, nothing to sandbox, and the validator becomes your teacher's-red-pen feedback loop instead of a security perimeter.

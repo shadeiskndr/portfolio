@@ -1,0 +1,57 @@
+---
+title: Taming Highcharts with TypeScript, CSS variables, and update-don't-recreate
+date: 2026-04-19
+summary: A v11→v12 upgrade was the excuse to delete a 1,000-line chart-config blob. What replaced it — a thin wrapper, typed co-located builders, and CSS-variable theming — is what I'd reach for again.
+tags:
+  - typescript
+  - dataviz
+  - angular
+  - highcharts
+---
+
+A Highcharts v11→v12 upgrade forced a move to ESM and to `provideHighcharts()`, and I used it as cover to fix something worse: every chart's configuration lived in one ~1,000-line "builder" util that all the chart components reached into. It was hard to type, hard to theme, and every option change rebuilt the chart from scratch — losing the user's zoom and hover state each time. Four changes fixed all of that.
+
+**Register modules once, at bootstrap** — via dynamic ESM imports, instead of each component initializing what it needs:
+
+```ts
+provideHighcharts({
+  modules: () => [
+    import("highcharts/esm/modules/stock"),
+    import("highcharts/esm/modules/exporting"),
+    import("highcharts/esm/modules/accessibility"),
+  ],
+});
+```
+
+**One thin wrapper component**, so templates never touch `<highcharts-chart>` directly — and, crucially, it hands the live chart instance back out so callers can patch it:
+
+```ts
+@Component({ selector: "app-chart", changeDetection: ChangeDetectionStrategy.OnPush, /* ... */ })
+export class ChartComponent {
+  readonly options = input.required<Highcharts.Options>();
+  readonly chartInstance = output<Highcharts.Chart>(); // hand the live chart back
+}
+```
+
+**One typed `*.options.ts` builder per chart** — a pure function returning a fully-typed `Highcharts.Options`, co-located with the component that uses it. The monolith is gone. A `import type Highcharts from "highcharts/esm/highcharts"` keeps the type in the editor and out of the bundle.
+
+**Theme charts with CSS variables, not `if (isDark)` branches.** Almost every color in the options is a `var(--...)` — the app's design tokens plus an 8-entry categorical palette (`--chart-color-0..7`). Flip the theme and the chart re-paints with *zero* JavaScript, because SVG resolves the variable at render time.
+
+The single biggest behavioral fix was **update, don't recreate**. The `options` input handles full rebuilds; for runtime tweaks (axis scale, gridlines, markers) I grab the instance and patch it, which preserves zoom and hover:
+
+```ts
+export function applyDisplayPatch(chart: Highcharts.Chart, o: DisplayPatch): void {
+  chart.update({ yAxis: { type: o.scale, gridLineWidth: o.grid ? 1 : 0 } }, false); // redraw=false
+  chart.series.forEach((s) => s.update({ marker: { enabled: o.markers } }, false));
+  chart.redraw(); // batch everything into one redraw
+}
+```
+
+Then a handful of gotchas that don't make it into the docs:
+
+- **`colorAxis.stops` won't accept CSS variables.** Highcharts parses gradient stops into RGB to interpolate, and `var(--x)` doesn't resolve in that path — so heatmap/treemap scales stay concrete hex while everything else is a token. The one place "everything is a variable" breaks.
+- **The PNG export fires `load` too.** Exporting builds a throwaway clone chart that *also* fires `load`. If you cache the instance on `load`, guard it — `if (chart.options.chart?.forExport) return;` — or you'll cache a chart that's about to be destroyed and every tooltip breaks afterward.
+- **Per-instance state → a `WeakMap<Highcharts.Chart, T>`.** Keying UI state on the chart object means it's garbage-collected with the chart and never leaks onto the instance.
+- **The echo loop** (this one cost an afternoon): a draggable point writes to state → the state signal changes → the rebuild `effect()` fires → the rebuild clobbers the drag mid-gesture and resets zoom. The fix is to tag the *origin* of each write and have the rebuild effect skip its own echoes.
+
+The reframe: I'd been treating a chart as a render target you re-hand a config to. It's really a *stateful object you own a reference to* — theme it declaratively with variables, patch it for small changes, and rebuild only when the data itself changes. Once I stopped throwing the chart away on every tweak, half the "why did my zoom reset" bugs disappeared.

@@ -1,0 +1,53 @@
+---
+title: Three decisions that made an MCP server safe to point at production
+date: 2026-06-30
+summary: Exposing real backend operations to an agent over MCP is easy. Making it safe came down to how "dangerous" is declared, what the audit log records, and what happens when nobody's there to approve.
+tags:
+  - ai
+  - mcp
+  - security
+---
+
+I built an [MCP](https://modelcontextprotocol.io/) server that lets our AI agent call real backend operations — read data, write data, kick off jobs. Wiring the tools up took an afternoon. What took actual thought was that an LLM could now invoke any of those operations, on our infrastructure, on someone's behalf. Three decisions are what made me comfortable pointing it at production.
+
+**1. A tool declares its own danger, and that one flag drives everything.** Each tool carries annotations — `readOnlyHint`, `destructiveHint`. I don't keep a separate hand-maintained "these are the dangerous ones" list, because that list drifts the moment someone adds a tool and forgets. Instead the annotation *is* the source of truth: it decides whether a call needs approval and whether the audit log tags it as mutating.
+
+**2. The audit log records argument *names*, never values.** Every call logs who called it, which tool, the outcome, how long it took — and the argument **keys**, not their contents.
+
+```python
+class AuditMiddleware(Middleware):
+    async def on_call_tool(self, ctx, call_next):
+        tool = await ctx.fastmcp.get_tool(ctx.message.name)
+        mutating = not getattr(tool.annotations, "readOnlyHint", False)
+        t0 = monotonic()
+        try:
+            result = await call_next(ctx)
+        except Exception as e:
+            emit_audit(ctx.message.name, caller_identity(), mutating,
+                       ok=None, error=repr(e), ms=elapsed(t0))
+            raise
+        emit_audit(ctx.message.name, caller_identity(), mutating,
+                   ok=(result.structured_content or {}).get("ok"),
+                   arg_keys=sorted(ctx.message.arguments or {}),  # keys, not values
+                   ms=elapsed(t0))
+        return result
+```
+
+You get `update_record({id, status})` in the log — the *shape* of what happened — without spilling the actual record into a log aggregator that has a very different retention and access policy than your database.
+
+**3. Mutations fail closed.** Before a state-changing tool runs, the server asks the connected client to approve — MCP has [elicitation](https://modelcontextprotocol.io/) for exactly this ("approve once / approve for this session / decline"). The important part is the `else`: if the client provides no way to answer, the mutation is **refused**, not run. The default is no.
+
+```python
+async def require_approval(ctx, summary):
+    if await ctx.get_state("writes_approved"):
+        return None
+    try:
+        choice = await ctx.elicit(summary, ["Approve once", "Approve session", "Decline"])
+    except Exception:
+        return {"ok": False, "error": "no approval channel; refusing mutation"}  # fail closed
+    ...
+```
+
+There's a fourth thing I didn't expect to care about as much as I do: **identity**. The server runs each call as the *actual user* — it forwards the user's own upstream token, so the backend's permission checks apply to the human, not to some superuser service account. The "who" in the audit log is decoded from that token *without verifying its signature* — on purpose, and heavily commented so nobody "fixes" it: the auth layer already verified the token before dispatch, and this value is used only for attribution, never for authorization.
+
+The lesson that stuck: the tools were the easy, fun part. Safety wasn't a layer I added on top — it was three small decisions about *representation*. Make "dangerous" a property each tool declares, log the shape of a call and not its contents, and make the absence of an approver mean "no."

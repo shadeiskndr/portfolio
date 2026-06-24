@@ -1,0 +1,45 @@
+---
+title: The token-counter bug that taught me additive vs. level metrics
+date: 2026-07-04
+summary: A turn that pauses for approval resumes as a fresh model call whose usage counter restarts at zero — and not every number in the usage blob should be summed.
+tags:
+  - ai
+  - observability
+  - debugging
+---
+
+Our agent can stop in the middle of a turn — to ask for approval before it writes something, or to ask the user a clarifying question — and then resume. Each turn also reports token usage and a cost estimate.
+
+The bug: after any pause, the reported usage was too low. Sometimes a turn that clearly did a lot of work reported almost nothing.
+
+Two things were wrong, and they taught me the same lesson from two directions.
+
+**First: resume is a brand-new model call.** When the turn pauses and comes back, it re-enters the model as a fresh invocation whose usage accumulator starts at zero. The persistence layer was writing metrics with the equivalent of `update_or_create(defaults=...)` — it *overwrote* the row on every segment. So the number that survived was only the last segment, after the pause. Everything billed before the pause was silently dropped. (And because nothing was persisted *at* pause time, a turn that paused and was then abandoned recorded nothing at all.)
+
+The fix for that half is "merge, don't overwrite," and persist on **both** the pause event and the completion event.
+
+**Second — and this is the part I actually learned:** you can't just sum the whole usage blob. Some of those numbers are deltas and some are levels.
+
+- `input_tokens`, `output_tokens`, cache tokens, cost — these are **deltas**. Each segment produced some. To get the turn total you *sum* them across segments.
+- `context_window_tokens` — how full the context window is *right now* — is a **level**. It's a snapshot, not a quantity you produced. Sum it across three segments and you'll report a context window three times larger than the model even has.
+
+```python
+ADDITIVE = ("input_tokens", "output_tokens", "cache_read_tokens",
+            "cache_write_tokens", "total_tokens")
+
+def merge_segment(row, usage: dict) -> None:
+    """Fold ONE model-call segment into the turn's running total."""
+    for key in ADDITIVE:                                   # deltas -> accumulate
+        if usage.get(key) is not None:
+            row.usage[key] = row.usage.get(key, 0) + usage[key]
+
+    if usage.get("cost") is not None:                      # money -> accumulate...
+        row.cost = (row.cost or Decimal(0)) + Decimal(str(usage["cost"]))  # ...with Decimal
+
+    if usage.get("context_window_tokens") is not None:     # LEVEL -> latest wins, never sum
+        row.usage["context_window_tokens"] = usage["context_window_tokens"]
+```
+
+Two small notes hiding in there: accumulate money as `Decimal`, not `float`, or it drifts over enough segments; and provider/model/latency are last-write-wins metadata, guarded so an empty final segment doesn't wipe what you already stored.
+
+The trap was treating one JSON object of numbers as one *kind* of number. Deltas accumulate; levels are snapshots you overwrite. It's the same distinction as bytes-sent vs. queue-depth, or requests vs. concurrency — and I now look for it every time I aggregate anything across segments.

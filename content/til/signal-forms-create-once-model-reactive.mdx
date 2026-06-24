@@ -1,0 +1,64 @@
+---
+title: "Angular Signal Forms: create the form once, make the model reactive"
+date: 2026-07-10
+summary: A dynamic form whose fields arrive async is the case that bites. Recreating form() when the fields change throws at runtime — the fix is one stable form, a reactive model, and per-item rules via applyEach.
+tags:
+  - angular
+  - forms
+  - signals
+---
+
+The first Signal Forms screens I migrated were static — a known set of fields. The one that taught me something was a **dynamic** form: the field list arrives asynchronously (config resolves after auth), so the component mounts with zero fields and gets the real definitions later.
+
+My instinct was to rebuild the form whenever the field list changed — wrap `form(...)` in a `linkedSignal` keyed on the fields. That throws at runtime, and the reason is worth internalizing: <Highlight>`form()` builds effect/lifecycle machinery at construction.</Highlight> Recreating it *inside a reactive computation* violates an Angular runtime invariant. You can't treat a form like a derived value.
+
+The fix inverts which part is reactive: keep **one stable `form()` instance** for the component's lifetime, and make the **model** the thing that rebuilds when the structure changes.
+
+```ts
+import { Component, Injector, inject, linkedSignal, signal } from "@angular/core";
+import { form, applyEach, required } from "@angular/forms/signals";
+
+interface FieldDef { key: string; label: string; required: boolean; }
+interface FieldValue { key: string; value: string; }
+
+@Component({ selector: "app-dynamic-form" /* ... */ })
+export class DynamicForm {
+  private injector = inject(Injector);
+  readonly defs = signal<FieldDef[]>([]);        // arrives async
+
+  // The MODEL is reactive: rebuild the array when the structure changes.
+  private model = linkedSignal({
+    source: () => this.defs().map((d) => d.key).join("|"),
+    computation: () => this.defs().map((d): FieldValue => ({ key: d.key, value: "" })),
+  });
+
+  // form() is created EXACTLY ONCE. Never wrap this in a computed/linkedSignal.
+  readonly dynForm = form(
+    this.model,
+    (schemaPath) => {
+      // Per-item rules via applyEach. The schema compiles ONCE, so don't iterate
+      // the current field list here — read live metadata inside the callbacks.
+      applyEach(schemaPath, (itemPath) => {
+        required(itemPath.value, {
+          when: ({ pathKeys }) => this.defs()[Number(pathKeys()[0])]?.required ?? false,
+          message: ({ pathKeys }) => `${this.defs()[Number(pathKeys()[0])]?.label ?? "Field"} is required`,
+        });
+      });
+    },
+    { injector: this.injector },  // give the once-built form an injection context
+  );
+}
+```
+
+Here's the same nested-forms *shape* you can actually poke — built with [TanStack Form](https://tanstack.com/form) since the portfolio isn't Angular. One form created once, an array of item sub-forms that flex as you add and remove rows (the `applyEach` analog), each field's validity rolling up into a single Save gate, and the live model underneath — the form's one source of truth. The API differs from `@angular/forms/signals`; the architecture is the point.
+
+<NestedFormDemo />
+
+Two subtleties packed in there, both of which I got wrong first:
+
+- **The schema is compiled once, too.** A `defs().forEach(...)` *inside* the schema body would freeze validation against the initial (empty) field list. `applyEach` describes the rule *structurally* — once — and you read the live, changing metadata *inside* the rule callbacks (`when`, `message`, `validate`), which re-evaluate reactively. So "the rules are static, the data they consult is live."
+- **Cross-field and conditional logic stay declarative.** `validate(path, ({ value, valueOf }) => ...)` can read any other field or service signal and re-runs when they change; `applyWhen(path, ({ valueOf }) => valueOf(path.flag) === true, subSchema)` switches an entire sub-schema on a sibling's value. No manual `if` wiring in the component.
+
+There's a matching piece for component libraries: a custom input opts into `[formField]` by implementing `FormValueControl<T>` — a `value = model<T>()` (optionally `disabled`/`required` models) — and the directive two-way-binds field state to it. There's a separate `FormCheckboxControl` with a `checked = model<boolean>()`, and the types enforce the mutual exclusion (a value control must *not* declare `checked`, and vice-versa), which is a nice guardrail.
+
+The reframe that fixed my mental model: with Reactive Forms you're used to rebuilding a `FormGroup` when the fields change, so recreating the form feels natural. Signal Forms flip it — the *form* is the stable, effect-bearing thing you build once, and the *model* is the signal that flexes. Make the model reactive, describe the rules structurally with `applyEach`, and read the changing bits inside the rule callbacks. (All still `@experimental` — `applyEach`, `applyWhen`, and the control contracts may churn — but the create-once-model-reactive principle is the part I'm confident will survive.)

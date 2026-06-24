@@ -1,0 +1,43 @@
+---
+title: Why I closed my GitHub Copilot provider PR (and what I kept)
+date: 2026-06-05
+summary: I built GitHub Copilot as a second model backend for our agent, then closed the PR without merging. The reason is a licensing line, and the lesson is knowing which parts of a rejected PR to keep.
+tags:
+  - ai
+  - architecture
+  - decisions
+---
+
+I built a feature to let our AI agent use **GitHub Copilot** as a model backend, a second provider alongside AWS Bedrock. The motivation was cost — a Copilot subscription is cheap per seat. It worked end to end: per-user device-code login, a live model catalog, reasoning models streaming a visible thinking panel. Then I closed the PR without merging it. This is a note about *why*, because "I built it and then decided not to ship it" is a real and underrated outcome.
+
+**Why it can't ship.** The only way to use a Copilot *subscription* as a general model backend is to **impersonate the editor**. Copilot's model API is a private, first-party surface meant for the IDE plugin — so making it serve an arbitrary agent means spoofing the editor's identity (a hardcoded editor client id, faked editor-version and integration headers) and calling an internal token-exchange endpoint that isn't a public API. That's squarely a Terms-of-Service / Acceptable-Use problem, and shipping it as a production model backend — *even gated off by default* — is a liability, not a feature. "Off by default" doesn't launder distributing a ToS-violating impersonation; it just hides it behind a flag.
+
+The same reasoning rules out the tempting cousin, "just drive a Claude *subscription* through the Claude Code CLI." A consumer subscription is licensed for a person using a specific first-party client, not to be a programmatic model backend inside a commercial product. The thing that *is* licensed for that — provider API keys (Bedrock, the first-party API) billed per token — is exactly what we already use. The cost saving was real; the license to realize it wasn't there.
+
+So the decision was easy once it was framed right: **if using a credential requires impersonating the client it was issued for, that's your answer.** Close the PR.
+
+**Why it wasn't wasted — and this is the actual skill.** A closed PR isn't a failed PR if you extract the part that was always going to be right regardless of the risky bit. Three provider-agnostic things came out of it and stayed:
+
+1. A real **provider abstraction** on both sides — a registry of providers behind a common interface, so everything downstream of model construction (streaming, tools, persistence, SSE) is identical no matter the backend, and the Bedrock path is preserved byte-for-byte.
+2. **Reasoning streaming and persistence** for OpenAI-compatible models — handling both the Chat Completions and the Responses API shapes, with a catalog-driven effort selector. Reusable for *any* OpenAI-compatible provider.
+3. A **validate-before-you-write** fix in the persistence path that had nothing to do with Copilot.
+
+```python
+# The durable win: model backend as a pluggable Protocol + registry.
+class ModelProvider(Protocol):
+    def resolve_creds(self, user) -> dict | None: ...      # Bedrock: None; others: per-user
+    def build_model(self, model_id: str, creds: dict | None): ...
+
+_REGISTRY: dict[str, ModelProvider] = {}
+def register(name: str, provider: ModelProvider) -> None:
+    _REGISTRY[name] = provider
+
+# Everything after this line — streaming, tools, persistence — is provider-agnostic.
+def model_for(provider: str, model_id: str, user):
+    p = _REGISTRY[provider]
+    return p.build_model(model_id, p.resolve_creds(user))
+```
+
+The payoff came almost immediately: the very next provider I added (a local model server) slid into that abstraction in a fraction of the code the Copilot path had taken, precisely because Copilot had forced the seam to exist.
+
+Two takeaways I'll keep. **A subscription meant for a first-party client is not a license to be your product's backend** — if realizing the cost saving requires pretending to be that client, the saving isn't yours to take, and a feature flag doesn't change that. And **closing a PR is a legitimate way to finish it**: separate the part you built to chase the risky idea from the part that was always sound, keep the second, and let the first go. I closed the Copilot path and kept the abstraction it made me build.

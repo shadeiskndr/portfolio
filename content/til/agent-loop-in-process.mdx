@@ -1,0 +1,67 @@
+---
+title: Running an agent loop in-process, and the disconnect that isn't an error
+date: 2026-07-05
+summary: An embedded agent is mostly the loop the SDK hands you plus mapping its events to your transport. The subtle work is in the seams — passing request context in, and treating a closed tab as a normal exit.
+tags:
+  - ai
+  - strands
+  - bedrock
+  - streaming
+---
+
+We wanted the AI assistant to live *inside* the app — driven by the app's own auth, tools, persistence, and approval gates — not a hosted agent I couldn't reach into. So the agent loop runs in-process, on the [AWS Strands Agents SDK](https://strandsagents.com/) against Bedrock, and I translate its live event stream into Server-Sent Events for the browser.
+
+The SDK gives you more than I expected. You construct one `Agent` and hand it everything the loop needs — the model, a system prompt, your tool functions, a retry strategy, a session manager for on-disk persistence — and it owns the loop, tool dispatch, retries, and optional history summarization:
+
+```python
+from strands import Agent, ModelRetryStrategy
+from strands.models import BedrockModel
+from strands.session import FileSessionManager
+
+def build_agent(session_id: str, hooks, interventions) -> Agent:
+    return Agent(
+        model=BedrockModel(model_id=MODEL_ID, region_name=REGION, streaming=True),
+        system_prompt=SYSTEM_PROMPT,
+        tools=REGISTERED_TOOLS,             # a list of @tool functions
+        retry_strategy=ModelRetryStrategy(max_attempts=3),
+        session_manager=FileSessionManager(session_id=session_id, storage_dir=STORE),
+        hooks=hooks, interventions=interventions,
+    )
+```
+
+Two things I had to learn to make it stream cleanly.
+
+**Request context rides in `invocation_state`.** `agent.stream_async(prompt, invocation_state={...})` takes a plain dict, and your tool functions read it back via their `tool_context`. That's how a stateless tool gets the *caller's* credentials and IDs without reaching for globals — you inject them per turn and they flow through the loop to the tools.
+
+**The event stream is untyped dicts, and `stop_reason` is a branch point.** `stream_async` yields dict events; you branch on which key is present — `"data"` is a text delta, `"reasoningText"` is a thinking delta, `"result"` is the terminal `AgentResult`. And the result's `stop_reason` isn't just metadata — `"interrupt"` means *pause for a human*, which you handle by serializing the pending interrupts and returning early.
+
+```python
+async def sse_stream(prompt: str, ctx: dict):
+    agent = build_agent(ctx["session_id"], hooks=[...], interventions=[...])
+    stream = agent.stream_async(prompt, invocation_state=ctx)  # ctx reaches the tools
+    try:
+        async for event in stream:
+            if "data" in event:
+                yield frame("token", {"text": event["data"]})
+            elif isinstance(event.get("reasoningText"), str):
+                yield frame("reasoning_token", {"text": event["reasoningText"]})
+            elif event.get("result") is not None:
+                r = event["result"]
+                if r.stop_reason == "interrupt":
+                    yield frame("interrupt_request", serialize(r.interrupts)); return
+                yield frame("message_complete", {"usage": usage_of(r)})
+        yield frame("done", {})
+    finally:
+        await asyncio.shield(persist_partial(agent))  # survive mid-write cancellation
+        await stream.aclose()
+        agent.cancel()
+```
+
+The single most useful realization: <Highlight>a browser closing the tab is a normal path, not an exception.</Highlight> When the client disconnects, the async generator is cancelled — and if that cancellation lands mid-write, you lose the assistant's partial message. So the cleanup lives in `finally`, and the partial-save is wrapped in `asyncio.shield(...)` so the persistence completes even though the surrounding task is being cancelled. Treating disconnect as routine, and protecting the one write that must finish, is what makes "close the tab and come back later" actually work.
+
+Two Bedrock-specific gotchas that cost real time, both about *retries stacking* and *timeouts*:
+
+- **Pin botocore to `retries={"max_attempts": 1}`.** Otherwise the AWS SDK does its own exponential backoff *on top of* Strands' retry strategy — two retry layers compounding, so a blip becomes a very long, very confusing wait.
+- **Raise botocore's `read_timeout` well above its 60-second default.** A long generation with thinking on can take more than a minute to produce its first byte, and the default trips a client-side "Read timed out" before Bedrock has streamed anything.
+
+The shape I took away: an in-process agent is mostly *the loop the SDK gives you* plus *mapping its events onto your transport*. Everything hard lives in the seams — injecting per-request context on the way in, and treating a disconnect as a normal, must-still-persist exit on the way out.

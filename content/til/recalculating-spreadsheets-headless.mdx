@@ -1,0 +1,56 @@
+---
+title: Validating a generated spreadsheet by recalculating it headless
+date: 2026-07-09
+summary: A programmatically generated .xlsx has formula strings but no computed values. To know the formulas even work, drive headless LibreOffice to recompute — with one non-obvious flag.
+tags:
+  - python
+  - automation
+  - ai
+---
+
+The agent can generate spreadsheets, and I wanted them to contain *live* formulas — `=SUM(B2:B9)`, not a precomputed number — so the file is actually useful once someone opens it.
+
+The catch with generating `.xlsx` (via `openpyxl`) is that a formula is stored only as a **string**. There's no cached result next to it. Excel recomputes everything when you open the file, so a human never notices. But a server-side preview, or anything that loads the workbook `data_only=True`, sees blanks. And more to the point: you have no idea whether the model wrote a working formula or a `#REF!` until a human opens it and finds out.
+
+I wanted the agent to get a fixable error back instead of shipping a broken sheet. So after generating the workbook, I drive **headless LibreOffice** to recompute it, write the cached values back in, and then scan for Excel error literals.
+
+```python
+ERROR_LITERALS = {"#REF!", "#DIV/0!", "#VALUE!", "#NAME?", "#N/A", "#NULL!", "#NUM!"}
+
+def recalc_and_validate(xlsx_bytes: bytes) -> tuple[bytes, dict[str, list[str]]]:
+    with tempfile.TemporaryDirectory() as tmp:
+        # THE TRICK: a throwaway profile that forces recalc-on-load (see below).
+        profile = Path(tmp, "profile", "user"); profile.mkdir(parents=True)
+        (profile / "registrymodifications.xcu").write_text(FORCE_RECALC_XCU)
+
+        src = Path(tmp, "in.xlsx"); src.write_bytes(xlsx_bytes)
+        subprocess.run(
+            ["soffice", f"-env:UserInstallation={Path(tmp, 'profile').as_uri()}",
+             "--headless", "--convert-to", "xlsx", "--outdir", str(tmp), str(src)],
+            capture_output=True, timeout=120, check=False)
+
+        wb = load_workbook(src.with_name("in.xlsx"), data_only=True, read_only=True)
+
+    errors: dict[str, list[str]] = {}
+    for ws in wb.worksheets:
+        for row in ws.iter_rows():
+            for cell in row:
+                if cell.value in ERROR_LITERALS:
+                    errors.setdefault(cell.value, []).append(f"{ws.title}!{cell.coordinate}")
+    return recalced_bytes, errors
+```
+
+The whole thing hinges on one non-obvious detail I lost an hour to. LibreOffice's default OOXML recalculation mode is **"ask the user"** — and in headless mode, "ask" is silently treated as **"never."** So `--convert-to xlsx` runs happily, exits zero, and hands you back the same blank cached values. The failure is completely silent.
+
+The fix is to seed a temporary user profile that forces recalculation on load:
+
+```xml
+<!-- registrymodifications.xcu — 0 = always recalculate on load -->
+<item oor:path="/org.openoffice.Office.Calc/Formula/Load">
+  <prop oor:name="OOXMLRecalcMode" oor:op="fuse"><value>0</value></prop>
+</item>
+```
+
+If there are errors, they go back to the model — cell locations included — with an instruction to fix the references and try again, which closes a tidy self-correction loop. A couple of guardrails keep it honest: I only pay the subprocess cost when the sheet actually contains formulas, and if `soffice` isn't installed I ship the un-recalculated file anyway (Excel will recompute on open) rather than failing the request over a missing validator.
+
+The lesson: the fastest way to check whether a formula is valid is to hand it to something that already speaks the format and let it do the math. And watch out for defaults that fail by doing nothing — those are the ones that eat your afternoon.

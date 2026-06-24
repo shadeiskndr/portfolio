@@ -1,0 +1,50 @@
+---
+title: Configuring a Bedrock agent — cache the prefix, tame the retries
+date: 2026-07-01
+summary: The model id is the least interesting field on the Bedrock model constructor. The settings that decide an agent's cost and reliability are further down, and none of them are obvious.
+tags:
+  - ai
+  - bedrock
+  - strands
+  - performance
+---
+
+Constructing the Bedrock model for an agent *looks* like `model_id`, `region`, `max_tokens`, done. But an agent isn't a one-shot completion — it re-sends a large, stable prefix on every single turn, and it's a long-lived network call. The settings that actually decide its cost and its reliability live further down the constructor, and I got each of them wrong once.
+
+**Cache the prefix. This is the one that moved the cost curve.** Every turn of an agent conversation re-sends the same system prompt and the same full list of tool schemas, then a little bit of new conversation. That prefix can be *tens of thousands* of tokens, and paying full input price for it on every turn is most of your bill. Bedrock supports prompt caching, and the model wrapper exposes it: cache the system prompt and cache the tool definitions, and each turn pays full price only for the *new* tokens while the rest comes back at a fraction of the cost.
+
+```python
+from strands.models import BedrockModel
+from strands.models.model import CacheConfig, CacheToolsConfig
+
+model = BedrockModel(
+    model_id=MODEL_ID,
+    region_name=REGION,
+    streaming=True,
+    cache_config=CacheConfig(...),        # cache the (large, stable) system prompt
+    cache_tools=CacheToolsConfig(...),    # cache the tool-schema block
+)
+```
+
+The rule that makes caching actually hit: <Highlight>the cached prefix has to be byte-stable.</Highlight> Caching is a prefix match — the request is rendered as tools → system → messages, and *any* byte change before the cache breakpoint invalidates everything after it. So a `datetime.now()` interpolated into the system prompt, or a tool list that reorders per request, silently drops your hit rate to zero with no error. Keep the system prompt and tool set frozen; put anything volatile *after* the breakpoint, in the messages.
+
+Then two gotchas that aren't on the model at all — they're on the underlying AWS client, which is exactly why they're easy to miss:
+
+```python
+from botocore.config import Config as BotocoreConfig
+
+model = BedrockModel(
+    # ...as above...
+    boto_client_config=BotocoreConfig(
+        retries={"max_attempts": 1},   # the framework already retries — don't stack a 2nd
+        read_timeout=300,              # a thinking turn can take >60s to first byte
+    ),
+)
+```
+
+- **Pin `retries` to 1.** The agent framework already has its own retry strategy with backoff. Leave botocore's default retries on *underneath* it and you get two exponential backoffs stacked — a transient blip becomes a baffling multi-minute hang, and you'll waste an afternoon convinced the model is slow when it's really your two retry layers negotiating with each other.
+- **Raise `read_timeout` well above the 60-second default.** A long generation — especially with extended thinking on — can take more than a minute to produce its first byte. botocore's default read timeout trips a client-side "Read timed out" *before Bedrock has streamed anything*, so the request looks like it failed when it was about to succeed.
+
+One more coupling worth naming (it has its own story): reasoning config goes in `additional_request_fields`, and whenever thinking is engaged you must pin `temperature=1.0` and drop `top_p`, or Bedrock rejects the request outright.
+
+The reframe: `model_id` is the least interesting thing you pass. For a production agent, the constructor is where you set your **cost** profile — cache the stable prefix, and keep it stable so the cache hits — and your **reliability** profile — one retry layer, not two, and a socket timeout that outlasts how long the model actually thinks.

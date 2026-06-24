@@ -1,0 +1,77 @@
+---
+title: From SVG surgery to a real graph library — a custom node in React Flow
+date: 2026-06-10
+summary: The hand-rolled Graphviz-SVG DAG was later replaced by a node-graph library. Because ng-diagram borrows React Flow's model wholesale, the custom-node mental model ports one-to-one between the Angular app and this React site.
+tags:
+  - dataviz
+  - react-flow
+  - angular
+  - typescript
+---
+
+Earlier I wrote about rendering a [workflow DAG by parsing Graphviz SVG](/til/hidden-node-orphaned-edges) and doing DOM surgery to hide nodes — and the lesson that a node and its edges are one unit you must keep in sync by hand. That was the "before." The "after" was moving to a real node-graph library, which gives you that invariant for free: you hand it `{ nodes, edges }` plus a custom node component, and it owns hit-testing, dragging, panning, and keeping edges attached to nodes as they move.
+
+At work that library is [`ng-diagram`](https://www.npmjs.com/package/ng-diagram) (Angular). On this site (React) the equivalent is [`@xyflow/react`](https://reactflow.dev/) — and that's not a coincidence: ng-diagram lifts its data model straight from React Flow. Same `Node`/`Edge` vocabulary, same "a custom node is just your component, registered by a `type` string" idea. So I can build the node here in React Flow (which I can actually run on this page) and the mental model transfers verbatim to the Angular app.
+
+Here's a live one — drag the nodes around, and it re-themes with the rest of the site (try the toggle):
+
+<WorkflowGraphDemo />
+
+Each box above is a *custom node*: a typed component whose entire look is driven by its own `data.status`, while React Flow owns the layout, dragging, panning, and keeping the edges attached. That's the whole component — data typed via `NodeProps<T>`, connection points via `Handle`, status-driven styling:
+
+```tsx
+import {
+  ReactFlow, Background, Controls, Handle, Position,
+  useNodesState, useEdgesState,
+  type Node, type NodeProps, type NodeTypes,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+
+type StepNode = Node<{ label: string; status: "ok" | "running" | "failed" }, "step">;
+
+const STATUS = { ok: "border-emerald-500", running: "border-amber-500", failed: "border-red-500" };
+
+function StepNodeView({ data, selected }: NodeProps<StepNode>) {
+  return (
+    <div className={`rounded-lg border-2 bg-background px-3 py-2 text-sm
+                     ${STATUS[data.status]} ${selected ? "ring-2 ring-primary" : ""}`}>
+      <Handle type="target" position={Position.Top} />
+      <span className="font-medium">{data.label}</span>
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
+// Define this ONCE, outside the component. A fresh object each render remounts
+// every node in the graph — the #1 React Flow footgun.
+const nodeTypes: NodeTypes = { step: StepNodeView };
+
+export function WorkflowGraph({ initialNodes, initialEdges }: {
+  initialNodes: StepNode[]; initialEdges: Edge[];
+}) {
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  return (
+    <div style={{ height: 420 }}>
+      <ReactFlow
+        nodes={nodes} edges={edges} nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+        fitView
+      >
+        <Background />
+        <Controls />
+      </ReactFlow>
+    </div>
+  );
+}
+```
+
+The Angular version at work is the same shape with different spelling: a component implementing `NgDiagramNodeTemplate<T>` with a single signal input `node = input.required<Node<T>>()` (its data lives at `node().data`, not spread as props), registered in a `new NgDiagramNodeTemplateMap([["step", StepNode]])` bound to `[nodeTemplateMap]`; selection comes from a host directive instead of a `selected` prop. Once you've built one, you've built both.
+
+Three things I learned bridging the two:
+
+- **Neither library does layout.** You pair it with a layout engine — [dagre](https://github.com/dagrejs/dagre) is the usual choice — to compute positions from a DAG. One coordinate gotcha: dagre returns node *centre* coordinates while the graph libraries want *top-left*, so you subtract half-width/half-height after laying out.
+- **Initialize the graph once; don't re-assign the whole model.** Handing React Flow a brand-new `nodes` array identity (or re-assigning ng-diagram's `[model]`) forces a re-init that re-fires `fitView` and destroys the user's pan/zoom. Mutate through the state setters (`onNodesChange`, `setNodes`) instead of replacing wholesale.
+- **The one structural difference** is edges. ng-diagram has a *middleware pipeline* that can rewrite edge geometry before render; React Flow has no such pipeline — you compute edge geometry *inside a custom edge component* using `getSmoothStepPath`/`getBezierPath`. The concrete case that bit both was "floating" edges that attach anywhere on a node's border rather than snapping to the four cardinal midpoints. In React Flow that's the official floating-edges recipe (`getNodeIntersection` + `getEdgeParams` in a custom edge); in ng-diagram it was the identical math living in a middleware.
+
+The satisfying part, coming from the SVG-surgery days: the thing I used to do by hand — "hide this node *and* its incident edges, and keep the click-targets in sync" — is just the library's job now. You describe the graph as data and the node as a component, and correctness of the *relationships* stops being something you maintain. And because ng-diagram borrowed xyflow's model wholesale, that knowledge is portable across a React site and an Angular app without re-learning a thing.

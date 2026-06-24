@@ -1,0 +1,57 @@
+---
+title: Letting users teach an agent new skills at runtime
+date: 2026-07-10
+summary: An agent's built-in skills are frozen at deploy. A SKILL.md folder a user uploads — mounted as a second skills root and synced by content hash — teaches the agent a workflow that's live on the next message, no deploy.
+tags:
+  - ai
+  - strands
+  - agents
+---
+
+An agent's built-in skills are fixed at deploy time, but users keep needing niche, personal workflows the platform team can't anticipate — a house report style, a domain vocabulary, a specific multi-step procedure. The goal I had: let a user upload a folder that *teaches* the agent a capability, have it available in their very next message, with zero deploy — and without dumping a giant instruction blob into every prompt.
+
+The unit of teaching is deliberately boring: a **skill is a zip of a directory** — a `SKILL.md` with YAML frontmatter (`name`, `description`) and optional supporting files under `references/`, `scripts/`, `assets/`. It's the same shape as Anthropic's [Agent Skills](https://www.anthropic.com/news/skills) convention; the twist is that here they're supplied by end users at runtime rather than baked into the image.
+
+```markdown
+<!-- my-report-style/SKILL.md -->
+---
+name: my-report-style
+description: Use when the user asks for a "status report" — apply our house
+  structure (TL;DR, Risks, Next steps) and tone. See references/tone.md.
+---
+# Status report style
+1. Open with a two-sentence TL;DR.
+2. Then `## Risks` (bullets) and `## Next steps` (a checklist).
+For voice and banned phrases, read `references/tone.md`.
+```
+
+The end-to-end flow, and where the real engineering was:
+
+1. The web app uploads the zip. The backend validates and unpacks it *there* — parses the frontmatter, enforces size/count caps — and stores the files keyed to the user. The frontmatter `name` is the identity, so re-uploading the same name replaces the skill.
+2. The agent worker is **stateless and shares no disk with the backend.** So at the start of every chat stream it fetches that user's skill *manifest* — a name plus a content **hash** per skill — and downloads only the skills whose hash differs from its local cache, extracting each into `user-skills/<user>/<skill>/`.
+3. That per-user directory is handed to the skills plugin as a **second skills root**, right alongside the built-in one. The framework's own `<available_skills>` listing now transparently includes the user's skill, using the exact same activation machinery as the platform skills.
+
+```python
+from strands import Agent, AgentSkills
+
+BUNDLED = "/app/skills"  # shipped with the image
+
+def build_agent(user_skills_dir: str | None):
+    roots = [BUNDLED, *(([user_skills_dir]) if user_skills_dir else [])]
+    return Agent(plugins=[AgentSkills(skills=roots)], tools=[read_skill_file, ...])
+```
+
+Two things made this click for me:
+
+**Progressive disclosure is what makes "bring your own skills" affordable.** Only each skill's one-line *description* rides in the system prompt; the full `SKILL.md` body enters context only when the skill is activated. So with twenty user skills you pay twenty short descriptions per turn, not twenty documents. Without that property, letting users pile on skills would blow the context budget instantly.
+
+**There's no live hot-reload — and you don't need one.** The plugin snapshots the skill set in its constructor, so a running agent can't see an edit. But because the worker rebuilds the agent (and re-runs the sync) at the top of *every* stream, a re-upload simply lands on the user's next message. The content hash makes that per-stream sync a cheap no-op when nothing changed, and it doubles as the pruning signal — a skill renamed or deleted upstream disappears from the manifest, and the worker removes its local directory.
+
+A few things I had to get right because these are *user-supplied* files:
+
+- **The sync must never break chat.** It catches everything and degrades to "whatever's already cached" rather than failing the stream on a backend hiccup.
+- **Serialize per user.** Two concurrent streams for the same user would otherwise race each other's directory rewrites; an async lock keyed on user id fixes it.
+- **Built-ins win name collisions** — a user skill that shadows a platform skill is skipped, so nobody can silently hijack core behavior.
+- **Re-validate the zip on extraction** — reject `..`, absolute, and backslash members — even though your own backend produced it. Cheap insurance on a path that carries user bytes.
+
+The lesson I keep: "skills" is a wonderful extension point precisely *because* it's a folder with a `SKILL.md`. The capability is data, not code; the model already knows how to read it; and progressive disclosure means the cost of *having* a skill available is a single sentence. Almost all the work was plumbing user bytes to a stateless worker freshly and safely — a hash-versioned sync and a second skills root — and almost none of it was in the agent.

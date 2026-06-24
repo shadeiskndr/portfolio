@@ -1,0 +1,40 @@
+---
+title: Designing a database for AI chat, where a message isn't a row of text
+date: 2026-06-12
+summary: One assistant reply interleaves text, reasoning, tool calls, an approval pause, token accounting, and files. Modeling that taught me when to normalize and when to keep a structured blob.
+tags:
+  - database
+  - django
+  - ai
+---
+
+When I started persisting our AI agent's conversations, I reached for the obvious schema: a session has many messages, a message has `role` and `content`. That falls apart on the first assistant reply, because an assistant "message" isn't text — it's a *timeline*: some prose, some reasoning, a tool call, more prose, a pause waiting for me to approve something, another tool call, and a running tab of tokens and cost the whole time. The schema has to reconstruct that timeline exactly, and it has to be persistable *mid-stream*, because the turn can pause or the connection can drop.
+
+Here's what I learned modeling it.
+
+**Store the reply three ways, on purpose.** A message keeps a flat `content` text column (the cheap path for rendering a list and for search), a separate `reasoning_content` column (thinking is different from the answer and you often want to show/hide it independently), and a `parts` JSON list of typed, *ordered* markers — `text`, `reasoning`, `tool_call`, `interrupt`. The flat columns are for speed; `parts` preserves the interleaving that a flat column physically can't represent.
+
+```python
+class Message(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid7, editable=False)  # time-ordered
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name="messages")
+    role = models.CharField(max_length=16, choices=Role.choices)
+    status = models.CharField(max_length=16, choices=Status.choices)  # pending | awaiting_user | completed | failed
+    content = models.TextField(blank=True)            # flat: cheap to render & search
+    reasoning_content = models.TextField(blank=True)  # "thinking", kept separate
+    parts = models.JSONField(default=list)            # typed, ORDERED timeline markers
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ["created_at", "id"]  # stable *only* because id is time-sortable
+```
+
+**Metrics are a one-to-one row, not columns on the message.** Token counts, cache reads/writes, cost as a `Decimal`, latency — they live in their own table, one row per message, alongside the raw provider payload. Why a separate table? Because listing a hundred conversations shouldn't load a hundred message bodies — with metrics split out, the session-list view sums the token and cost columns *in SQL* and never touches `content`.
+
+**A pause is a first-class row.** When the agent stops to ask for approval, that's not a flag — it's an `Interrupt` row with its own `interrupt_id` and status machine (`awaiting` → `approved`/`rejected`/`answered`/`skipped`). And here's the part I didn't expect: the interrupt is represented *twice* — as a queryable row **and** as a marker inside the message's `parts`. The rows drive the state machine (the server answers "is anything awaiting a human?" with a cheap query); the JSON marker records *where in the reply* the pause happened, for rendering. Two representations because they answer two different questions.
+
+Two decisions that quietly do a lot of work:
+
+- **Time-ordered UUIDs** (a UUIDv7-style generator) as primary keys. They sort by creation time, so `ORDER BY created_at, id` is a stable tie-break — and they're non-enumerable, so a leaked id can't be used to walk the table. That stable ordering is *load-bearing*: with a random UUID PK, the tie-break would be meaningless and interleaved parts could reorder.
+- **No soft-delete.** There's no `is_deleted` column. A deleted session is a real cascade delete. "Dead" turns — a `pending` reply that stops receiving writes — are handled by a *state transition* (flip to `failed` after a grace window), not by hiding rows. It kept the query surface honest: every list query means what it says, with no `WHERE NOT is_deleted` I'd inevitably forget somewhere.
+
+The through-line: the hard modeling calls were all about *representation matching the question*. Normalize what you aggregate (metrics), keep a structured blob for what you replay (parts), and represent a pause both ways because rendering it and reasoning about it are genuinely different jobs.

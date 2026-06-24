@@ -1,0 +1,55 @@
+---
+title: Deleting a dependency, and the one line that made it possible
+date: 2026-04-19
+summary: Replacing an idle-timeout library with ~40 lines of native code — the trick isn't the timer, it's registering activity listeners outside Angular's change-detection zone.
+tags:
+  - angular
+  - frontend
+  - performance
+---
+
+An Angular app I maintain logs you out after a stretch of inactivity. That ran on a third-party idle library, which happened to be the last `NgModule`-based dependency in an otherwise fully standalone app — and it carried a small bug where activity kept getting recorded even after the session had already timed out. I wanted it gone.
+
+The logic underneath turns out to be about forty lines: listen for user activity, stamp the time, and let a one-second tick check how long it's been. At zero, log out; in the last stretch before that, show a countdown.
+
+But when I first sketched it, I nearly shipped something that would have quietly wrecked the app's performance — and understanding *why* is the actual thing I learned.
+
+The activity events you listen for include `mousemove`. That fires constantly — dozens of times a second as the cursor moves. In Angular, an event handler runs inside the framework's "zone," and every run schedules a change-detection pass. So a naive idle service triggers a full change-detection cycle on every pixel of mouse movement. Death by a thousand twitches.
+
+The fix is to register the listeners (and the interval) **outside** the zone, and only step back *into* it when something the UI actually needs to react to changes — the warning appears, or the countdown number ticks over:
+
+```ts
+@Injectable({ providedIn: "root" })
+export class IdleTimeoutService {
+  private zone = inject(NgZone);
+  private lastActivity = signal(Date.now());
+  readonly isWarning = signal(false);
+  readonly countdown = signal(0);
+  private timedOut = false;
+
+  start(onTimeout: () => void, totalMs: number, warnMs: number) {
+    this.zone.runOutsideAngular(() => {              // <- the line that matters
+      const bump = () => { if (!this.timedOut) this.lastActivity.set(Date.now()); };
+      for (const e of ["mousemove", "mousedown", "keydown", "touchstart", "scroll"]) {
+        document.addEventListener(e, bump, { passive: true });
+      }
+      setInterval(() => {
+        const remaining = totalMs - (Date.now() - this.lastActivity());
+        if (remaining <= 0 && !this.timedOut) {
+          this.timedOut = true;
+          this.zone.run(onTimeout);                  // re-enter Angular only here...
+        } else if (remaining <= warnMs) {
+          this.zone.run(() => {                       // ...or on a real state change
+            this.isWarning.set(true);
+            this.countdown.set(Math.ceil(remaining / 1000));
+          });
+        }
+      }, 1000);
+    });
+  }
+}
+```
+
+Every `mousemove` now touches nothing but a signal — no change detection — and Angular only wakes up when the warning state or the countdown genuinely changes. The `timedOut` flag fixes the original bug two ways: the timeout callback fires exactly once, and activity is ignored after the session is already gone.
+
+The reframe: the library wasn't doing anything I couldn't write in forty lines. The value it was actually adding was that one piece of discipline — keeping high-frequency listeners out of the framework's reactivity — and once I understood *why* it was built that way, replacing it was easy, and I got to drop a dependency, its `NgModule` baggage, and a bug in the same commit.

@@ -1,0 +1,33 @@
+---
+title: asyncio will garbage-collect your fire-and-forget task
+date: 2026-07-02
+summary: "Background chat-title generation kept vanishing with no error — the cause: asyncio only keeps a weak reference to a bare create_task, so nothing held it alive."
+tags:
+  - python
+  - asyncio
+  - ai
+---
+
+I wanted chat sessions to name themselves. When a conversation starts, kick off a cheap, separate model call built from the first prompt, let it run in the background, and drop the title into the sidebar the moment it's ready — so it shows up seconds in and lands even if the main turn later pauses or the client disconnects. Classic fire-and-forget: `create_task`, don't await.
+
+It worked. Mostly. Every so often a conversation just never got a title, with no error and no pattern I could pin down.
+
+The cause is a genuine `asyncio` footgun, and it's [in the docs](https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task) if you go looking: the event loop keeps only a **weak** reference to a task. If nothing in *your* code holds a reference to it, the garbage collector is free to collect it mid-flight — and your background work just quietly stops. `await` and gather hold references, which is why you never notice this until the first time you truly fire-and-forget.
+
+The fix is three lines: keep a strong reference, and drop it when the task finishes.
+
+```python
+_background: set[asyncio.Task] = set()   # strong refs; the loop only keeps weak ones
+
+def spawn(coro) -> None:
+    task = asyncio.create_task(coro)
+    _background.add(task)                 # <- this is what keeps it alive
+    task.add_done_callback(_background.discard)
+```
+
+Two more things I got wrong on the way, both about "cosmetic work must never break the real work":
+
+- **The task must never raise.** A missing title is cosmetic; it must not bubble up as a failure on the stream the user is actually watching. So it swallows everything except `CancelledError` (which it re-raises, so cooperative cancellation still works) and falls back to the first line of the prompt.
+- **Generate from the prompt alone.** My first version built the title from the prompt *and* the finished answer, so it couldn't run until the turn completed — and a turn that paused for approval never got one. Decoupling it from the assistant's reply is what let it run early and survive.
+
+The reframe I keep: "fire-and-forget" in `asyncio` is really "fire, hold a reference, and forget." The garbage collector has no idea your background job matters unless something is still pointing at it.

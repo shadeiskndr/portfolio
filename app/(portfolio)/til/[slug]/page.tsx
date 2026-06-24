@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote-client/rsc";
+import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import { mdxComponents } from "@/components/new-site/content/mdx-components";
@@ -57,7 +58,19 @@ export default async function TilPostPage({ params }: { params: Promise<{ slug: 
             options={{
               mdxOptions: {
                 remarkPlugins: [remarkGfm],
-                rehypePlugins: [rehypeSlug],
+                rehypePlugins: [
+                  rehypeSlug,
+                  [
+                    rehypePrettyCode,
+                    {
+                      // Dual themes emit CSS vars (--shiki-light/--shiki-dark) per
+                      // token; globals.css swaps them on the .dark class. Drop
+                      // Shiki's own background so the <pre> bg-muted shows through.
+                      theme: { light: "github-light", dark: "github-dark" },
+                      keepBackground: false,
+                    },
+                  ],
+                ],
               },
             }}
           />

@@ -1,0 +1,40 @@
+---
+title: Stop styling Angular Material's private DOM
+date: 2026-02-05
+summary: Restyling Material by targeting .mat-mdc-* classes behind ::ng-deep is borrowing against the next upgrade. The M3 override mixins let you style the documented token contract instead.
+tags:
+  - angular
+  - css
+  - material
+---
+
+For a long time, the way I restyled an Angular Material component was to target its internal DOM — `.mat-mdc-button`, `.mdc-button__label` — usually behind `::ng-deep` and an `!important` to punch through view encapsulation. It works right up until it doesn't. Those class names are Material's private MDC implementation detail: undocumented, they changed *wholesale* during the MDC migration, and every override built on them rots silently on the next version bump. You find out in production, because CSS doesn't throw.
+
+M3 gives you a supported alternative: a documented per-component **overrides mixin** that emits design *tokens* scoped to your selector. You style the contract the component promises, not the DOM it happens to render:
+
+```scss
+@use "@angular/material" as mat;
+
+.mode__toggle-group {                 // your own BEM class on the host element
+  @include mat.button-toggle-overrides((
+    background-color: var(--mat-sys-surface-container-low),
+    selected-state-background-color: var(--mat-sys-secondary-container),
+    text-color: var(--mat-sys-on-surface-variant),
+    selected-state-text-color: var(--mat-sys-on-secondary-container),
+    shape: 0.5rem,
+    height: 2.25rem,
+    label-text-weight: 500,
+  ));
+}
+```
+
+No `::ng-deep`. No `!important`. No reaching into `.mdc-*`.
+
+Two properties make this genuinely better, not just tidier:
+
+- **Unknown keys are a build error.** Each mixin accepts a fixed, documented token set (`background-color`, `selected-state-text-color`, …). Pass a key that doesn't exist and Sass fails the build — which is exactly what you want. The failure moves from "silently wrong in prod after an upgrade" to "loud, at compile time, in the PR."
+- **It's scoped, so there's no global bleed.** Because you `@include` the mixin under your own selector, you get per-instance theming without leaking styles across the app — the thing `::ng-deep` could never promise.
+
+A couple of boundaries worth keeping straight: values can be tokens *or* literals (`shape: 0.5rem` sits right next to a `var(--mat-sys-*)`), and some genuinely structural things — a custom legend, a tooltip's symbol shape — have no token, so those stay as ordinary scoped CSS on your *own* markup. Reserve the override mixins for Material's internals; author everything else against elements you named yourself.
+
+The reframe I wish I'd had earlier: `::ng-deep` into `.mat-mdc-*` isn't styling, it's *borrowing against the next upgrade* — you're coupling your look to a private structure the maintainers are free to change without telling you. Styling the documented token contract is the difference between a restyle that survives a major version bump and one that quietly breaks the day you run `ng update`.

@@ -1,0 +1,58 @@
+---
+title: Pick contrast by tone, not by luminance
+date: 2026-02-18
+summary: The usual "is this background light or dark" check weights RGB and thresholds at 0.5. HCT gives you a real perceptual lightness axis, so a readable on-color becomes a fixed tone-distance from the surface.
+tags:
+  - css
+  - color
+  - frontend
+---
+
+Wiring up runtime theming (letting a user pick a brand color and rebuilding the whole palette from it), I had to answer a small question a lot: given *this* surface color, what text color stays readable on it? I'd written the standard helper before without thinking about it:
+
+```ts
+// The usual approach — and what one corner of our app still does.
+function contrastColor(hex: string): "#000000" | "#ffffff" {
+  const [r, g, b] = toRgb(hex);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.5 ? "#000000" : "#ffffff";
+}
+```
+
+It mostly works. But it wobbles across hues, and it's not actually how we *perceive* lightness — it's a weighted RGB average with a magic threshold. When one seed color drives an entire theme, "mostly works" isn't good enough: a saturated blue and a saturated yellow can land on opposite sides of that 0.5 line in ways that don't match how light or dark they *look*.
+
+The thing I learned, via Google's `@material/material-color-utilities`, is that there's a better axis to decide on: **tone**, the T in [HCT](https://material.io/blog/science-of-color-design) (Hue, Chroma, Tone). Tone is a perceptual lightness axis built on CIE L\*/CAM16 — crucially, it's defined *independently* of hue and chroma. So a tone-30 blue and a tone-30 yellow sit at roughly the same *perceived* lightness even though their RGB luminance differs. That independence is exactly what you want when the hue is a user-supplied variable.
+
+You can feel that independence below. The top ramp steps through tone on a perceptual lightness axis; the bottom steps through HSL's "lightness." Both pick black-or-white text with the *same* rule — but drag the hue and only the perceptual ramp keeps every step readable. (CSS `oklch()` stands in for HCT here: a different perceptual space, same "tone is the axis" point.)
+
+<ToneRampDemo />
+
+```ts
+import { Hct, argbFromHex, hexFromArgb, TonalPalette } from "@material/material-color-utilities";
+
+// A hue-independent, perceptual lightness readout (0 = black … 100 = white).
+const toneOf = (hex: string) => Hct.fromInt(argbFromHex(hex)).tone;
+
+// Better than a pure black/white flip: derive the on-color from the SAME hue
+// family, at a fixed tone GAP, so the text feels part of the surface and the
+// contrast is locked in for ANY seed.
+function onColorFor(surfaceHex: string): string {
+  const surface = Hct.fromInt(argbFromHex(surfaceHex));
+  const family = TonalPalette.fromHueAndChroma(surface.hue, surface.chroma);
+  const onTone = surface.tone >= 60 ? 10 : 90; // ~80-point gap ⇒ reliable contrast
+  return hexFromArgb(family.tone(onTone));
+}
+```
+
+That's the whole trick, and it's what Material 3's `on-*` roles do under the hood: an on-color is just "jump to a far tone." Instead of computing a contrast *ratio* and hoping, you *construct* the pair at a fixed tone distance. Pin the gap between a surface and its text (say 90 vs 10) and legibility holds no matter which hue the user picks.
+
+A few gotchas from the API that tripped me:
+
+- **Tone is 0–100** — not 0–255, not 0–1, and not HSL's "L". It's L\*, which is why it tracks perception.
+- **`argbFromHex` returns a 32-bit integer** (`0xAARRGGBB`), not a string. The pipeline is `hex → argb int → Hct/palette → argb int → hex`, and mixing the int up with the hex is the classic first bug.
+- **Equal tone ≠ equal sRGB luminance** — which is the entire point. If you compare a tone-derived color against the luminance formula they'll disagree, and the tone one is the one that looks right.
+- **Chroma is clamped to the sRGB gamut** — ask a palette for a tone and you get the most chromatic in-gamut color at that tone, so you don't independently dial chroma when you call `.tone()`.
+
+(The same primitives spawn a whole *family* from one seed — rotate hue at a fixed tone and chroma for N distinguishable-but-related colors, or hold hue and step tone for a sequential ramp. I haven't needed that yet, but it's right there in `TonalPalette`.)
+
+I wrote separately about the plumbing of runtime theming — the compile-time/runtime wall and writing the tokens inline. This is the part I found genuinely delightful underneath it: once you have a real perceptual lightness number, "make this readable" stops being a ratio you check and becomes a distance you set.

@@ -1,0 +1,50 @@
+---
+title: What made a two-major Angular upgrade survivable
+date: 2026-01-12
+summary: Taking a large NgModule app across two majors to fully standalone came down to two things — letting the schematics do the boring bulk, and remembering that "modernize" is opt-in.
+tags:
+  - angular
+  - frontend
+  - migration
+---
+
+I took a large, `NgModule`-based Angular app across two major versions and out to fully standalone — around forty module and routing-module files gone — without a rewrite and while keeping it shippable at each step. Two realizations did most of the work.
+
+**Let the schematics do the boring bulk.** `ng update` plus the official migrations carry the mechanical mass: `ng generate @angular/core:standalone` converts components, prunes modules, then drops the now-default `standalone: true`; the control-flow migration turns `*ngIf`/`*ngFor`/`*ngSwitch` into `@if`/`@for`/`@switch`. Then the one manual move is standalone bootstrap — `bootstrapModule(AppModule)` becomes `bootstrapApplication(AppComponent, { providers })`, with each root-module provider becoming a `provide*` function:
+
+```ts
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideZoneChangeDetection(),                        // chose to STAY zone-based
+    importProvidersFrom(LegacyWidgetModule.forRoot()),   // bridge for module-only libs
+    provideRouter(appRoutes),
+    provideHttpClient(withInterceptorsFromDi()),         // keep class interceptors
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    provideAppInitializer(async () => { await inject(RuntimeConfig).load(); }),
+  ],
+});
+```
+
+`importProvidersFrom()` is worth calling out: it's the bridge for third-party libraries that still ship only an `NgModule`. Reaching for it isn't a failure to be "fully standalone" — it's the sanctioned escape hatch, and the app is standalone at its own level while those libs stay module-backed underneath.
+
+**"Modernize everything" is the trap; modernizing is opt-in.** This is the realization that kept the PR from ballooning into a risky rewrite. You do *not* have to convert every guard and interceptor to the functional style. The app happily runs a mix — a functional `CanDeactivateFn` sits right next to class `CanActivate` guards, and the HTTP interceptors stayed DI-class-based via `withInterceptorsFromDi()` rather than being rewritten to functional ones. Angular lets old and new coexist on purpose; leaning on that is what makes the upgrade a series of shippable steps instead of a big bang.
+
+```ts
+@Component({
+  selector: "app-widget",
+  imports: [/* only what's used — CommonModule is dead weight once you're on @if/@for */],
+  template: `
+    @if (user(); as u) { <h2>{{ u.name }}</h2> }
+    @for (row of rows(); track row.id) { <app-row [row]="row" /> }
+  `,
+})
+export class WidgetComponent {
+  private data = inject(DataService); // was a constructor parameter
+}
+```
+
+The second major bump was deliberately *tiny*, and that's the tell that the approach worked: a router API rename, an automated prune of now-unused `CommonModule` from standalone `imports` arrays (with `@if`/`@for` it's dead weight), an added `provideZoneChangeDetection()` — i.e. an explicit choice to **stay on Zone.js** rather than chase zoneless mid-migration — and a `tsconfig` cleanup. Nearly the entire diff was those four mechanical patterns.
+
+One honest caveat I'd want a reader to have: **a version bump does not migrate you to signal inputs.** Signals, `input()`, and `output()` are everywhere in the codebase *now*, but that adoption happened separately and incrementally, on its own schedule — not as a side effect of the upgrade. Conflating "we're on the new Angular" with "we're fully signals-based" sets a false expectation about how much a major upgrade actually changes.
+
+The through-line: a big Angular upgrade is survivable precisely because the framework doesn't force you to modernize everything at once. Run the schematics for the tedious bulk, bridge the stragglers with `importProvidersFrom`, leave working class-based guards and interceptors alone, and let the old and new styles coexist until you *choose* to migrate each one.

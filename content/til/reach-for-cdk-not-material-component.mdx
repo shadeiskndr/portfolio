@@ -1,0 +1,109 @@
+---
+title: Reach for the CDK primitive, not the styled Material component
+date: 2026-03-20
+summary: Angular Material gives you finished components; the CDK gives you the unstyled behavior primitives Material is built on. When the finished component's styling is what you're fighting, skip a layer down.
+tags:
+  - angular
+  - cdk
+  - frontend
+  - css
+---
+
+Angular ships two things that get conflated. **Angular Material** is finished, Google-styled components. The **CDK** (Component Dev Kit) is the layer *underneath* them — the unstyled behavior primitives Material itself is built on: overlay positioning, focus trapping, portals, drag physics, virtual scrolling, breakpoint observation. I use Material happily for the ordinary 80%. But the moment I need interactive content in a floating panel, or a full-bleed surface, or a behavior the styled component won't give me without prying into its rendered internals, I drop to the CDK primitive and style my own. This is the constructive flip side of [not styling Material's private DOM](/til/stop-styling-material-private-dom): instead of overriding `.mat-mdc-*`, build on the layer beneath it.
+
+The clearest case is **interactive floating panels**. `MatTooltip` renders a plain string on hover and can't hold interactive content; `MatMenu` brings menu semantics and its own theming you then override. Both are built on the CDK Overlay + Portal — so I build directly on that, which is exactly what Material did:
+
+```ts
+@Directive({
+  selector: "[popoverTriggerFor]",
+  host: { "(click)": "toggle()", "[attr.aria-expanded]": "isOpen()" },
+})
+export class PopoverTriggerDirective {
+  readonly panel = input.required<TemplateRef<unknown>>({ alias: "popoverTriggerFor" });
+  private overlay = inject(Overlay);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private vcr = inject(ViewContainerRef);
+  private destroyRef = inject(DestroyRef);
+  private readonly _open = signal(false);
+  readonly isOpen = this._open.asReadonly();
+  private ref: OverlayRef | null = null;
+
+  toggle() { this._open() ? this.ref?.detach() : this.open(); }
+
+  private open() {
+    this.ref ??= this.create();
+    this.ref.attach(new TemplatePortal(this.panel(), this.vcr));
+    this._open.set(true);
+  }
+
+  private create(): OverlayRef {
+    const positionStrategy = this.overlay.position()
+      .flexibleConnectedTo(this.host)
+      .withPositions([                                   // ordered: first that fits wins
+        { originX: "start", originY: "bottom", overlayX: "start", overlayY: "top", offsetY: 6 },
+        { originX: "start", originY: "top", overlayX: "start", overlayY: "bottom", offsetY: -6 },
+      ]);
+    const ref = this.overlay.create({
+      positionStrategy,
+      scrollStrategy: this.overlay.scrollStrategies.reposition(),  // follow the anchor
+    });
+    ref.detachments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this._open.set(false));
+    ref.keydownEvents().pipe(takeUntilDestroyed(this.destroyRef))
+       .subscribe((e) => e.key === "Escape" && ref.detach());
+    ref.outsidePointerEvents().pipe(takeUntilDestroyed(this.destroyRef))
+       .subscribe((e) => !this.host.nativeElement.contains(e.target as Node) && ref.detach());
+    this.destroyRef.onDestroy(() => ref.dispose());
+    return ref;
+  }
+}
+```
+
+The details that make this worth it (and that a styled component hides *or* denies you):
+
+- **The position array is ordered — first that fits wins.** List your preferred placement first and give realistic fallbacks, or the panel clips at a viewport edge.
+- **The scroll strategy is a real decision.** `reposition()` keeps a persistent popover glued to its anchor; `close()` dismisses a transient tooltip on scroll. Picking wrong makes the panel drift or linger.
+- **You own disposal.** `detach()` closes the panel; `dispose()` tears the overlay host down. Close on `detach()`, `dispose()` on destroy — mix them up and you leak detached DOM hosts.
+- **You get hooks Material won't give you** — subscribe to `positionStrategy.positionChanges` to flip an arrow/caret when the panel lands above vs below. `MatTooltip` has no such seam.
+
+The same instinct applies to **full-bleed modals**. For an immersive surface — a fullscreen preview or viewer — `MatDialog`'s pre-styled card (padding, elevation, max-width, its own surface) is the wrong container, and fighting it means reaching into Material's internals. So I inject the *CDK* `Dialog` — the unstyled service `MatDialog` is itself built on:
+
+```ts
+import { Dialog, DialogRef, DIALOG_DATA } from "@angular/cdk/dialog";
+
+const ref = this.dialog.open<string, { html: string }>(FullscreenPreview, {
+  data: { html },
+  width: "100vw", height: "100vh", maxWidth: "100vw",
+  panelClass: "fullscreen-panel",   // the ONLY styling seam — all design lives in the component
+  ariaModal: true,
+});
+ref.closed.subscribe((result) => { /* CDK: .closed, not Material's afterClosed() */ });
+```
+
+You get the overlay, the focus trap, and `role="dialog"` — and nothing visual, which is the point. (Watch the tokens: `Dialog`/`DialogRef`/`DIALOG_DATA`, not the `Mat*` ones; mixing them silently breaks DI.)
+
+**Tables** are the purest illustration of the whole idea. `MatTable` simply *is* the CDK's `CdkTable` plus Material's styling — the same column and row definitions, the same sticky-header and dynamic-column machinery. When I want that powerful definition model but my own look — a compact job list, a report grid, a skeleton loader — I use `cdk-table` directly and get an identical API with zero imposed styling:
+
+```html
+<!-- Same column/row-def model as MatTable (matColumnDef → cdkColumnDef), just unstyled. -->
+<table cdk-table [dataSource]="rows()">
+  <ng-container cdkColumnDef="name">
+    <th cdk-header-cell *cdkHeaderCellDef>Name</th>
+    <td cdk-cell *cdkCellDef="let r">{{ r.name }}</td>
+  </ng-container>
+  <tr cdk-header-row *cdkHeaderRowDef="cols; sticky: true"></tr>
+  <tr cdk-row *cdkRowDef="let r; columns: cols"></tr>
+</table>
+```
+
+The sticky header, the dynamic columns, and the data-source diffing all come from the CDK; the borders, spacing, and row-hover states are mine. One real choice worth knowing: `cdk-table` defaults to a *flex* layout on custom elements — apply it to a native `<table>` (as above) when you want true table semantics and the accessibility that rides along with them.
+
+The pattern keeps paying out:
+
+- **Drag-to-reorder** on `@angular/cdk/drag-drop` — `cdkDropList` + `cdkDrag` with `moveItemInArray` / `transferArrayItem`; style the handle and preview yourself, there's no styled Material equivalent to fight.
+- **`BreakpointObserver` instead of `window.matchMedia`** — an *injectable*, testable, zone-aware stream you can `toSignal`, versus a global with manual listener cleanup.
+- **Virtual scrolling** — `<cdk-virtual-scroll-viewport>` + `*cdkVirtualFor` with a `trackBy`; there's no `MatVirtualScroll`, so it's a primitive Material simply doesn't wrap. (Gotcha: the fixed `itemSize` strategy needs uniform row height; variable heights want an autosize strategy.)
+- **`LiveAnnouncer`** for polite screen-reader announcements in components you hand-built.
+
+Now the honest part, because this is a *preference*, not a crusade: the same app leans on `MatTooltip`, `MatDialog`, `MatMenu`, sidenav, and expansion panels all over the place. The rule isn't "avoid Material." It's: **reach for the CDK primitive when you need custom content, or a behavior the styled component won't give you without fighting its internals.** Material for the ordinary; CDK for the case where the finished component's styling is the thing in your way.
+
+The mental model that made it click: a Material component is *a CDK primitive + Google's styling + Material's semantics*. When that styling and those semantics are what you want, take the component — you'd be silly to rebuild them. When they're what you're fighting, skip one layer down to the primitive Material itself composed, and you get the genuinely hard parts — flexible positioning, focus management, portals, drag physics, a11y — for free, while owning 100% of the look. It's the difference between overriding someone's finished component and composing the same parts they did.

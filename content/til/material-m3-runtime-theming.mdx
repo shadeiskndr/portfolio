@@ -1,0 +1,66 @@
+---
+title: Angular Material M3 — the compile-time wall you hit at runtime
+date: 2026-02-12
+summary: M3's Sass theming bakes fixed colors into :root at build time. Letting an operator pick a brand color at runtime meant computing a full scheme in TypeScript and writing every token inline.
+tags:
+  - angular
+  - css
+  - material
+---
+
+We migrated to Angular Material's M3 theming, and the built-in palettes worked beautifully. Then a feature that lets an operator supply their *own* brand color at runtime silently broke: every Material component — toolbar, sidenav, buttons, chips — rendered the default seed palette instead of the configured color. It took a dedicated follow-up to understand why.
+
+The reason is a hard seam I hadn't internalized: `mat.theme()` and `mat.theme-overrides()` are **compile-time Sass**. They bake fixed hex values into the `--mat-sys-*` custom properties at `:root` when the stylesheet is built. There is no runtime knob. You cannot drive them from a config fetched after boot.
+
+```scss
+// Compile-time base — great for built-in palettes, fixed at build.
+@use "@angular/material" as mat;
+html {
+  color-scheme: dark;
+  @include mat.theme((
+    color: (primary: mat.$violet-palette, tertiary: mat.$cyan-palette, theme-type: dark),
+    typography: (plain-family: "Inter"),
+    density: 0,
+  ));
+}
+```
+
+My first attempt was to nest a second `mat.theme()` under a CSS class with custom palettes. It didn't work, for two reasons that together taught me what an M3 theme actually *is*. First, the nested block didn't beat the `:root` overrides on specificity. Second — the real lesson — it only redefined `primary` and `tertiary`, leaving roughly thirty *other* role tokens (surfaces, containers, every `on-*` pair, outline, inverse) sitting at the default palette. M3 components read **all** of those roles, so a partial override doesn't look "mostly right" — it looks broken, because a button's container is your color but its surface and text aren't.
+
+The fix is to compute a **complete** scheme in TypeScript from the seed color, then write every token as an inline style — inline styles on `documentElement` beat the compiled `:root` rule on specificity, so the whole app re-themes live:
+
+```ts
+import { DynamicScheme, Variant, Hct, argbFromHex, hexFromArgb }
+  from "@material/material-color-utilities";
+
+function applyBrandColor(seedHex: string, isDark: boolean) {
+  const scheme = new DynamicScheme({
+    sourceColorHct: Hct.fromInt(argbFromHex(seedHex)),
+    variant: Variant.TONAL_SPOT,
+    isDark,
+    contrastLevel: 0,
+  });
+  const tokens = {
+    primary: hexFromArgb(scheme.primary),
+    "on-primary": hexFromArgb(scheme.onPrimary),
+    "primary-container": hexFromArgb(scheme.primaryContainer),
+    surface: hexFromArgb(scheme.neutralPalette.tone(isDark ? 19 : 100)),
+    "on-surface": hexFromArgb(scheme.neutralPalette.tone(isDark ? 92 : 13)),
+    // …emit EVERY --mat-sys-* role a component might read…
+  };
+  for (const [name, value] of Object.entries(tokens)) {
+    document.documentElement.style.setProperty(`--mat-sys-${name}`, value);
+  }
+}
+```
+
+Here's the idea live — drag the seed hue and a *whole* coordinated role set moves together, not just the primary. (CSS `oklch()` stands in for `material-color-utilities`' `DynamicScheme` here; same "a seed is not a theme" point.)
+
+<RuntimeThemeDemo />
+
+Two things I'd tell past-me:
+
+- **A seed color is not a theme.** A theme is ~30 coordinated roles, and components read all of them, so you must emit the full set — not just primary/secondary. Setting two tokens and hoping is exactly what produced the "half-themed" look.
+- **Pin the generated tones to your base theme.** Left to library defaults, a generated scheme drifts in contrast and lightness. I matched the surface/`on-surface`/container tones to the base theme's tones so runtime theming changes the *hue* and nothing else — the app stays recognizably itself.
+
+The reframe: M3's token system is genuinely lovely for a fixed brand, and it lulls you into thinking theming is "just Sass." The moment you need *per-tenant, runtime* theming you hit a compile-time/runtime wall — and the only way through is to stop asking Sass to do it and instead generate the whole token set in code and set the CSS variables yourself.

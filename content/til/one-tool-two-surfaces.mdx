@@ -1,0 +1,55 @@
+---
+title: One tool, two surfaces — a framework-agnostic core
+date: 2026-06-29
+summary: The same capabilities had to be callable by an in-process agent and by external MCP clients. Writing each tool twice would double the bugs; a core-plus-adapters split writes the logic once.
+tags:
+  - ai
+  - architecture
+  - python
+---
+
+Our capabilities need to be callable two ways: by the in-app agent, as in-process [Strands](https://strandsagents.com/) `@tool` functions, and by external MCP clients, over an MCP server. The naive approach implements each tool twice — and then every fix has to be made twice, and the two copies drift until they behave differently on the same input.
+
+The fix was a three-layer split where the *logic* exists once.
+
+**A framework-agnostic core.** Each capability is an `*_op(client, id, *, ...)` function that imports **neither** Strands nor FastMCP. It takes an already-built HTTP client, does the fetch and the shaping, and returns the agent-facing envelope. The "already-built client" part is the discipline: the core never needs to know *how* auth was obtained, so it stays clean of both runtimes.
+
+```python
+# core/records.py — NO strands, NO fastmcp imports. This is the rule.
+from collections.abc import Awaitable, Callable
+
+Authorize = Callable[[dict], Awaitable[dict | None]]  # returns a denial, or None
+
+async def get_record_op(client, record_id: int, *, authorize: Authorize | None = None):
+    raw = await client.fetch_record(record_id)
+    if authorize and (denied := await authorize(raw)):   # policy seam
+        return denied
+    return shape(raw)                                    # shared trimming/shaping
+```
+
+**Two thin adapters** that each build a client the way their runtime does, then call the same op:
+
+```python
+# tools/records.py — in-process Strands adapter
+@tool(context="tool_context")
+async def get_record(record_id: int, tool_context) -> dict:
+    """Fetch one record by id."""                       # docstring = the model's spec
+    client = client_from(tool_context.invocation_state)  # request-scoped token
+    return await get_record_op(client, record_id)        # no authorize: already scoped
+
+# mcp_server/tools/records.py — external MCP adapter, SAME op
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
+async def get_record(record_id: int) -> dict:
+    """Fetch one record by id."""
+    client = client_from_bearer_token()
+    return await get_record_op(client, record_id, authorize=object_access_check)
+```
+
+The interesting decision was what to do about the *one* place the two surfaces genuinely differ. The external MCP surface needs a per-object access check — a client out on the internet could name a resource in a workspace it isn't allowed to touch — while the in-app agent is already scoped to the caller's session and doesn't. My instinct was to fork the function. Instead I made it a **strategy seam**: the op takes an optional `authorize` callback that runs between fetch and shaping. MCP injects the check; the in-process caller passes nothing. Same code path, different injected policy.
+
+Two things I'd underline:
+
+- **The core must stay import-clean of both frameworks.** The moment `core/records.py` imports `strands` or `fastmcp`, you've welded the shared layer to one runtime and the whole point is lost. Taking an already-built client is what keeps that boundary honest.
+- **Auth provenance differs, and that's fine** — because it never reaches the core. In-process, the token comes from the request context the agent was built with; over MCP, from a verified bearer token. The op doesn't know or care.
+
+The mental model that made this click: draw the boundary by *what each layer is allowed to know*. The core knows your domain and nothing about the runtime; the adapters know the runtime and nothing about your domain. Write once, adapt twice — and the single real difference between the surfaces becomes an injected policy, not a second copy waiting to drift.

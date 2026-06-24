@@ -1,0 +1,54 @@
+---
+title: Syncing one time axis across a stack of charts
+date: 2026-04-22
+summary: Instead of syncing N chart axes to each other (and fighting feedback loops), point them all at one range owner. Highcharts' standalone navigator is exactly that owner.
+tags:
+  - dataviz
+  - highcharts
+  - typescript
+---
+
+I had several stacked line charts sharing one time axis, and one range control — drag-to-zoom, preset buttons, from/to date inputs — that had to pan and zoom *all* of them together, plus a synchronized crosshair so hovering a date on one chart highlights that date on every other. My first instinct was to make each chart listen to every other chart's zoom and re-broadcast. That's a feedback-loop factory.
+
+Here's the idea made interactive — three panels pointed at one axis. Hover any panel and the crosshair lands on the same x on all three; drag the navigator under the bottom one to zoom the whole stack; toggle sync off to feel what N independent charts gets you. (It's [recharts](https://recharts.org)' `syncId` standing in for the Highcharts navigator — same idea: a single owner of "where we are on x.")
+
+<SyncedChartsDemo />
+
+The clean answer is to have a single **range owner** that the charts subscribe to, and Highcharts ships exactly that in its `navigator` module: a *standalone navigator* — a navigator/scrollbar widget with **no chart of its own**. You create it once and bind each chart to it:
+
+```ts
+// One navigator, no chart of its own. (series/xAxis go at the ROOT of the options.)
+const navigator = Highcharts.navigator(navEl, {
+  xAxis: { ordinal: false },
+  series: [{ type: "line", data: masterSeriesData }],
+});
+
+// Bind every stacked chart — one drag on the navigator now zooms them all.
+charts.forEach((chart) => navigator.bind(chart, /* twoWay */ true));
+```
+
+The single most important thing I learned — and the source of an hour of "why won't the other charts move" — is this: <Highlight>`setExtremes` does not propagate; `setRange` does.</Highlight> Binding only forwards range changes that were *triggered* by a pan, zoom, or the range selector. So an imperative `chart.xAxis[0].setExtremes(min, max)` updates that one chart and never reaches its siblings. Anything that programmatically moves the range — a preset button, a date input — has to go through the owner:
+
+```ts
+function applyRange(min: number, max: number) {
+  navigator.setRange(min, max);       // fans out to every bound chart
+  // NOT chart.xAxis[0].setExtremes(min, max) — that stays local
+}
+```
+
+Then each chart mirrors its extremes into a shared store via `afterSetExtremes`, so the surrounding UI (the highlighted preset, the date inputs) stays correct regardless of *how* the range changed:
+
+```ts
+xAxis: { events: { afterSetExtremes(e) { store.setRange(e.min ?? null, e.max ?? null); } } }
+```
+
+Synchronized hover is hand-rolled on top of per-point events: on `mouseOver`, grab `point.x`, then for every *other* chart find the point at the same x and paint a synthetic hover on it (`point.onMouseOver()` + `xAxis[0].drawCrosshair(...)`). The non-obvious part is you must neutralize `chart.pointer.reset` — because a mouse-out on one chart calls `reset()`, which cheerfully wipes the synthetic hover you just painted on the siblings. Clear everything yourself from a container-level `mouseleave` instead.
+
+A few sharp edges worth knowing before you reach for the standalone navigator:
+
+- **`afterSetExtremes` can fire with `min`/`max` `undefined`** (e.g. "show all") — coerce before storing.
+- **Its option-merge is quirky and mostly undocumented.** Navigator-specific keys (`series`, `xAxis`, `maskFill`) belong at the *root* of the options you pass, not nested under `navigator: {}`, or they're silently ignored; and `chart`-level styling isn't applied through the factory at all — you `chart.update(...)` the navigator's internal chart afterward.
+- **Recreate, don't `update()`, when the backing series changes** — its internal series bookkeeping goes stale, so destroy → recreate → re-bind.
+- A TypeScript nit: the shipped types declare `Highcharts.navigator` as returning `void`, but at runtime it returns the instance, so you cast through `unknown`.
+
+The mental model that dissolved the feedback loops: don't sync N axes to each other. Elect one thing as the owner of "the current range," make every chart a subscriber bound to it, and route *every* mutation of the range through the owner. Once there's a single source of truth for the range, "keep five charts in lockstep" stops being a synchronization problem and becomes a subscription.

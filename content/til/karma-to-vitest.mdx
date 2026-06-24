@@ -1,0 +1,55 @@
+---
+title: Karma to Vitest without rewriting the tests
+date: 2026-03-06
+summary: Migrating an Angular test suite off Karma/Jasmine looked like a rewrite. It was a vocabulary swap — because TestBed belongs to Angular, not to the runner.
+tags:
+  - angular
+  - testing
+  - vitest
+---
+
+I moved an Angular app's unit tests off Karma + Jasmine — real Chrome launcher, `karma.conf.js`, `test.ts` bootstrap files — over to [Vitest](https://vitest.dev/), for a faster, ESM-native runner with a watch mode that doesn't make you wait.
+
+The thing I braced for and didn't hit: it is **not** a rewrite. `TestBed`, `ComponentFixture`, dependency injection, `inject()` — all of Angular's testing machinery carries over untouched. What changes is only the spy/mock/matcher vocabulary. So the bulk of the migration is mechanical find-and-replace:
+
+```ts
+// The framework part is identical. Only the spy/matcher API changed.
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TestBed } from "@angular/core/testing";
+
+// jasmine.createSpyObj(["load"]) -> a tiny vi.fn() helper
+const createSpyObj = (methods: string[]) =>
+  Object.fromEntries(methods.map((m) => [m, vi.fn()]));
+
+describe("WidgetComponent", () => {
+  let api: any;
+  beforeEach(() => {
+    api = createSpyObj(["load"]);
+    api.load.mockReturnValue(Promise.resolve([])); // was .and.returnValue(...)
+    TestBed.configureTestingModule({ providers: [{ provide: ApiService, useValue: api }] });
+  });
+
+  it("calls the API", () => {
+    expect(api.load).toHaveBeenCalledWith(expect.objectContaining({ id: 1 })); // was jasmine.objectContaining
+  });
+});
+```
+
+`jasmine.createSpyObj` → the `vi.fn()` helper, `.and.returnValue` → `.mockReturnValue`, `jasmine.objectContaining` → `expect.objectContaining`. That's most of it.
+
+Do **not** hand-wire Vitest into Angular yourself. Angular ships an official `@angular/build:unit-test` builder — point it at `runner: "vitest"` and `ng test` keeps working. That's the supported path and it saves you fighting the toolchain.
+
+Two gotchas cost me real time, and neither is about the test code:
+
+1. **It runs in a real browser, not jsdom.** The tests execute in headless Chromium driven by Playwright — an intentional choice for fidelity. Which means CI must install that browser: `npx playwright install --with-deps chromium`, or the job fails hard with a confusing "browser not found" the first time it runs anywhere clean.
+2. **CJS-only dependencies must be inlined.** A couple of packages that only ship CommonJS choke when Vitest imports them under ESM. The fix is one list in the config — which turns out to be the *only* real content in the config file:
+
+```ts
+// vitest.config.ts — its entire job is transforming CJS-only deps for the ESM runner
+import { defineConfig } from "vitest/config";
+export default defineConfig({
+  test: { server: { deps: { inline: [/some-cjs-only-pkg/], fallbackCJS: false } } },
+});
+```
+
+The reframe I took away: I'd been thinking of "the test framework" as one monolithic thing you commit to. It isn't. `TestBed`, DI, and fixtures are *Angular's*; Jasmine/Vitest only provide the runner, the assertions, and the spies. Once you see that seam, the runner is swappable — and swapping it is a vocabulary change, not a rewrite.

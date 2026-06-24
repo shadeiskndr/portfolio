@@ -1,0 +1,55 @@
+---
+title: Playwright locators that survive a UI rewrite
+date: 2026-01-15
+summary: We swapped a data grid and a code editor for entirely different libraries. The E2E tests didn't notice — because they locate elements by what the user sees, not by how the UI is built.
+tags:
+  - testing
+  - playwright
+  - frontend
+---
+
+Two screens in our app had their internals replaced out from under them: a heavyweight data grid swapped for a framework-native table, and a heavyweight code editor swapped for a lighter one. Any test that had pinned elements to the old library's DOM — grid-row classes, editor-specific nodes — would have shattered on the swap. Almost none did, and the reason is a locator discipline worth internalizing.
+
+**Locate by what the user perceives, not by what the framework renders.** Playwright's `getByRole` and `getByLabel` resolve against the *accessibility tree*, and both the old and new component render that the same way: a button is still a button, a labeled field still has its label, a table row is still a `row`. So swapping the table library leaves the test untouched:
+
+```ts
+test("edit a row in the results table", async ({ page }) => {
+  await page.goto("/reports");
+
+  // Resilient: "row" / "checkbox" / "button" are accessibility-tree facts.
+  // Survives replacing the entire table library underneath.
+  const row = page.getByRole("row", { name: /Quarterly summary/i });
+  await row.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Edit" }).click();
+  await page.getByLabel("Display name").fill("Quarterly summary v2");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Saved")).toBeVisible();
+
+  // Brittle by contrast — pinned to today's DOM, breaks on a rewrite:
+  //   page.locator("some-grid .grid-row .grid-selection-checkbox")
+  //   page.locator(".mdc-data-table__row .mdc-checkbox input")
+});
+```
+
+Two honest caveats, because this isn't a purity story:
+
+**It's a mix, and the structural locators are the maintenance tax.** Alongside the role/label locators, real specs still have element-tag and CSS-class selectors coupled to the current DOM. Those are exactly the ones that need touch-ups when you rewrite. The resilient subset sailed through the swaps untouched; the structural subset didn't. The lesson isn't "never use a CSS selector" — it's "every structural locator is a bet that this DOM won't change, so spend them deliberately and prefer a role when one exists."
+
+**A rich code editor is the one place this breaks down.** A CodeMirror/Monaco surface is *not* a plain `<input>` — `fill()`, `Ctrl+A`, `Backspace` all race against the editor's own document model, which is how you get a flaky test. The fix is to stop pretending it's an input and drive it through the editor's own API, then assert the visible result:
+
+```ts
+test("set a formula in a code editor", async ({ page }) => {
+  const editor = page.locator("[data-editor='formula'] .cm-content").first();
+  await editor.evaluate((el, text) => {
+    const view = el.__editorView;                 // exposed by your editor wrapper
+    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+  }, "revenue * 1.05");
+  await expect(editor).toHaveText("revenue * 1.05");
+});
+```
+
+That's literally the spec a "fix flaky editor test" commit touched while we were mid-swap from one editor to another — a three-line adjustment, not a rewrite, precisely because everything *around* it was role-based.
+
+One gotcha to standardize early: `getByTestId` defaults to the `data-testid` attribute. If your app tags elements with a *different* custom attribute, `getByTestId` won't find them and you'll end up with a confusing mix of `getByTestId(...)` and `page.locator('[my-test-attr="…"]')` in the same suite. Pick one attribute name and `configure` Playwright to it.
+
+The framing that stuck: a test asserting "there's a row named X with a checkbox in it, and a Save button" is describing the *product's contract with the user*. That contract is what you're actually shipping, and it's stable across a component transplant. Pin your tests to the contract, and swapping the library that renders it becomes invisible to your test suite — which is the whole point of having one.

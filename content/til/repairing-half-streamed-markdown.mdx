@@ -1,0 +1,49 @@
+---
+title: Repairing Markdown that's only half-arrived
+date: 2026-07-06
+summary: Rendering streamed Markdown means rendering broken Markdown — so you patch the open delimiters on the fly. Except code fences, which you leave open.
+tags:
+  - ai
+  - streaming
+  - markdown
+  - frontend
+---
+
+When you stream a model's answer token-by-token and render it as Markdown, you are constantly rendering *broken* Markdown. `**important` shows two literal asterisks until the closing `**` arrives. `[see the docs](https://ex` renders as garbage until the `)` lands. Every few tokens the formatting flips on and off. It flickers, and it looks cheap.
+
+You can watch exactly that below. Scrub the slider — or hit play — to advance the buffer character by character. The right pane is the raw text as it arrives (watch where it stops mid-`**`, mid-list-item, mid-link); the left pane is the same buffer rendered and repaired on every step, so it never flickers into broken formatting.
+
+<StreamRevealDemo />
+
+The trick — which I learned porting Vercel's open-source [`remend`](https://github.com/vercel/streamdown) — is to patch the still-growing tail *before* each render so it parses as if it were already complete. Count a delimiter; if the count is odd, append the closer.
+
+```ts
+// Only ever call this on the LAST, still-growing chunk. Settled text is
+// left untouched (which also means you can memoize it).
+function repairMarkdown(partial: string): string {
+  // Odd inline backticks → close them (but not an empty, dangling one).
+  const ticks = (partial.match(/(?<!`)`(?!`)/g) ?? []).length;
+  if (ticks % 2 === 1 && !/`\s*$/.test(partial)) partial += "`";
+
+  // Odd "**" → close bold. A lone trailing "*" just needs one more.
+  const bold = (partial.match(/\*\*/g) ?? []).length;
+  if (bold % 2 === 1) partial += partial.endsWith("*") ? "*" : "**";
+
+  return partial;
+}
+```
+
+The counterintuitive part — the actual TIL — is <Highlight>you do not close code fences.</Highlight> An unterminated ` ``` ` block should be left exactly as it is. For two reasons:
+
+1. The renderer already shows an open fence perfectly well. "Closing" it early just to balance it only produces more flicker.
+2. More importantly, **an open fence is a mode, not a delimiter to fix.** While you're inside it, you have to switch *off* every other repair. The `*` in there is Python multiplication; the `_` is a `snake_case` identifier — not emphasis. If you "helpfully" balanced them, you'd corrupt the code.
+
+So the fence handler runs first and, if the fence count is odd, it returns the string untouched and short-circuits everything else:
+
+```ts
+if ((partial.match(/```/g) ?? []).length % 2 === 1) return partial; // inside a fence: hands off
+```
+
+The other thing that bit me was CommonMark's flanking rules. A `*` with whitespace on both sides (`a * b`) is not emphasis, and a `_` sitting between two word characters (`foo_bar`) is not either. If you naively count and close those, you'll wrap ordinary prose and identifiers in bold and italics. The real implementation is a dozen tiny handlers, each skipping escaped characters, word-internal delimiters, and anything inside math or a link URL.
+
+Two takeaways I keep: run the repair only on the growing edge, never on text that's already settled — it's both correct and cheap. And the hardest construct to "repair" turned out to be the one you repair by leaving it completely alone.

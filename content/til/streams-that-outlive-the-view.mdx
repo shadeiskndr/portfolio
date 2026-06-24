@@ -1,0 +1,67 @@
+---
+title: Keeping an LLM stream alive after you navigate away
+date: 2026-07-03
+summary: The fix wasn't resumable server streams — it was moving stream ownership out of the component and into an app-lifetime singleton.
+tags:
+  - ai
+  - streaming
+  - angular
+  - architecture
+---
+
+In the AI chat I work on, opening a different conversation used to kill the answer that was still being written. Switching sessions called `cancel()` on the in-flight stream. I wanted the opposite: let a conversation keep generating in the background while you go read another one, and show a little "generating…" dot next to it in the sidebar.
+
+My first instinct was to make the *network* survive — resumable server streams, reconnect with `Last-Event-ID`, replay the deltas from the database when you come back. That's a lot of machinery.
+
+The real problem was much smaller and it was on the client: <Highlight>the component owned the stream, and the component dies the moment you navigate.</Highlight> Anything holding the reader dies with it.
+
+So I moved ownership up. An app-lifetime singleton owns one bundle of reactive state *per session* — its messages, a `streaming` flag, its own `AbortController`, its own SSE read loop. The view just holds a pointer to the active session. Switching conversations repoints the pointer; the read loops keep running inside the singleton, writing into their own session's state.
+
+<Mermaid chart={`
+flowchart LR
+  V["Chat view<br/>(active pointer)"]
+  subgraph Store["Root singleton (lives for the whole app)"]
+    direction TB
+    A["Session A state<br/>signals + read loop"]
+    B["Session B state<br/>signals + read loop"]
+    C["Session C state<br/>signals + read loop"]
+  end
+  V -. "renders" .-> B
+  netA["SSE A"] --> A
+  netB["SSE B"] --> B
+  netC["SSE C"] --> C
+`} />
+
+```ts
+// The singleton lives for the whole app, so the read loop outlives any view.
+@Injectable({ providedIn: "root" })
+class ChatStore {
+  private sessions = new Map<string, SessionState>();
+  private active = signal<SessionState>(blankSession());
+
+  // The view binds to these. Switching conversation just repoints `active`.
+  readonly messages = computed(() => this.active().messages());
+  readonly streaming = computed(() => this.active().streaming());
+
+  open(id: string) {
+    const session = this.sessions.get(id) ?? this.create(id);
+    this.active.set(session);
+    if (session.streaming()) return; // don't clobber a live stream with a stale fetch
+    this.hydrateFromServer(session);
+  }
+
+  async start(session: SessionState, token: string) {
+    session.abort = new AbortController();
+    session.streaming.set(true);
+    const res = await fetch("/stream", { headers: { token }, signal: session.abort.signal });
+    // This loop runs in the singleton — it keeps writing into `session`'s
+    // signals even after the user has navigated to another conversation.
+    for await (const event of sseFrames(res.body!.getReader())) this.apply(session, event);
+    session.streaming.set(false);
+  }
+}
+```
+
+The one guard that actually matters is in `open()`: if you switch *back* to a session that is still streaming, you must **not** refetch it from the server, or you'll overwrite the half-streamed transcript in memory with a stale snapshot from the database. I also keep a per-session sequence number so a slow `fetch` that resolves after you've moved on gets discarded instead of applied.
+
+The lesson I keep coming back to: the stream didn't need to survive the network, it needed to survive the component. Once ownership moved somewhere that outlives navigation, "background streaming" stopped being a feature to build and became a thing that just happened.

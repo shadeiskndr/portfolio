@@ -1,0 +1,51 @@
+---
+title: Trading Monaco for CodeMirror, and learning what an editor library is
+date: 2026-01-10
+summary: The Angular Monaco wrapper pinned us to a framework version and copied the whole editor into build assets. Moving to CodeMirror 6 changed how I think about editor libraries.
+tags:
+  - angular
+  - frontend
+  - codemirror
+---
+
+An app I work on embeds a code editor. It ran on [Monaco](https://microsoft.github.io/monaco-editor/) — the editor that powers VS Code — through an Angular wrapper. Monaco is excellent, but the setup had problems: persistent runtime console errors, a build step that copied the *entire* `monaco-editor` package into the app's assets, and — the actual blocker — a wrapper that pinned us to a specific Angular major version, so I couldn't upgrade the framework underneath it.
+
+I moved it to [CodeMirror 6](https://codemirror.net/), and the interesting part wasn't the migration mechanics. It was realizing the two libraries have fundamentally different shapes.
+
+Monaco is **batteries-included**: one big editor you switch features on and off. CodeMirror 6 is a small core you **compose** — you import only the extensions you actually want and push them into an array. Line numbers, indentation guides, a theme, a language — each is a separate package you opt into. Nothing you don't ask for is in the editor.
+
+And because it's just a core plus extensions, it's small enough to drop straight into this page. Here's a real CodeMirror instance — editable, with the language and theme supplied as extensions (the theme tracks this site's light/dark). Switch languages and only the grammar you pick loads:
+
+<CodeMirrorDemo />
+
+```ts
+@Component({
+  selector: "app-code-editor",
+  imports: [CodeEditor],
+  template: `<code-editor
+    [(ngModel)]="value"
+    [language]="language()"
+    [theme]="theme()"
+    [extensions]="extensions()" />`,
+})
+export class CodeEditorComponent {
+  value = model<string>("");
+  language = input<string>("");
+  isDark = input(false);
+
+  // Compose exactly the features you want — nothing more ships.
+  extensions = computed(() => [
+    EditorView.theme({ ".cm-content": { fontFamily: "var(--font-mono)" } }),
+    indentationMarkers(),
+  ]);
+  // A CodeMirror theme is just another extension, so drive it from the app's theme.
+  theme = computed(() => (this.isDark() ? githubDark : githubLight));
+}
+```
+
+Two things fell out of that shape:
+
+- **The build got simpler by deletion.** The single most satisfying diff was removing the glob that staged all of `node_modules/monaco-editor` into `assets/`. CodeMirror needs no asset staging at all — grammars load lazily through a `LanguageDescription` registry, so you don't bundle every language up front.
+- **The real integration work was theming.** Since a CodeMirror theme is just an extension, the job wasn't "configure the editor's dark mode" — it was bridging the app's *own* light/dark signal to a CodeMirror theme extension and recomposing when it flips. Once I stopped looking for a `theme` option and started treating it as an extension I supply, it clicked.
+
+I went in expecting to swap one editor for another. I came out with a different definition of "editor library": not a product you configure, but a core plus the pieces you choose to assemble. The composability *is* the feature — you don't pay, in bytes or in lock-in, for the parts you never use.

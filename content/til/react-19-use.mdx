@@ -20,4 +20,8 @@ function UserName({ userPromise }: { userPromise: Promise<User> }) {
 
 Wrap the consumer in `<Suspense>` and you get loading-state handling for free. The promise must be **created outside** the rendering component (typically in a Server Component or higher up), otherwise you'll create a new promise every render and never resolve.
 
+Here it is running — the promise is created in the click handler (outside the component that reads it), then unwrapped with `use()` behind a Suspense fallback:
+
+<UsePromiseDemo />
+
 This makes a lot of `useEffect` + `useState` boilerplate disappear when you're just fetching one thing.

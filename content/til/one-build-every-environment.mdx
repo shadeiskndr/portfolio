@@ -1,0 +1,44 @@
+---
+title: One build, every environment — runtime config the native Angular way
+date: 2026-04-18
+summary: The value wasn't the config library I removed. It was the lifecycle hook that blocks bootstrap until config loads, which makes config synchronous everywhere and kills a whole class of race.
+tags:
+  - angular
+  - frontend
+  - architecture
+---
+
+We ship a single build of an Angular app to several environments. The API base URL, feature flags, and a few other knobs differ per environment. You can bake those in at build time — but then you need one build *per* environment, and "the thing we tested" isn't "the thing we deployed."
+
+The alternative is to fetch a `config.json` at startup. The same compiled artifact runs anywhere; you change the file, not the build. We'd been doing this through a third-party library, and I replaced it with about twenty lines of native Angular. The interesting part was realizing the library's actual value was one lifecycle hook.
+
+That hook is `provideAppInitializer`: it runs an async function *before* the app bootstraps, and bootstrap **waits** for the returned promise. So you fetch the config, validate it, stash it — and because bootstrap blocked, everything that renders afterward can read config **synchronously**.
+
+```ts
+bootstrapApplication(AppComponent, {
+  providers: [provideAppInitializer(loadRuntimeConfig)],
+});
+
+export async function loadRuntimeConfig(): Promise<void> {
+  const svc = inject(RuntimeConfigService);
+  const res = await fetch("/assets/config.json");
+  if (!res.ok) throw new Error(`Config load failed: ${res.status}`);
+  svc.set(assertRuntimeConfig(await res.json())); // validates shape; throws if wrong
+}
+
+@Injectable({ providedIn: "root" })
+export class RuntimeConfigService {
+  private config = signal<AppConfig | null>(null);
+  readonly apiBase = computed(() => this.config()?.apiBase ?? ""); // "" => relative URLs
+  set(c: AppConfig) { this.config.set(c); }
+}
+```
+
+That "synchronous after load" property is the whole point, and it's what the old approach got wrong. The library exposed config as an observable stream. Anything that read config *before the stream emitted* got nothing — a race that showed up as intermittent, environment-specific "why is this undefined" bugs. Blocking bootstrap deletes that entire category: by the time a single component renders, the config is already there. No `configReady$`, no guards waiting on config, no defensive `?? defaultValue` scattered around.
+
+Two smaller things I'd repeat:
+
+- **Fail loud, at boot.** A hand-written type guard (`assertRuntimeConfig`) checks every required field and throws at startup if the file is malformed. A screaming failure the instant the app loads beats a mysterious `undefined` three screens deep.
+- **Empty-string fallback for the API base.** `apiBase()` falls back to `""` on purpose, so requests stay *relative* and work behind a reverse proxy that terminates on the same origin. A subtle production detail that's easy to miss until something's deployed behind a gateway.
+
+The reframe: I set out to remove a dependency and found the dependency was mostly wrapping a framework primitive I already had. Once configuration loads before anything renders, it stops being asynchronous — and every "is the config ready yet?" workaround you'd accumulated just evaporates.

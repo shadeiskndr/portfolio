@@ -1,0 +1,63 @@
+---
+title: Giving an agent a tool to ask *me* a question
+date: 2026-07-05
+summary: A human-in-the-loop tool that pauses the turn to offer a few choices — and the surprise that the tool re-executes from the top when the user answers.
+tags:
+  - ai
+  - agents
+  - ux
+---
+
+Sometimes the agent hits a fork that's genuinely mine to decide — which of two approaches to take, which source to pull from. Guessing is bad; so is dumping a wall of text that asks. The nice move is to pause and offer a few buttons.
+
+So I gave it a tool: `ask_user`. The model calls it with one to four questions, each a short header, a prompt, and two to four options. The UI renders a little card, I click, and the turn continues with my answer folded into the tool's result.
+
+The interesting part is *how* it pauses, because it changed how I think about tools.
+
+The tool raises an **interrupt** from inside its own body. The first time it runs, `interrupt()` throws and the whole stream stops with a "waiting on the user" reason. When I answer, the agent doesn't resume at some saved instruction pointer — <Highlight>it re-executes the entire tool from the top</Highlight>, and this time that same `interrupt()` call *returns* my answer instead of throwing.
+
+<Mermaid chart={`
+sequenceDiagram
+  participant M as Model
+  participant T as ask_user tool
+  participant U as User
+  M->>T: call(questions)
+  T-->>M: interrupt() raises → stream stops
+  M-->>U: render choice card
+  U->>M: pick options (+ optional "Other")
+  Note over M,T: tool RE-RUNS from the top
+  M->>T: call(questions)
+  T-->>M: interrupt() now RETURNS answers
+  M->>M: continue the turn
+`} />
+
+That "re-runs from the top" detail is the whole thing. The `interrupt()` line is effectively a checkpoint, which means everything *before* it has to be idempotent — if the tool did real work before asking, that work happens twice. In practice you validate the questions, then interrupt, and do nothing else before it.
+
+```python
+ASK_USER = "ask-user"
+
+@tool(context="tool_context")
+def ask_user(questions: list[dict], tool_context) -> dict:
+    if problem := validate(questions):
+        return {"ok": False, "error": problem}   # never pause on a bad payload
+
+    # 1st call: raises and stops the stream.  On resume: returns the answer.
+    reply = tool_context.interrupt(ASK_USER, reason={"questions": questions})
+    if reply.get("skipped"):
+        return {"ok": True, "skipped": True}      # user declined -> model uses judgment
+
+    raw = reply.get("answers", [])
+    return {"ok": True, "answers": [
+        {"question": q["question"],
+         "selected": (raw[i] if i < len(raw) else {}).get("selected", [])}
+        for i, q in enumerate(questions)          # index-aligned to the questions
+    ]}
+```
+
+Here's the felt experience — press run and the turn streams until the tool fires, then the whole thing blocks on your click before resuming:
+
+<AskUserDemo />
+
+A couple of contract choices I liked: answers are index-aligned to the questions and carry option *labels* (strings), not indices, so nothing breaks if options get reordered; the client always appends an implicit free-text "Other"; and there's a skip path that resolves with `{skipped: true}` and a note telling the model to proceed with its best judgment and *not* re-ask.
+
+To the model it looks like the most ordinary tool imaginable — ask a question, get an answer. Underneath it's a coroutine that suspends a whole streaming turn on a human. It's the same shape as the multiple-choice prompts coding agents now use to check in with you mid-task, and building it made those feel a lot less like magic.

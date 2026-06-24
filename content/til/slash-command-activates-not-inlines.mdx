@@ -1,0 +1,41 @@
+---
+title: A slash command should activate the skill, not paste it in
+date: 2026-07-11
+summary: The obvious way to wire "/skill" is to splice the skill's text into the prompt. That silently throws away progressive disclosure. The better move is to make the slash command a directive to the model.
+tags:
+  - ai
+  - agents
+  - ux
+---
+
+Chat UIs love a `/command` affordance, so when I added user-uploadable agent skills, the natural next step was a `/skill-name` invocation in the composer. The obvious implementation: when the user types `/foo`, look up skill `foo` and splice its instructions into the prompt.
+
+Don't do that. It quietly destroys the very property you built the skills system around.
+
+Skills use **progressive disclosure** — only a one-line description sits in context until a skill is *activated*, at which point the agent's activation tool loads the full body. If your slash command inlines the skill text into the prompt, you're back to shoving whole documents into context on every invocation, *and* you've bypassed the framework's own activation bookkeeping (which tracks what's active and lists the skill's resource files). You've reintroduced the exact cost you designed the feature to avoid.
+
+The better design is counterintuitive: <Highlight>a slash command is a directive to the model, not a content splice.</Highlight> When the turn carries invoked skill names, the server doesn't inline anything — it appends a small instruction telling the model to *call the activation tool* for each named skill before doing anything else:
+
+```python
+def build_skill_invocation(skill_names: list[str]) -> str:
+    calls = " then ".join(f'skills(skill_name="{n}")' for n in skill_names)
+    return (
+        "<skill_invocation>The user explicitly invoked "
+        f"{', '.join(map(repr, skill_names))}. Load them now with {calls} "
+        "before anything else, then follow their instructions for this turn."
+        "</skill_invocation>"
+    )
+
+turn = prompt + (f"\n\n{build_skill_invocation(names)}" if names else "")
+```
+
+Now the user-invoked path and the model-chose-it-itself path are *the same path*: the body enters context exactly once, on activation, and the framework's tracking stays intact. The slash command became a hint, and the one code path that loads a skill stayed the one code path.
+
+The composer that produces those names is a `contenteditable` div rather than a `<textarea>`, which buys a nicer UX and a few sharp edges:
+
+- Typing `/` **at a word boundary** (input start or after whitespace) opens a filtered popover; picking a skill inserts a non-editable chip. That word-boundary rule is load-bearing — it stops `and/or` and URLs from firing the popover.
+- On submit, a serializer walks the DOM to a plain-text prompt (chips become `/name` tokens, `<br>` becomes `\n`), and the chosen skill names travel as a separate array.
+
+One more piece worth its own mention: reaching a skill's *resource files* is a dedicated `read_skill_file(skill_name, path)` tool, not the agent's normal file tools — because skills live outside the agent's sandbox root and its ordinary tools can't see them. That tool re-guards against path traversal (`..`, absolute paths, backslashes) and refuses to return binary assets as text — because it's reading *user-authored* files back into the model's context, and later back to the browser, where serving anything but known image types as `text/plain` is what keeps user HTML from executing on your origin.
+
+The takeaway that generalizes past skills: when you add a UI affordance on top of an agent, the instinct is to make the affordance *do the work* — look it up, paste it in, call the API. Often the better move is to make it *tell the model what you want* and let the model's existing tools do the work. That keeps one code path instead of two, and it stops your convenient little UI shortcut from silently defeating an efficiency property you carefully designed into the layer underneath.

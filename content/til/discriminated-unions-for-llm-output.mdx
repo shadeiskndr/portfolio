@@ -1,0 +1,44 @@
+---
+title: Discriminated unions turn "nothing matched" into a fixable error
+date: 2026-07-08
+summary: When an LLM is the thing reading your validation errors, error quality is a feature — and a tagged union is what makes the error point at the one block that's wrong.
+tags:
+  - typescript
+  - validation
+  - ai
+---
+
+The agent I work on emits documents and slide decks as JSON: a list of heterogeneous blocks — a heading, a table, an image, a chart — each with its own shape. Before any of it renders or gets saved, it has to be validated. And when it fails, the error goes *back to the model* so it can fix its own output.
+
+I started with a plain union of every block schema. It technically works, but the failure mode is terrible. When one block is malformed, the validator tries the block against every variant, fails all of them, and reports something like "no union member matched," with every variant's complaints stacked on top of each other. A human can barely read that. A model definitely can't act on it — it can't tell *which* block it got wrong or *what* it was even supposed to be.
+
+The fix is a **discriminated union**: every variant carries a literal tag, and the validator reads the tag first to pick the one correct schema. Now a bad table produces a single, focused error against the table schema — the schema it was obviously trying to satisfy.
+
+```ts
+import { z } from "zod";
+
+const Heading = z.object({ kind: z.literal("heading"), text: z.string().min(1),
+                           level: z.number().int().min(1).max(4) }).strict();
+const Table   = z.object({ kind: z.literal("table"), columns: z.array(z.string()).min(1),
+                           rows: z.array(z.array(z.union([z.string(), z.number(), z.null()]))) }).strict();
+const Image   = z.object({ kind: z.literal("image"),
+                           ref: z.string().regex(/^asset:[0-9a-f-]{36}$/) }).strict();
+
+// The `kind` tag selects exactly one schema, so a bad block yields ONE
+// targeted error instead of "no variant matched" for every variant.
+const Block    = z.discriminatedUnion("kind", [Heading, Table, Image]);
+const Document = z.object({ blocks: z.array(Block).min(1).max(200) });
+```
+
+Edit a block and watch it happen — the tag routes to one schema, so a bad `table` is checked against the table schema alone, not scored against every variant. Try the presets, or break a field yourself:
+
+<DiscriminatedUnionDemo />
+
+Two things layered on top earned their keep:
+
+- **`.strict()`** (Pydantic's `extra="forbid"`) catches the model hallucinating extra keys. Without it, a typo'd field passes silently and the value just goes missing downstream.
+- **Structural validity and semantic validity are different jobs.** The discriminator gets you the right *shape*; a second pass (`.refine()` / a `@model_validator`) enforces the *rules* — "a pie chart has exactly one series and at most eight wedges," "every series in a line chart is the same length." I write those messages the way I'd write them for a junior teammate, because the reader is literally trying to follow them.
+
+In Python it's the same idea, one line: `Annotated[Heading | Table | Image, Field(discriminator="kind")]`.
+
+The reframe I took away: I'm used to thinking of validation errors as something a developer reads at 2am. Here the consumer is a model in a correction loop, and error *quality* is a product feature. The discriminator is the difference between the agent quietly fixing block 3 and the agent drowning in complaints about the blocks it already got right.

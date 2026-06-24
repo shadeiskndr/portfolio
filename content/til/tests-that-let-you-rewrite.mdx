@@ -1,0 +1,62 @@
+---
+title: The test suite that let us rewrite the UI underneath it
+date: 2026-03-10
+summary: The app took a two-major framework upgrade and three library swaps without rewriting user-facing behavior. What made that safe was E2E tests that assert outcomes, plus auto-waiting instead of retries.
+tags:
+  - testing
+  - playwright
+  - frontend
+---
+
+Over about a year, this app swapped its data-grid library, its code editor, and its unit-test runner, and took a two-major framework upgrade — all without rewriting the user-facing behavior. The thing that made those rewrites *safe* rather than terrifying was a Playwright suite that asserts what a user can see, so we could rip out the internals and still know the workflows worked.
+
+The evidence I trust most isn't any single test — it's the git history. The grid, the editor, the runner, and the framework all changed underneath a stable set of behavior specs, and the only editor-swap-related test change in the whole arc was a three-line flakiness fix. That's a safety net doing its job: it stays quiet through an implementation change and speaks up only when behavior actually breaks.
+
+Three pieces of infra make the suite dependable enough to lean on:
+
+**Authenticate once per worker, not once per test.** A worker-scoped fixture logs in one browser context per parallel worker, saves the authenticated state to disk, and reuses it — across every test that worker runs, and across runs if the file's already there:
+
+```ts
+export const test = base.extend<{}, { workerStorageState: string }>({
+  storageState: async ({ workerStorageState }, use) => use(workerStorageState),
+  workerStorageState: [async ({ browser }, use) => {
+    const id = test.info().parallelIndex;
+    const file = path.resolve(test.info().project.outputDir, `.auth/${id}.json`);
+    if (fs.existsSync(file)) return use(file);          // reuse across runs
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+    const page = await ctx.newPage();
+    const acct = accounts[id];                          // one account per worker
+    await page.goto("/");
+    await page.getByRole("textbox", { name: "Username" }).fill(acct.user);
+    await page.getByRole("textbox", { name: "Password" }).fill(acct.pass);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL("**/home");
+    await ctx.storageState({ path: file });
+    await page.close();
+    await use(file);
+  }, { scope: "worker" }],
+});
+```
+
+Login isn't paid per test, and every test starts already authenticated — which matters when the thing you're rewriting sits *behind* login.
+
+**Run headless in Docker, pointed at the real app.** CI brings the app up behind a reverse proxy in Docker, then runs the tests from the official Playwright image with `baseURL` pointed at it. There's deliberately no `webServer` block — Playwright doesn't own a multi-service app's lifecycle, and that's fine; `ignoreHTTPSErrors` lets it talk to the proxy's self-signed TLS.
+
+**Dependability comes from auto-waiting, not retries.** This surprised me: retries are set to *zero*. The suite is dense with web-first assertions (`expect(locator).toBeVisible()`, `toContainText()`) that auto-retry until true or time out, and where an action depends on a backend round-trip, it synchronizes on the network rather than sleeping:
+
+```ts
+test("running a report shows results", async ({ page }) => {
+  await page.goto("/reports");
+  await Promise.all([
+    page.waitForResponse((r) => r.url().includes("/reports/") && r.ok()),
+    page.getByRole("button", { name: "Run" }).click(),
+  ]);
+  await expect(page.getByRole("row")).not.toHaveCount(0); // auto-waits; no sleep
+});
+```
+
+A component that renders 50ms slower *after* a library swap doesn't fail a web-first assertion — but it *would* fail a fixed `sleep`. Auto-waiting made retries unnecessary enough that we left them off entirely, and failures keep a trace and video (`retain-on-failure`) so a red build opens straight into the Trace Viewer.
+
+One honest constraint of the per-worker-login pattern: parallelism is bounded by the pool of seeded test accounts, because each worker needs its own session.
+
+The reframe: the safety net wasn't clever tooling or retry magic. It was a decision to assert *user-visible outcomes* and to synchronize on *real events* — so the tests know only about the product, never the parts. That single decision is what turns "let's swap the grid library" from a rewrite you dread into a diff you can watch go green.

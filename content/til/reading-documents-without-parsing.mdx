@@ -1,0 +1,43 @@
+---
+title: Reading a user's documents without parsing them
+date: 2026-07-07
+summary: The instinct is to run OCR/parsing code over an uploaded file. Modern multimodal models read PDFs and images natively — and with citations on, they quote answers back with source spans.
+tags:
+  - ai
+  - bedrock
+  - documents
+---
+
+The agent needs to answer questions about whatever a user uploads — a PDF, a spreadsheet, a Word doc, an image. The heavy, obvious approach is to run parsing and OCR code to turn each file into text before the model sees it. I didn't write any of that. The file is handed to the model as a **native multimodal content block**, and for PDFs specifically, citations are turned on so the answer comes back *quoted*, with spans pointing at the source page.
+
+The whole read path is one pure function mapping a MIME type to the right content block:
+
+```python
+def to_content_block(data: bytes, mime: str, filename: str) -> dict:
+    if mime == "application/pdf":
+        return {"document": {
+            "format": "pdf", "name": doc_name(filename), "source": {"bytes": data},
+            "citations": {"enabled": True},        # <- model quotes with source spans
+        }}
+    if mime in IMAGE_FORMATS:
+        return {"image": {"format": IMAGE_FORMATS[mime], "source": {"bytes": data}}}
+    if mime in OFFICE_FORMATS:                     # docx/xlsx: provider extracts text, no citations
+        return {"document": {"format": OFFICE_FORMATS[mime],
+                             "name": doc_name(filename), "source": {"bytes": data}}}
+    text = data.decode("utf-8", errors="replace") # text / code / csv / json inline
+    return {"text": f"Attached `{filename}`:\n\n{text}"}
+```
+
+The PDF path is the interesting one. Enabling citations routes the PDF through the provider's full *visual* understanding (the text plus a rendered image of each page), and — because citations are on — the model returns **citation content blocks** carrying the quoted text *and* the location span, instead of a paraphrase you have to trust. Grounding, not vibes.
+
+That leads straight to the gotcha that cost me a confusing hour: <Highlight>citations change the request by exactly one flag, but they change the *response* shape.</Highlight> With citations on, the assistant's answer arrives as citation blocks rather than plain `text` blocks. Any code that reads assistant text by pulling `.text` will silently return empty — you have to handle both shapes (concatenate the cited `content[].text`) or the answer just vanishes.
+
+A few more edges worth knowing:
+
+- **Office files give you text, not layout.** A `document` block for docx/xlsx gets the provider to extract text server-side — but there's no page-image understanding (that's PDF-only), so don't promise table or figure fidelity there. Citations aren't available for them either.
+- **pptx doesn't fit the document-block types at all**, so it's the one format where I *do* extract — a bounded outline, a few KB per slide, inlined as text.
+- **The document block needs a clean `name`.** Arbitrary filenames (unicode, punctuation, path separators) get rejected, so there's a small sanitizer that strips to a safe set and falls back to a default.
+
+And then the part I'm proudest of, because it's about *not* doing the naive thing: there's a **size gate** in front of all of this. Images always inline; other types have per-MIME byte ceilings. Over the ceiling, the tool does **not** stuff the file into context. It returns guidance steering the model to *structure-first* tools instead — an `overview` (sheet names, headings, page count), a bounded `read_chunk` that returns a size-capped slice of pages/rows/paragraphs, or a sub-agent that reads the whole big file in its *own* context window and reports back a summary. So the raw bytes of a huge file never enter — and never get re-sent on every subsequent turn of — the main conversation.
+
+The reframe: I came in assuming "read the file" meant "write a parser." For a multimodal model it mostly means *routing* the file to the right native block and turning on citations so the model can cite what it read. And when a file is too big to inline, the answer isn't a bigger context window — it's handing the model tools to *navigate the file's structure* rather than inhale it whole.

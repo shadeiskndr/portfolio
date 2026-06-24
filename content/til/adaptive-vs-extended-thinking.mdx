@@ -1,0 +1,42 @@
+---
+title: Reasoning isn't one setting — normalizing "thinking" across models
+date: 2026-07-01
+summary: Wiring one agent to several Claude models on Bedrock, I learned there are two different ways a model exposes reasoning, they live in different parts of the request, and some models can't turn it off.
+tags:
+  - ai
+  - llm
+  - bedrock
+---
+
+The agent I work on can run on several different Claude models through Bedrock, and the user can pick one per conversation. I assumed "turn on thinking, set how hard it thinks" would be one setting. It is not — and reconciling the differences into one config surface taught me more about how reasoning models actually work than any doc did.
+
+There are **two different control models**, and a given model supports one or the other:
+
+- **A fixed thinking budget.** Older extended-thinking models take an explicit token allowance — `thinking: {type: "enabled", budget_tokens: N}`. You are literally handing it a reasoning budget.
+- **Adaptive thinking.** Newer models decide for themselves how much to think, and you steer that with an **effort** level — `low` through `max`. You don't set a budget; you set an intent.
+
+The first gotcha: on the adaptive models, the effort level does **not** live inside the thinking block. It goes in a separate top-level `output_config`:
+
+```python
+def reasoning_fields(mode, on, budget, effort, off_behavior):
+    """Normalize one agent's reasoning knobs into per-model request fields."""
+    if mode == "adaptive":
+        if not on and off_behavior == "omit":
+            return None                                    # send nothing; let it default
+        thinking = ({"type": "disabled"} if not on
+                    else {"type": "adaptive", "display": "summarized"})
+        fields = {"thinking": thinking}
+        if effort:
+            fields["output_config"] = {"effort": effort}   # NOT inside `thinking`
+        return fields
+    # budget-style models
+    return {"thinking": {"type": "enabled", "budget_tokens": budget}} if on else None
+```
+
+The second gotcha is the one that reshaped my mental model: <Highlight>some models can't turn thinking off at all.</Highlight> They're adaptive-only. Send them a "reasoning off" request and they still think — the right move is to *not* send a disable flag (some reject it with a `400`) and to hide the "Think" toggle in the UI, because for that model it's a lie.
+
+So "thinking off" isn't a universal capability. My config needed a third state beyond on/off: *this model ignores the off switch.* I ended up modeling it as an explicit `thinking_off_behavior` per model — omit the field, send `disabled`, or force-adaptive.
+
+The last thing I learned is that reasoning and sampling aren't independent. When thinking is engaged, `temperature` isn't a free knob — historically it had to be pinned to `1.0`, and on the newest models you can't pass `temperature` at all; it's rejected. Which means a "think hard" request and a "be creative, crank the temperature" request are, at the API level, somewhat mutually exclusive. That surprised me, and it's obvious in hindsight: a model deep in structured reasoning isn't the one you want sampling wildly.
+
+None of this is hard once you see it. But it's a good reminder that "the model" is not one uniform thing behind a flag — reasoning is a capability with a shape, and the shape differs per model. The accepted fields drift as models are released, so the useful artifact wasn't any single request body; it was the little normalizer above that turns one set of app-level knobs into whatever the chosen model actually accepts.

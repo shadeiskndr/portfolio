@@ -1,0 +1,66 @@
+---
+title: Your SPA can do OAuth without ever holding a token
+date: 2026-05-15
+summary: The usual SPA tutorial stores a token in localStorage and attaches a Bearer header. If you have a backend, the browser can hold nothing but an HttpOnly cookie — and a whole class of token theft disappears.
+tags:
+  - auth
+  - frontend
+  - security
+  - angular
+---
+
+The default SPA auth tutorial has you store an access token (and usually a refresh token) in `localStorage`, attach it as a `Bearer` header, and hand-write refresh and expiry logic in the client. Every one of those is a liability: anything that achieves XSS can read `localStorage` and walk off with your tokens, and the refresh dance is fiddly to get right. The model I learned instead is one where <Highlight>the browser holds no token at all.</Highlight>
+
+It's the Backend-for-Frontend (BFF) shape of OAuth Authorization Code. The backend is the confidential OAuth client; the SPA only ever does redirects.
+
+1. The login screen asks the API for the list of identity providers and renders a button per provider (labels and icons come from the backend, so adding or removing a provider needs zero frontend changes).
+2. Clicking one asks the API for a hosted login URL and does a full-page redirect to the corporate OIDC provider.
+3. The provider authenticates the user — **including any MFA step, which the SPA never sees** — and redirects back to a `/{provider}/callback?code&state` route.
+4. A tiny callback component forwards `code` + `state` to the API. The **backend** performs the code-for-token exchange (PKCE, client secret, the whole thing — all server-side) and establishes a **server-side session**.
+5. The browser receives only an opaque **HttpOnly session cookie** (plus a readable CSRF cookie). No token ever touches JavaScript.
+
+Because there's no token in the client, the HTTP interceptor is almost nothing — send the cookie, and add a CSRF header on mutating requests:
+
+```ts
+@Injectable()
+export class SessionInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler) {
+    let request = req.clone({ withCredentials: true }); // send the HttpOnly session cookie
+    const csrf = readCookie("csrf_token");
+    if (csrf && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+      request = request.clone({ setHeaders: { "X-CSRF-Token": csrf } });
+    }
+    return next.handle(request);
+  }
+}
+```
+
+And the auth service is mostly redirects — it never sees a token:
+
+```ts
+startLogin(provider: string) {
+  const redirectUri = encodeURIComponent(`${location.origin}/${provider}/callback`);
+  this.http.get<{ uri: string }>(`${this.api}/auth/${provider}/login?redirect_uri=${redirectUri}`)
+    .subscribe(({ uri }) => (location.href = uri));   // full-page redirect to the provider
+}
+finishLogin(provider: string, code: string, state: string) {
+  // The SERVER exchanges code → tokens and sets the session cookie. Body is throwaway.
+  return this.http.get(`${this.api}/auth/${provider}/callback`,
+    { params: { code, state }, responseType: "text" });
+}
+isAuthenticated() {
+  return this.http.get<{ authenticated: boolean }>(`${this.api}/auth/session`)
+    .pipe(map((r) => r.authenticated));
+}
+```
+
+A few things that surprised me building it:
+
+- **There is no client-side refresh, and that's correct.** No refresh-token rotation, no 401-retry interceptor. Token lifetime is the server session's problem. The client learns it's logged out by *probing* a session endpoint and reacting to a `true → false` transition — pop a "session expired" notice and redirect to login. You don't need retry logic; you do need that probe, because a dead cookie otherwise surfaces as vague, scattered API errors.
+- **`withCredentials: true` is mandatory on every request.** Miss it on one call and the cookie silently isn't sent — especially painful cross-origin in dev.
+- **Your framework may already do the CSRF part.** Angular's built-in XSRF support attaches the header for mutating methods on its own; I found we were *also* doing it by hand in the interceptor — harmless, but redundant. Check before you write that code.
+- **The callback has to be a real SPA route** (`:provider/callback`), or the provider's redirect back lands on a 404.
+
+The honest security nuance: this isn't magic immunity. While the page is open, an XSS payload can still *ride* the cookie to make authenticated calls — so you still need a tight CSP and `HttpOnly` + `SameSite` on the cookie. What it removes is **exfiltration**: the attacker can't read a token out of the browser and replay it later from somewhere else, because there's no token to read. Given XSS-plus-stolen-refresh-token is the nightmare, closing that door is worth a lot.
+
+The reframe: the reflex is "SPA equals hold a token and attach it." But if you already have a backend, the backend can be the confidential client and the browser can carry nothing but an opaque cookie it can't even read. Auth stops being client state you manage and becomes a redirect dance plus a single `withCredentials` flag — less code, and the most valuable thing to steal simply isn't there to steal.

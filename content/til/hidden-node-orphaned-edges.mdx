@@ -1,0 +1,50 @@
+---
+title: A hidden graph node needs its edges gone too (and stop regexing SVG)
+date: 2026-03-03
+summary: Hiding nodes in a generated workflow diagram with regex left arrows pointing into empty space and dead click-targets. Parsing the SVG instead — and treating a node and its edges as one unit — fixed both.
+tags:
+  - typescript
+  - dataviz
+  - svg
+---
+
+We render a workflow as a [Graphviz](https://graphviz.org/)-generated SVG — nodes, edges, and cluster boxes — shown as a `background-image` data URL. Some nodes are conditionally skipped at runtime and have to be hidden from the diagram.
+
+The original code hid them by running regex string-replacements over the raw SVG markup. It worked until the generated structure shifted slightly, and then the regexes drifted in two nasty ways: a node's box got removed but its *incoming edge* didn't — so arrows pointed into empty space — and a leftover clickable overlay sat on top of nothing, firing a backend request that errored when someone clicked it.
+
+Both bugs have the same root cause: treating structured markup as a flat string. The fix is to parse it into a real document, mutate the tree, and serialize back:
+
+```ts
+const doc = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
+
+function hideNode(doc: Document, nodeId: string) {
+  // A Graphviz node is <g class="node"><title>{id}</title>…</g>
+  doc.querySelectorAll("g.node").forEach((g) => {
+    if (g.querySelector("title")?.textContent?.trim() === nodeId) g.remove();
+  });
+  doc.querySelector(`g#cluster_${nodeId}.cluster`)?.remove();
+
+  // CRUCIAL: also remove every edge whose destination is this node,
+  // or its arrow is left dangling into empty space.
+  doc.querySelectorAll("g.edge").forEach((edge) => {
+    const raw = edge.querySelector("title")?.textContent?.trim() ?? "";
+    const [, dst] = raw.replace(/&#45;&gt;/g, "->").split("->").map((s) => s.trim());
+    if (dst === nodeId) edge.remove();
+  });
+}
+
+const svg = new XMLSerializer().serializeToString(doc);
+```
+
+The line that actually fixed the "arrows into nowhere" bug is the edge loop. **A node and its incident edges are one unit** — remove the node without removing the edges pointing at it and you get a diagram that's subtly, visibly broken. The same principle killed the dead click-target: there's a parallel data array driving the clickable overlays, and hiding a node has to remove *its* entry too, or a blank click-target outlives the thing it belonged to.
+
+You can toggle exactly that below. Hide the node and its incident edges are left dangling into empty space; flip on the cascade and they go with it:
+
+<GraphOrphanEdgesDemo />
+
+A couple of details that make this kind of SVG surgery work:
+
+- **Graphviz encodes the edge arrow in the `<title>` as HTML entities** (`A&#45;&gt;B`). If you `split("->")` without normalizing first, every edge match silently fails and you're back to dangling arrows — but now confusingly, because the code *looks* right.
+- **Order of operations matters.** Do the DOM surgery on the parsed document first; do any color-swaps and whitespace cleanup on the string; do URL-encoding for the data URL *last*. The old regex version smeared all three together, which is a big part of why it was so fragile.
+
+The transferable lesson, and one I'll carry into any language: **regex over HTML/SVG/XML is a smell.** A parser with `querySelectorAll` keyed on the *semantics* (`g.node`, `g.edge`, `<title>`) survives structural churn that string rewrites can't. And any hide/filter over a graph has to cascade — to the edges, and to whatever overlay or interaction model you've layered on top — because in a graph, removing one thing quietly invalidates its relationships.

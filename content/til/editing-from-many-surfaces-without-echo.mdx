@@ -1,0 +1,51 @@
+---
+title: Editing one dataset from three surfaces without an echo loop
+date: 2026-05-06
+summary: A spreadsheet, a chart you can drag, and a fallback table all edit the same series over one undo/redo store. The fix for the inevitable feedback loop wasn't a boolean flag — it was a generation counter.
+tags:
+  - typescript
+  - frontend
+  - state
+---
+
+I built a screen where you can edit the values of a time series three ways at once: type into a spreadsheet grid (with formulas), drag points directly on a chart, or use a plain fallback table — all backed by a single immutable store with undo/redo. Each surface has to reflect edits made in the others, without fighting them, and without losing the user's zoom or their cell cursor.
+
+The bug you *will* hit wiring multiple views to one store is the echo: view A writes → the store notifies everyone → view A re-renders itself from the notification and clobbers the user's in-progress action (resets the zoom mid-drag, jumps the cell cursor). The tempting fix is a boolean `isUpdatingFromSelf` flag. It races — two writes that coalesce into one microtask, or two views reacting to the same emission, and the flag is already wrong.
+
+What actually works is a **monotonic generation counter**. Every write bumps it and records "origin *X* produced generation *N*." Each surface's reactive effect asks: *is the current emission the exact generation I last produced?* If so, skip — I already have this change. Otherwise, apply it.
+
+```ts
+type Origin = "chart" | "grid" | "table";
+let generation = 0;
+const producedBy = new Map<Origin, number>();
+const emission = signal(0);
+
+function commit(next: Point[], origin: Origin | null) {
+  pushSnapshot(next);                       // copy-on-write into {past, present, future}
+  generation += 1;
+  if (origin) producedBy.set(origin, generation);
+  emission.set(generation);
+}
+
+// True iff THIS origin authored the current emission (and nothing wrote after).
+const shouldSkipEcho = (o: Origin) => producedBy.get(o) === emission();
+
+effect(() => { emission(); if (!shouldSkipEcho("chart")) rebuildChart(); }); // keeps zoom/drag
+effect(() => { emission(); if (!shouldSkipEcho("grid"))  reloadGrid();   }); // keeps cursor
+effect(() => { emission(); if (!shouldSkipEcho("table")) reloadTable();  });
+```
+
+So the chart skips its own rebuild when it authored the change (preserving the live drag and the zoom), the grid skips re-writing its cells when it authored the change (preserving the cursor), but a write from *any other* surface flows through to everyone. Unlike a boolean, a generation counter is race-proof and idempotent — two effects can independently read the same emission and each correctly decides whether it's looking at its own echo.
+
+Two surfaces, one value, below. Set a zoom on the chart, then drag its value: with the guard off, every self-echo rebuilds the chart and snaps your zoom back; with it on, the chart recognizes its own write and leaves your view alone:
+
+<EchoGuardDemo />
+
+The rest of what I learned was spreadsheet-specific and all in the "parse the cell" path:
+
+- **`Number("") === 0`.** A cleared cell passes `Number.isFinite`, so a naive parse silently overwrites the point with zero. Guard empty/whitespace explicitly, restore the prior value, and steer the user to the "remove row" action instead.
+- **Formula cells arrive as strings.** On save, the value can be `"=B2*1.05"`. If `Number(value)` isn't finite, read the *evaluated* result off the sheet's cell model before deciding the input was invalid.
+- **Lock everything, then unlock the one editable column.** Protect the sheet, lock all cells, then unlock just the editable range — cleaner than trying to intercept edits cell by cell.
+- **Patch by timestamp, never by index.** In stock mode the chart library crops its data array to the visible window and can leave `undefined` holes; matching a dragged point back to state by its index into that cropped view edits the wrong row or crashes. Match on the x value.
+
+The transferable lesson is the counter. Any time several views edit one shared model, you need a way for a view to recognize *its own* change coming back around — and "recognize" has to survive two changes landing in the same tick. A boolean can't; a per-write version number can. Version the writes, and every view can confidently ignore exactly the echo it produced while still reacting to everyone else.

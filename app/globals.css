@@ -176,3 +176,32 @@
     display: none;
   }
 }
+
+/*
+ * Shiki dual-theme syntax highlighting (via rehype-pretty-code) inside MDX prose.
+ * Each token span carries --shiki-light / --shiki-dark CSS vars; swap which one
+ * wins on the .dark class so highlighted code tracks the active theme.
+ */
+.prose-content code[data-theme],
+.prose-content code[data-theme] span {
+  color: var(--shiki-light);
+}
+.dark .prose-content code[data-theme],
+.dark .prose-content code[data-theme] span {
+  color: var(--shiki-dark);
+}
+.prose-content figure[data-rehype-pretty-code-figure] {
+  margin: 0;
+}
+.prose-content [data-rehype-pretty-code-title] {
+  margin-bottom: -0.5rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: var(--muted);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}

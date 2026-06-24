@@ -1,0 +1,39 @@
+---
+title: The fullscreen panel that fought change detection — until I deleted the JavaScript
+date: 2025-10-20
+summary: A panel measured its own width in JS with observers and a rAF loop. It froze the app. The fix was one line of CSS on the parent and deleting a hundred lines.
+tags:
+  - css
+  - frontend
+  - angular
+  - performance
+---
+
+A panel in our app had an "expand to fullscreen" mode: it needed to fill the viewport minus the sidebars. The implementation I inherited computed its width in JavaScript — a `ResizeObserver`, a `MutationObserver` watching the sidebars, a `window.resize` listener, and a `requestAnimationFrame` loop tracking the sidebar's open/close animation, all of it writing an `[ngStyle]` width onto the element.
+
+It did roughly what it promised, and it also: fought Angular's change detection on every frame, *froze the whole app* when a chart dialog opened over it, rendered blank charts, and printed `requestAnimationFrame` errors into the console. Classic symptoms of JavaScript trying to do a browser's job.
+
+The fix was to delete all of it. The panel doesn't need to *know* its width — it just needs a positioning context to fill:
+
+```scss
+.panel-host {
+  position: relative;   /* the entire fix: establish the containing block */
+}
+
+.panel-fullscreen {
+  position: absolute;
+  inset: 78px 0 0 0;    /* top right bottom left — stretches to fill naturally */
+  width: 100%;
+  overflow-y: auto;
+  z-index: 20;
+}
+```
+
+The `[ngStyle]="{ width: ... }"` binding and about a hundred lines of observers, subscriptions, and the rAF loop came out. The panel now reflows on window resize and sidebar toggle *for free*, because the browser recomputes the box against its positioned ancestor — which is exactly the thing the JavaScript was reimplementing, badly, one frame at a time.
+
+Two things worth pinning down:
+
+- **The whole bug was a missing `position: relative` on the parent.** Absolute positioning resolves against the nearest *positioned* ancestor; without one, the panel was escaping up to a far ancestor and landing wrong, which is what sent someone down the measure-it-in-JS path in the first place.
+- **`inset` beats `height: calc(100vh - 78px)`.** With `inset` (or explicit top/bottom/left/right) the box stretches to its container; there are no magic offsets and no assumption about header height baked into a formula that breaks the day the header changes.
+
+The general rule I took away, and now apply as a smell test: **if you're measuring boxes in JavaScript to set a width or height, there's almost always a declarative flex/grid/positioning answer that's faster and doesn't race the framework.** And JS-driven layout that happens to run inside a charting library's render window isn't just slow — it's how you get a full freeze, because two things are now fighting over the same layout at the same time.
