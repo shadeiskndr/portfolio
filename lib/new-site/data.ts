@@ -162,8 +162,8 @@ export const EXPERIENCES: ExperienceEntry[] = [
     darkLogoKey: "logo-estee-dark",
     logoAlt: "The Estée Lauder Companies logo",
     position: "Software Engineer Intern",
-    startDate: new Date(2024, 9),
-    endDate: new Date(2025, 1),
+    startDate: new Date(2024, 8),
+    endDate: new Date(2025, 2),
     summary: [
       "Contributed significantly to the development and delivery of an internal Support Portal full-stack web application to support Estée Lauder Companies' retail operations.",
       "Gained hands-on experience with retail software architecture and best practices in a production environment.",
@@ -171,18 +171,6 @@ export const EXPERIENCES: ExperienceEntry[] = [
       "Participated in code reviews and implemented improvements to enhance system performance and reliability.",
     ],
     attachedFileKey: "internship-estee",
-  },
-  {
-    company: "99 Speedmart",
-    logoKey: "logo-99",
-    logoAlt: "99 Speedmart logo",
-    position: "Logistics Associate",
-    startDate: new Date(2020, 1),
-    endDate: new Date(2020, 5),
-    summary: [
-      "Coordinated with the store manager to restock inventory as needed, performed regular stock checks and reported any issues to the store manager immediately.",
-      "Organized the store area for ease of access and optimal space utilization.",
-    ],
   },
 ];
 
@@ -479,6 +467,63 @@ export const RECOGNITIONS: Recognition[] = [
     title: "Malaysian University English Test (MUET)",
     detail: "Band 4.5",
     meta: "English proficiency",
+  },
+];
+
+export type UsesEntry = { label: string; value: string };
+export type UsesRig = { id: string; label: string; rows: UsesEntry[] };
+export type UsesSectionData = { title: string; rows: UsesEntry[] };
+
+// "Uses" page — hardware rigs (tab-switched) plus shared peripherals/software.
+export const USES_RIGS: UsesRig[] = [
+  {
+    id: "laptop",
+    label: "Laptop",
+    rows: [
+      { label: "Laptop", value: "Acer Nitro 5" },
+      { label: "Processor", value: "AMD Ryzen 5 5600H with NVIDIA GTX 1650" },
+      { label: "Memory", value: "32 GB DDR4" },
+      { label: "OS", value: "Fedora Linux 44 (Workstation Edition)" },
+    ],
+  },
+  {
+    id: "gaming-rig",
+    label: "Gaming Rig",
+    rows: [
+      { label: "CPU", value: "Intel Core i5-10400F" },
+      { label: "GPU", value: "MSI GeForce RTX 5070 Shadow 2X" },
+      { label: "Memory", value: "32 GB DDR4" },
+      { label: "Motherboard", value: "Gigabyte H410M S2 V3" },
+    ],
+  },
+  {
+    id: "homelab",
+    label: "Homelab",
+    rows: [
+      { label: "Thin Client", value: "Dell Wyse 5070 (N11D)" },
+      { label: "Processor", value: "Intel Celeron J4105 4-Cores" },
+      { label: "Memory", value: "12 GB DDR4" },
+      { label: "OS", value: "Fedora Linux 44 (Server Edition)" },
+    ],
+  },
+];
+
+export const USES_SHARED: UsesSectionData[] = [
+  {
+    title: "Peripherals",
+    rows: [
+      {
+        label: "Monitors",
+        value: "Philips Evnia 27 Inch QHD 300Hz • HP E273Q 27 Inch QHD 60Hz",
+      },
+      { label: "Keyboard", value: "Keychron K2" },
+      { label: "Mouse", value: "Attack Shark X6 • Logitech G304" },
+      { label: "Headset", value: "Logitech PRO X2" },
+    ],
+  },
+  {
+    title: "Software",
+    rows: [{ label: "IDE", value: "Visual Studio Code" }],
   },
 ];
 

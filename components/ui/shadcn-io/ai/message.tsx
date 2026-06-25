@@ -264,6 +264,9 @@ export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
     <Streamdown
       className={cn("size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0", className)}
+      // The external-link safety modal renders a fixed <div> inside the markdown
+      // <p>, which is invalid HTML (hydration error). Links stay plain anchors.
+      linkSafety={{ enabled: false }}
       {...props}
     />
   ),

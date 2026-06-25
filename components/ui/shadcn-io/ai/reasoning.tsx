@@ -202,7 +202,12 @@ export const ReasoningContent = memo(
             }
           >
             <div className={cn("mt-4 text-muted-foreground text-sm", className)}>
-              <Streamdown animated={animated} isAnimating={isAnimating} plugins={plugins}>
+              <Streamdown
+                animated={animated}
+                isAnimating={isAnimating}
+                plugins={plugins}
+                linkSafety={{ enabled: false }}
+              >
                 {children}
               </Streamdown>
             </div>

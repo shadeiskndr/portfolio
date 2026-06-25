@@ -145,7 +145,10 @@ export const deleteOrphanBlobs = internalMutation({
     const files = await ctx.db.system.query("_storage").collect();
     const orphans = files.filter((f) => !referenced.has(f._id));
     for (const f of orphans) await ctx.storage.delete(f._id);
-    return { deleted: orphans.length, freedKB: Math.round(orphans.reduce((s, f) => s + f.size, 0) / 1024) };
+    return {
+      deleted: orphans.length,
+      freedKB: Math.round(orphans.reduce((s, f) => s + f.size, 0) / 1024),
+    };
   },
 });
 
