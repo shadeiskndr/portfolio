@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
+import type { QueryCtx } from "./_generated/server";
 import { internalMutation, internalQuery, query } from "./_generated/server";
 
 const sectionValidator = v.union(v.literal("reading"), v.literal("resource"));
@@ -98,7 +99,7 @@ export const upsertBookmark = internalMutation({
 // `_storage`. Deleting a document row (e.g. in the dashboard) never frees its
 // blob, so previews of hand-deleted bookmarks show up here.
 async function collectReferencedStorageIds(
-  ctx: Parameters<Parameters<typeof internalQuery>[0]["handler"]>[0]
+  ctx: QueryCtx
 ): Promise<Set<string>> {
   const referenced = new Set<string>();
   const add = (id: Id<"_storage"> | undefined | null) => {

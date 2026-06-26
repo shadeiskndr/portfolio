@@ -43,7 +43,7 @@ async function loadTilPosts(): Promise<TilPostInput[]> {
   const dir = path.join(process.cwd(), "content", "til");
   const files = (await readdir(dir)).filter((file) => file.endsWith(".mdx"));
   const posts = await Promise.all(
-    files.map(async (file) => {
+    files.map(async (file): Promise<TilPostInput | null> => {
       const { data, content } = matter(await readFile(path.join(dir, file), "utf-8"));
       if (data.draft) return null;
       return {
@@ -52,7 +52,7 @@ async function loadTilPosts(): Promise<TilPostInput[]> {
         summary: data.summary ? String(data.summary) : undefined,
         tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
         body: content,
-      } satisfies TilPostInput;
+      };
     })
   );
   return posts.filter((post): post is TilPostInput => post !== null);
