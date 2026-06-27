@@ -98,9 +98,7 @@ export const upsertBookmark = internalMutation({
 // storageId still in use across the tables that hold blobs, then diff against
 // `_storage`. Deleting a document row (e.g. in the dashboard) never frees its
 // blob, so previews of hand-deleted bookmarks show up here.
-async function collectReferencedStorageIds(
-  ctx: QueryCtx
-): Promise<Set<string>> {
+async function collectReferencedStorageIds(ctx: QueryCtx): Promise<Set<string>> {
   const referenced = new Set<string>();
   const add = (id: Id<"_storage"> | undefined | null) => {
     if (id) referenced.add(id);

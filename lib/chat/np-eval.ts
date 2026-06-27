@@ -129,7 +129,7 @@ class Parser {
     let left = this.parseUnary();
     while (true) {
       const t = this.peek();
-      if (!t || t.type !== "punc" || !(t.value in BIN_PREC)) break;
+      if (t?.type !== "punc" || !(t.value in BIN_PREC)) break;
       const prec = BIN_PREC[t.value];
       if (prec < minPrec) break;
       this.next();

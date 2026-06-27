@@ -85,7 +85,6 @@ export default function ResumeViewer({
           variant="outline"
           size="sm"
           nativeButton={false}
-          // biome-ignore lint/a11y/useAnchorContent: children are spliced in by base-ui's render prop; aria-label provides the accessible name.
           render={<a href={fileUrl} download aria-label={`Download ${label}`} />}
         >
           <Download className="h-4 w-4" aria-hidden="true" />
