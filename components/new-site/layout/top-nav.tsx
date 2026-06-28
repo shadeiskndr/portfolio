@@ -1,5 +1,6 @@
 "use client";
 
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { LayoutGroup, motion } from "motion/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,12 +10,14 @@ import { playClick } from "@/hooks/use-sound";
 import { NAV_LINKS } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
 import NavScrollButton from "./nav-scroll-button";
+import { useSidebarCollapse } from "./sidebar-collapse-provider";
 import SidebarDrawer from "./sidebar-drawer";
 import ThemeControls from "./theme-controls";
 
 export default function TopNav() {
   const pathname = usePathname();
   const scrolled = useScroll(40);
+  const { collapsed, toggle } = useSidebarCollapse();
   const { ref, canScrollLeft, canScrollRight, scrollBy } =
     useHorizontalScrollState<HTMLUListElement>();
 
@@ -28,6 +31,18 @@ export default function TopNav() {
       )}
     >
       <SidebarDrawer />
+      <button
+        type="button"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-pressed={collapsed}
+        onClick={() => {
+          playClick();
+          toggle();
+        }}
+        className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:inline-flex"
+      >
+        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+      </button>
       <div className="flex min-w-0 flex-1 items-center">
         <NavScrollButton
           direction="left"

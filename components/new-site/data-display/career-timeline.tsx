@@ -47,14 +47,7 @@ export default function CareerTimeline() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="truncate font-semibold text-xs">
-                  {entry.company}
-                  {entry.current ? (
-                    <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 font-medium text-[10px] text-primary">
-                      Current
-                    </span>
-                  ) : null}
-                </p>
+                <p className="truncate font-semibold text-xs">{entry.company}</p>
                 <span className="shrink-0 text-[10px] text-muted-foreground">
                   {formatDuration(entry.startDate, entry.endDate)}
                 </span>

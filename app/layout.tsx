@@ -13,6 +13,7 @@ import { DEFAULT_COLOR_THEME } from "@/lib/color-themes";
 import { ConvexClientProvider } from "@/lib/convex-client-provider";
 import { Providers } from "@/lib/light-dark-providers";
 import { QueryProvider } from "@/lib/query-provider";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const initialThemeCSS = buildThemeCSSText(DEFAULT_COLOR_THEME);
@@ -38,24 +39,32 @@ const caveat = Caveat({
   display: "swap",
 });
 
-const title = "Shahathir Iskandar | Software Developer From Batu Caves, Selangor, Malaysia.";
-const description = "A software developer from Batu Caves, Selangor, Malaysia.";
-const url = "https://shahathir.me";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(url),
-  title,
-  description,
-  keywords: [
-    "Web Developer",
-    "Mobile Developer",
-    "Front-end Developer",
-    "Full-stack Developer",
-    "Next.js Developer",
-    "React Developer",
-    "Java Developer",
-  ],
-  creator: "Shahathir Iskandar",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon-16x16.png",
