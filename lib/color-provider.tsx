@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTimeout } from "@/hooks/use-timeout";
@@ -13,6 +13,10 @@ import {
   DEFAULT_COLOR_THEME,
   type ThemeOption,
 } from "@/lib/color-themes";
+
+// Stable reference for useLocalStorage's options arg so the hook's internal
+// callbacks (which depend on `options`) don't rebuild every render.
+const EMPTY_STORAGE_OPTIONS = {};
 
 type ColorThemeProviderProps = {
   children: React.ReactNode;
@@ -50,10 +54,15 @@ export function ColorThemeProvider({
   storageKey = "vite-ui-color-theme",
   ...props
 }: ColorThemeProviderProps) {
-  const [colorTheme, setColorTheme] = useLocalStorage<ColorTheme>(storageKey, defaultTheme);
+  const [colorTheme, setColorTheme] = useLocalStorage<ColorTheme>(
+    storageKey,
+    defaultTheme,
+    EMPTY_STORAGE_OPTIONS
+  );
   const [transitionEnabled, setTransitionEnabled] = useLocalStorage<boolean>(
     `${storageKey}-transition`,
-    true
+    true,
+    EMPTY_STORAGE_OPTIONS
   );
   const [styleId, setStyleId] = useState<string | null>(null);
 
@@ -90,18 +99,19 @@ export function ColorThemeProvider({
     styleId ? 3000 : null
   );
 
-  const setColorThemeWithTransition = (newTheme: ColorTheme) => {
-    if (!transitionEnabled) {
-      setColorTheme(newTheme);
-      return;
-    }
+  const setColorThemeWithTransition = useCallback(
+    (newTheme: ColorTheme) => {
+      if (!transitionEnabled) {
+        setColorTheme(newTheme);
+        return;
+      }
 
-    // Inject polygon wipe animation styles
-    const newStyleId = `color-theme-transition-${Date.now()}`;
-    const style = document.createElement("style");
-    style.id = newStyleId;
+      // Inject polygon wipe animation styles
+      const newStyleId = `color-theme-transition-${Date.now()}`;
+      const style = document.createElement("style");
+      style.id = newStyleId;
 
-    const css = `
+      const css = `
       @supports (view-transition-name: root) {
         ::view-transition-old(root) {
           animation: none;
@@ -120,30 +130,43 @@ export function ColorThemeProvider({
       }
     `;
 
-    style.textContent = css;
-    document.head.appendChild(style);
-    setStyleId(newStyleId);
+      style.textContent = css;
+      document.head.appendChild(style);
+      setStyleId(newStyleId);
 
-    // Use View Transitions API if supported
-    if ("startViewTransition" in document) {
-      document.startViewTransition(() => {
+      // Use View Transitions API if supported
+      if ("startViewTransition" in document) {
+        document.startViewTransition(() => {
+          setColorTheme(newTheme);
+        });
+      } else {
         setColorTheme(newTheme);
-      });
-    } else {
-      setColorTheme(newTheme);
-    }
-  };
+      }
+    },
+    [transitionEnabled, setColorTheme]
+  );
 
-  const value: ColorThemeProviderState = {
-    colorTheme,
-    setColorTheme,
-    setColorThemeWithTransition,
-    themes,
-    localThemes: COLOR_THEMES,
-    remoteThemes,
-    transitionEnabled,
-    setTransitionEnabled,
-  };
+  const value = useMemo<ColorThemeProviderState>(
+    () => ({
+      colorTheme,
+      setColorTheme,
+      setColorThemeWithTransition,
+      themes,
+      localThemes: COLOR_THEMES,
+      remoteThemes,
+      transitionEnabled,
+      setTransitionEnabled,
+    }),
+    [
+      colorTheme,
+      setColorTheme,
+      setColorThemeWithTransition,
+      themes,
+      remoteThemes,
+      transitionEnabled,
+      setTransitionEnabled,
+    ]
+  );
 
   return (
     <ColorThemeProviderContext.Provider {...props} value={value}>

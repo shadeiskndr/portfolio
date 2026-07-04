@@ -52,14 +52,14 @@ export const Source = ({ href, title, children, ...props }: SourceProps) => (
   </a>
 );
 
+const sources = [
+  { href: "https://stripe.com/docs/api", title: "Stripe API Documentation" },
+  { href: "https://docs.github.com/en/rest", title: "GitHub REST API" },
+  { href: "https://docs.aws.amazon.com/sdk-for-javascript/", title: "AWS SDK for JavaScript" },
+];
+
 /** Demo component for preview */
 export default function SourcesDemo() {
-  const sources = [
-    { href: "https://stripe.com/docs/api", title: "Stripe API Documentation" },
-    { href: "https://docs.github.com/en/rest", title: "GitHub REST API" },
-    { href: "https://docs.aws.amazon.com/sdk-for-javascript/", title: "AWS SDK for JavaScript" },
-  ];
-
   return (
     <div className="p-6" style={{ height: "150px" }}>
       <Sources>

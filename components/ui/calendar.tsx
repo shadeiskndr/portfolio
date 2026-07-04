@@ -161,7 +161,12 @@ function CalendarDayButton({
     <Button
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString(locale?.code)}
+      // Deterministic across SSR/client: an explicit locale is always passed
+      // ("en-US" fallback — the rule's prescribed fix, but its check is syntactic),
+      // and `day.date` is a local-midnight Date built by react-day-picker, so its
+      // Y/M/D components are identical regardless of server/client timezone.
+      // react-doctor-disable-next-line react-doctor/no-locale-format-in-render
+      data-day={day.date.toLocaleDateString(locale?.code ?? "en-US")}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

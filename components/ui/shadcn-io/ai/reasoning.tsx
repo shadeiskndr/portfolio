@@ -3,7 +3,17 @@
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, memo, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Streamdown } from "streamdown";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -66,55 +76,76 @@ export const Reasoning = memo(
     const duration = durationProp ?? measuredDuration;
 
     const [hasAutoClosed, setHasAutoClosed] = useState(false);
-    // Whether this block has streamed during its lifetime. Historical blocks
-    // (opened after the fact) never stream, so they must never auto-close —
-    // otherwise manually opening one starts the close timer and it collapses.
-    const [hasStreamed, setHasStreamed] = useState(isStreaming);
-    const [startTime, setStartTime] = useState<number | null>(null);
+    // Refs, not state: neither value is ever rendered. hasStreamed records
+    // whether this block streamed during its lifetime — historical blocks
+    // (opened after the fact) never stream, so they must never auto-close.
+    // startTime anchors the thinking-duration measurement.
+    const hasStreamedRef = useRef(isStreaming);
+    const startTimeRef = useRef<number | null>(null);
 
-    // Track duration when streaming starts and ends
-    useEffect(() => {
-      if (isStreaming) {
-        if (startTime === null) {
-          setStartTime(Date.now());
-        }
-      } else if (startTime !== null) {
-        setDuration(Math.ceil((Date.now() - startTime) / MS_IN_S));
-        setStartTime(null);
+    // Runs at most once per stream (from the timer below): close the panel and
+    // consume the one-shot auto-close. Reads the latest state at fire time, so
+    // a panel the user already closed isn't "re-closed" (no spurious
+    // onOpenChange), and a later manual open sticks.
+    const autoClose = useEffectEvent(() => {
+      if (isOpen) {
+        setIsOpen(false);
       }
-    }, [isStreaming, startTime, setDuration]);
+      setHasAutoClosed(true);
+    });
 
-    // Auto-open when streaming starts (also records that it streamed) — covers a
+    // Stream start: anchor the duration measurement and auto-open — covers a
     // block that mounts before its stream begins.
-    useEffect(() => {
-      if (isStreaming) {
-        setHasStreamed(true);
-        if (defaultOpen && !hasAutoClosed) {
-          setIsOpen(true);
-        }
+    const handleStreamStart = useEffectEvent(() => {
+      if (startTimeRef.current === null) {
+        startTimeRef.current = Date.now();
       }
-    }, [defaultOpen, isStreaming, hasAutoClosed, setIsOpen]);
+      if (defaultOpen && !hasAutoClosed) {
+        setIsOpen(true);
+      }
+    });
 
-    // Auto-close shortly after streaming ends (once only), and only for a block
-    // that actually streamed — never for a historical block opened by hand.
-    useEffect(() => {
-      if (defaultOpen && hasStreamed && !isStreaming && isOpen && !hasAutoClosed) {
-        // Add a small delay before closing to allow user to see the content
-        const timer = setTimeout(() => {
-          setIsOpen(false);
-          setHasAutoClosed(true);
-        }, AUTO_CLOSE_DELAY);
-
+    // Stream end: record the measured duration, then auto-close after a small
+    // delay (once only) so the user can see the content. Returns the timer
+    // cleanup so a re-started stream or unmount cancels the pending close.
+    const handleStreamEnd = useEffectEvent((): (() => void) | undefined => {
+      if (startTimeRef.current !== null) {
+        setDuration(Math.ceil((Date.now() - startTimeRef.current) / MS_IN_S));
+        startTimeRef.current = null;
+      }
+      if (defaultOpen && isOpen && !hasAutoClosed) {
+        const timer = setTimeout(autoClose, AUTO_CLOSE_DELAY);
         return () => clearTimeout(timer);
       }
-    }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosed, hasStreamed]);
+      return undefined;
+    });
+
+    // Subscribe to isStreaming transitions only. The effect events above read
+    // the latest props/state without being dependencies, so a parent re-render
+    // (e.g. a recreated onOpenChange) can't re-arm the auto-close timer.
+    useEffect(() => {
+      if (isStreaming) {
+        hasStreamedRef.current = true;
+        handleStreamStart();
+        return undefined;
+      }
+      if (!hasStreamedRef.current) {
+        return undefined;
+      }
+      return handleStreamEnd();
+    }, [isStreaming]);
 
     const handleOpenChange = (newOpen: boolean) => {
       setIsOpen(newOpen);
     };
 
+    const contextValue = useMemo(
+      () => ({ isStreaming, isOpen, setIsOpen, duration }),
+      [isStreaming, isOpen, setIsOpen, duration]
+    );
+
     return (
-      <ReasoningContext.Provider value={{ isStreaming, isOpen, setIsOpen, duration }}>
+      <ReasoningContext.Provider value={contextValue}>
         <Collapsible
           className={cn("not-prose mb-4", className)}
           onOpenChange={handleOpenChange}

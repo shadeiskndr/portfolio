@@ -18,12 +18,17 @@ const TAB_META: { value: Section; label: string }[] = [
   { value: "resource", label: "Resources" },
 ];
 
+// Hoisted to module scope with an explicit locale + timeZone so the server and
+// browser render identical text (no hydration mismatch from ambient settings).
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
 function formatDate(ts: number) {
-  return new Date(ts).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return dateFormatter.format(new Date(ts));
 }
 
 export default function BookmarksBoard() {
@@ -188,9 +193,9 @@ function BookmarkCard({ bookmark, variant }: { bookmark: ResolvedBookmark; varia
       target="_blank"
       rel="noreferrer noopener"
       title={bookmark.description ?? title}
-      className="group flex flex-col overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:ring-foreground/25 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+      className="group flex flex-col overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-lg hover:ring-foreground/25 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
     >
-      <div className="relative aspect-[16/10] overflow-hidden border-b bg-muted">
+      <div className="relative aspect-16/10 overflow-hidden border-b bg-muted">
         {previewUrl ? (
           <Image
             alt=""
@@ -251,7 +256,7 @@ function Favicon({ faviconUrl }: { faviconUrl: string | null }) {
 
 function PreviewFallback({ domain, faviconUrl }: { domain: string; faviconUrl: string | null }) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted to-muted/40">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-linear-to-br from-muted to-muted/40">
       {faviconUrl ? (
         <img alt="" src={faviconUrl} className="size-8 rounded-md" />
       ) : (
@@ -269,7 +274,7 @@ function BoardSkeleton() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={`skeleton-${i}`} className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
-          <Skeleton className="aspect-[16/10] w-full rounded-none" />
+          <Skeleton className="aspect-16/10 w-full rounded-none" />
           <div className="space-y-2 p-3.5">
             <Skeleton className="h-3 w-24" />
             <Skeleton className="h-4 w-full" />

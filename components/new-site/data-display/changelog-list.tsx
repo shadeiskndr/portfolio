@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { Search } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -161,14 +161,14 @@ export default function ChangelogList() {
                     {group.commits.length}
                   </Badge>
                 </div>
-                {/* biome-ignore lint/a11y/useSemanticElements: needs <div> to nest motion.div children for height animation */}
+                {/* biome-ignore lint/a11y/useSemanticElements: needs <div> to nest m.div children for height animation */}
                 <div role="list" className="divide-y overflow-hidden rounded-lg border bg-muted/20">
                   {initial.map((commit) => (
                     <CommitRow key={commit.sha} commit={commit} onOpen={setOpenCommit} />
                   ))}
                   <AnimatePresence initial={false}>
                     {isExpanded ? (
-                      <motion.div
+                      <m.div
                         key="extras"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -178,7 +178,7 @@ export default function ChangelogList() {
                       >
                         <div className="divide-y">
                           {extras.map((commit, i) => (
-                            <motion.div
+                            <m.div
                               key={commit.sha}
                               role="listitem"
                               initial={{ opacity: 0, y: -4 }}
@@ -189,10 +189,10 @@ export default function ChangelogList() {
                               }}
                             >
                               <CommitRowAnchor commit={commit} onOpen={setOpenCommit} />
-                            </motion.div>
+                            </m.div>
                           ))}
                         </div>
-                      </motion.div>
+                      </m.div>
                     ) : null}
                   </AnimatePresence>
                 </div>

@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils";
 function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      // Intentional: children are <Item>s that render as <div>/<a> via the
+      // useRender `render` prop, so a native <ul>/<menu> would produce invalid
+      // nesting; role="list" keeps list semantics without that constraint.
+      // react-doctor-disable-next-line react-doctor/prefer-tag-over-role
       role="list"
       data-slot="item-group"
       className={cn(

@@ -4,19 +4,24 @@ import * as React from "react";
 
 type EventType = "mousedown" | "mouseup" | "touchstart" | "touchend" | "focusin" | "focusout";
 
+// Stable default so callers that omit options don't pass a fresh `{}` every
+// render, which would otherwise re-subscribe the listener effect each render.
+const DEFAULT_EVENT_OPTIONS: AddEventListenerOptions = {};
+
 export function useOnClickOutside<T extends HTMLElement = HTMLElement>(
   ref: React.RefObject<T | null> | React.RefObject<T | null>[],
   handler: (event: MouseEvent | TouchEvent | FocusEvent) => void,
   eventType: EventType = "mousedown",
-  eventListenerOptions: AddEventListenerOptions = {}
+  eventListenerOptions: AddEventListenerOptions = DEFAULT_EVENT_OPTIONS
 ): void {
   const savedHandler = React.useRef(handler);
 
   // useEffect (not useLayoutEffect) keeps the ref fresh without emitting an
   // SSR warning; the handler is only ever read inside a user-triggered event.
+  // No dependency array: a fresh handler each render must not re-run the effect.
   React.useEffect(() => {
     savedHandler.current = handler;
-  }, [handler]);
+  });
 
   React.useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent | FocusEvent) => {

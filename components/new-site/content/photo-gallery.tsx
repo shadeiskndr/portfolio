@@ -2,7 +2,7 @@
 
 import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, m } from "motion/react";
 import Image from "next/image";
 import { useId, useState } from "react";
 import type { api } from "@/convex/_generated/api";
@@ -81,17 +81,19 @@ function GalleryImage({
   onClick: () => void;
 }) {
   return (
-    <motion.div
+    <m.div
       className="group relative mb-4 break-inside-avoid"
       initial={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.6) }}
       viewport={{ once: true, margin: "-80px" }}
       whileInView={{ opacity: 1, y: 0 }}
     >
-      <motion.div
-        className="w-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-[filter] duration-300 ease-out group-hover:blur-[3px]"
+      <m.button
+        aria-label={`View ${title}`}
+        className="block w-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-[filter] duration-300 ease-out group-hover:blur-[3px]"
         layoutId={layoutId}
         onClick={onClick}
+        type="button"
         whileTap={{ scale: 0.98, transition: { duration: 0.15 } }}
       >
         <Image
@@ -102,7 +104,7 @@ function GalleryImage({
           src={src}
           width={width}
         />
-      </motion.div>
+      </m.button>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end rounded-b-2xl p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <div
           aria-hidden
@@ -112,7 +114,7 @@ function GalleryImage({
           {title}
         </p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -156,18 +158,21 @@ function ImageModal({
           role="dialog"
           tabIndex={-1}
         >
-          <motion.div
+          {/* Click-outside-to-close is a mouse affordance; keyboard users close
+              via Escape (handled above) or the visible Close button, so this
+              button stays out of the tab order (tabIndex={-1}). */}
+          <m.button
             animate={{ opacity: 1 }}
             aria-label="Close"
             className="absolute inset-0 cursor-default bg-background/90 backdrop-blur-sm"
             exit={{ opacity: 0 }}
             initial={{ opacity: 0 }}
             onClick={onClose}
-            role="button"
             tabIndex={-1}
+            type="button"
           />
 
-          <motion.button
+          <m.button
             animate={{ opacity: 1, scale: 1, transition: { delay: 0.2 } }}
             aria-label="Close"
             className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
@@ -178,9 +183,9 @@ function ImageModal({
             type="button"
           >
             <X className="h-5 w-5" />
-          </motion.button>
+          </m.button>
 
-          <motion.button
+          <m.button
             animate={{ opacity: 1, x: 0, transition: { delay: 0.2 } }}
             aria-label="Previous image"
             className="absolute top-1/2 left-4 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
@@ -190,9 +195,9 @@ function ImageModal({
             type="button"
           >
             <ChevronLeft className="h-5 w-5" />
-          </motion.button>
+          </m.button>
 
-          <motion.button
+          <m.button
             animate={{ opacity: 1, x: 0, transition: { delay: 0.2 } }}
             aria-label="Next image"
             className="absolute top-1/2 right-4 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
@@ -202,14 +207,14 @@ function ImageModal({
             type="button"
           >
             <ChevronRight className="h-5 w-5" />
-          </motion.button>
+          </m.button>
 
           {/* pointer-events-none lets clicks in the empty area around the image
               fall through to the backdrop (which closes); the image re-enables
               pointer events so clicking the photo itself doesn't close. */}
           <div className="pointer-events-none relative flex min-h-0 flex-1 items-center justify-center px-16 pt-12 pb-2">
             {activePhoto ? (
-              <motion.div
+              <m.div
                 className="pointer-events-auto relative max-h-full max-w-full overflow-hidden rounded-2xl shadow-2xl"
                 layoutId={morphLayoutId ?? undefined}
                 style={{
@@ -226,11 +231,11 @@ function ImageModal({
                   sizes="(min-width: 1024px) 80vw, 100vw"
                   src={activePhoto.src}
                 />
-              </motion.div>
+              </m.div>
             ) : null}
           </div>
 
-          <motion.div
+          <m.div
             animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
             className="relative z-10 space-y-3 pb-4"
             exit={{ opacity: 0, y: 20, transition: { duration: 0.1 } }}
@@ -238,7 +243,7 @@ function ImageModal({
           >
             <AnimatePresence mode="wait">
               {activePhoto ? (
-                <motion.div
+                <m.div
                   animate={{ opacity: 1 }}
                   className="mx-auto max-w-3xl px-4 text-center"
                   exit={{ opacity: 0 }}
@@ -254,7 +259,7 @@ function ImageModal({
                   {activePhoto.description ? (
                     <p className="mt-2 text-muted-foreground text-sm">{activePhoto.description}</p>
                   ) : null}
-                </motion.div>
+                </m.div>
               ) : null}
             </AnimatePresence>
 
@@ -287,7 +292,7 @@ function ImageModal({
                 );
               })}
             </div>
-          </motion.div>
+          </m.div>
         </div>
       ) : null}
     </AnimatePresence>

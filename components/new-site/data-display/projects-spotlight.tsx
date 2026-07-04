@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { m, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { AssetImage } from "@/components/asset-image";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
@@ -52,7 +52,7 @@ function Card({ project, dimmed, onHoverStart, onHoverEnd }: CardProps) {
   };
 
   return (
-    <motion.a
+    <m.a
       href={project.url}
       target="_blank"
       rel="noreferrer"
@@ -85,7 +85,7 @@ function Card({ project, dimmed, onHoverStart, onHoverEnd }: CardProps) {
         }}
       />
 
-      <motion.div
+      <m.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-2xl"
         style={{
@@ -131,12 +131,12 @@ function Card({ project, dimmed, onHoverStart, onHoverEnd }: CardProps) {
 
       <div
         aria-hidden="true"
-        className="absolute bottom-0 left-0 h-0.5 w-0 rounded-full transition-all duration-500 group-hover:w-full"
+        className="absolute bottom-0 left-0 h-0.5 w-0 rounded-full transition-[width] duration-500 group-hover:w-full"
         style={{
           background: `linear-gradient(to right, ${project.color}80, transparent)`,
         }}
       />
-    </motion.a>
+    </m.a>
   );
 }
 

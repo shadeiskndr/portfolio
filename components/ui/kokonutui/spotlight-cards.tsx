@@ -190,7 +190,7 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
       {/* Accent bottom line */}
       <div
         aria-hidden="true"
-        className="absolute bottom-0 left-0 h-0.5 w-0 rounded-full transition-all duration-500 group-hover:w-full"
+        className="absolute bottom-0 left-0 h-0.5 w-0 rounded-full transition-[width] duration-500 group-hover:w-full"
         style={{
           background: `linear-gradient(to right, ${item.color}80, transparent)`,
         }}

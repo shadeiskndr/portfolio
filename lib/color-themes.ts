@@ -1108,7 +1108,3 @@ export const COLOR_THEMES: ThemeOption[] = [
 ];
 
 export const DEFAULT_COLOR_THEME = COLOR_THEMES[0];
-
-export function getColorTheme(id: ColorTheme): ThemeOption {
-  return COLOR_THEMES.find((t) => t.id === id) ?? DEFAULT_COLOR_THEME;
-}

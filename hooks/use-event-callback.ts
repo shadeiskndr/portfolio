@@ -22,9 +22,12 @@ export function useEventCallback<Args extends unknown[], R>(
     throw new Error("Cannot call an event handler while rendering.");
   });
 
+  // No dependency array: `fn` is a fresh function each render, so listing it
+  // would re-run the effect every render. Syncing the ref on every commit is
+  // exactly the intended latest-ref behavior.
   useIsomorphicLayoutEffect(() => {
     ref.current = fn;
-  }, [fn]);
+  });
 
   return useCallback((...args: Args) => ref.current?.(...args), [ref]) as (...args: Args) => R;
 }

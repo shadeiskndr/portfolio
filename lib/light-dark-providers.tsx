@@ -1,10 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTimeout } from "@/hooks/use-timeout";
 
 type Theme = "dark" | "light" | "system";
+
+// Stable reference for useLocalStorage's options arg so the hook's internal
+// callbacks (which depend on `options`) don't rebuild every render.
+const EMPTY_STORAGE_OPTIONS = {};
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -34,7 +38,7 @@ export function Providers({
   storageKey = "app-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useLocalStorage<Theme>(storageKey, defaultTheme);
+  const [theme, setTheme] = useLocalStorage<Theme>(storageKey, defaultTheme, EMPTY_STORAGE_OPTIONS);
   const [resolvedTheme, setResolvedTheme] = useState<string>("light");
   const [styleId, setStyleId] = useState<string | null>(null);
 
@@ -71,17 +75,18 @@ export function Providers({
     styleId ? 3000 : null
   );
 
-  const setThemeWithTransition = (newTheme: Theme) => {
-    // Inject circle-blur animation styles
-    const newStyleId = `theme-transition-${Date.now()}`;
-    const style = document.createElement("style");
-    style.id = newStyleId;
+  const setThemeWithTransition = useCallback(
+    (newTheme: Theme) => {
+      // Inject circle-blur animation styles
+      const newStyleId = `theme-transition-${Date.now()}`;
+      const style = document.createElement("style");
+      style.id = newStyleId;
 
-    const isMobile = window.innerWidth < 768;
-    const origin = isMobile ? "bottom right" : "top right";
-    const position = isMobile ? "100% 100%" : "70% 0%";
+      const isMobile = window.innerWidth < 768;
+      const origin = isMobile ? "bottom right" : "top right";
+      const position = isMobile ? "100% 100%" : "70% 0%";
 
-    const css = `
+      const css = `
       @supports (view-transition-name: root) {
         ::view-transition-old(root) {
           animation: none;
@@ -104,26 +109,31 @@ export function Providers({
       }
     `;
 
-    style.textContent = css;
-    document.head.appendChild(style);
-    setStyleId(newStyleId);
+      style.textContent = css;
+      document.head.appendChild(style);
+      setStyleId(newStyleId);
 
-    // Use View Transitions API if supported
-    if ("startViewTransition" in document) {
-      document.startViewTransition(() => {
+      // Use View Transitions API if supported
+      if ("startViewTransition" in document) {
+        document.startViewTransition(() => {
+          setTheme(newTheme);
+        });
+      } else {
         setTheme(newTheme);
-      });
-    } else {
-      setTheme(newTheme);
-    }
-  };
+      }
+    },
+    [setTheme]
+  );
 
-  const value = {
-    theme,
-    resolvedTheme,
-    setTheme,
-    setThemeWithTransition,
-  };
+  const value = useMemo<ThemeProviderState>(
+    () => ({
+      theme,
+      resolvedTheme,
+      setTheme,
+      setThemeWithTransition,
+    }),
+    [theme, resolvedTheme, setTheme, setThemeWithTransition]
+  );
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>

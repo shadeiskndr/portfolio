@@ -178,14 +178,16 @@ export const Persona: FC<PersonaProps> = memo(
       onPlay,
       onStop,
     });
-    callbacksRef.current = {
-      onLoad,
-      onLoadError,
-      onReady,
-      onPause,
-      onPlay,
-      onStop,
-    };
+    useEffect(() => {
+      callbacksRef.current = {
+        onLoad,
+        onLoadError,
+        onReady,
+        onPause,
+        onPlay,
+        onStop,
+      };
+    });
 
     const stableCallbacks = useMemo(
       () => ({
@@ -249,12 +251,12 @@ Persona.displayName = "Persona";
 
 const variants = ["obsidian", "mana", "opal", "halo", "glint", "command"] as const;
 
+const states: PersonaState[] = ["idle", "listening", "thinking", "speaking", "asleep"];
+
 /** Demo component for preview */
 export default function PersonaDemo() {
   const [state, setState] = useState<PersonaState>("thinking");
   const [variant, setVariant] = useState<(typeof variants)[number]>("glint");
-
-  const states: PersonaState[] = ["idle", "listening", "thinking", "speaking", "asleep"];
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-6 p-6">

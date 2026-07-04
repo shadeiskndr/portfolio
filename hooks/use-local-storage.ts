@@ -137,7 +137,12 @@ export function useLocalStorage<T>(
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
   });
 
+  // Re-read from storage when `key` changes (and, when initializeWithValue is
+  // false, for the first client read after hydration). This is the hook's own
+  // state, not a parent callback; the alternative — tracking the previous key —
+  // is exactly what the rule warns against, so keep this verbatim-usehooks-ts.
   useEffect(() => {
+    // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent
     setStoredValue(readValue());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);

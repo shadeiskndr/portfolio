@@ -139,9 +139,14 @@ export const InlineCitationCarouselIndex = ({
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap() + 1);
 
-    api.on("select", () => {
+    const handleSelect = () => {
       setCurrent(api.selectedScrollSnap() + 1);
-    });
+    };
+    api.on("select", handleSelect);
+
+    return () => {
+      api.off("select", handleSelect);
+    };
   }, [api]);
 
   return (
@@ -250,30 +255,30 @@ export const InlineCitationQuote = ({
   </blockquote>
 );
 
+const citation = {
+  text: "The technology continues to evolve rapidly, with new breakthroughs being announced regularly",
+  sources: [
+    {
+      title: "Advances in Natural Language Processing",
+      url: "https://example.com/nlp-advances",
+      description:
+        "A comprehensive study on the recent developments in natural language processing technologies.",
+    },
+    {
+      title: "Breakthroughs in Machine Learning",
+      url: "https://mlnews.org/breakthroughs",
+      description: "An overview of the most significant machine learning breakthroughs.",
+    },
+    {
+      title: "AI in Healthcare: Current Trends",
+      url: "https://healthai.com/trends",
+      description: "A report on how artificial intelligence is transforming healthcare.",
+    },
+  ],
+};
+
 /** Demo component for preview */
 export default function InlineCitationDemo() {
-  const citation = {
-    text: "The technology continues to evolve rapidly, with new breakthroughs being announced regularly",
-    sources: [
-      {
-        title: "Advances in Natural Language Processing",
-        url: "https://example.com/nlp-advances",
-        description:
-          "A comprehensive study on the recent developments in natural language processing technologies.",
-      },
-      {
-        title: "Breakthroughs in Machine Learning",
-        url: "https://mlnews.org/breakthroughs",
-        description: "An overview of the most significant machine learning breakthroughs.",
-      },
-      {
-        title: "AI in Healthcare: Current Trends",
-        url: "https://healthai.com/trends",
-        description: "A report on how artificial intelligence is transforming healthcare.",
-      },
-    ],
-  };
-
   return (
     <p className="text-sm leading-relaxed">
       According to recent studies, artificial intelligence has shown remarkable progress.{" "}

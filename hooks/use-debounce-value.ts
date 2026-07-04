@@ -74,9 +74,12 @@ export function useDebounceValue<T>(
     debouncedFunc.current = debounce(setDebouncedValue, delay, options);
   }, [delay, options]);
 
-  // Update the debounced value if the initial value changes
+  // Update the debounced value if the initial value changes.
   if (!eq(previousValueRef.current as T, unwrappedInitialValue)) {
     updateDebouncedValue(unwrappedInitialValue);
+    // React-endorsed "store value from the previous render" pattern, guarded by
+    // the eq() check above so it only writes when the input actually changed.
+    // react-doctor-disable-next-line react-doctor/no-ref-current-in-render
     previousValueRef.current = unwrappedInitialValue;
   }
 

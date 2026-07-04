@@ -117,8 +117,10 @@ async function collectReferencedStorageIds(ctx: QueryCtx): Promise<Set<string>> 
 export const findOrphanBlobs = internalQuery({
   args: {},
   handler: async (ctx) => {
-    const referenced = await collectReferencedStorageIds(ctx);
-    const files = await ctx.db.system.query("_storage").collect();
+    const [referenced, files] = await Promise.all([
+      collectReferencedStorageIds(ctx),
+      ctx.db.system.query("_storage").collect(),
+    ]);
     const orphans = files.filter((f) => !referenced.has(f._id));
     const orphanBytes = orphans.reduce((sum, f) => sum + f.size, 0);
     return {
@@ -140,10 +142,12 @@ export const findOrphanBlobs = internalQuery({
 export const deleteOrphanBlobs = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const referenced = await collectReferencedStorageIds(ctx);
-    const files = await ctx.db.system.query("_storage").collect();
+    const [referenced, files] = await Promise.all([
+      collectReferencedStorageIds(ctx),
+      ctx.db.system.query("_storage").collect(),
+    ]);
     const orphans = files.filter((f) => !referenced.has(f._id));
-    for (const f of orphans) await ctx.storage.delete(f._id);
+    await Promise.all(orphans.map((f) => ctx.storage.delete(f._id)));
     return {
       deleted: orphans.length,
       freedKB: Math.round(orphans.reduce((s, f) => s + f.size, 0) / 1024),
@@ -159,10 +163,12 @@ export const clearSection = internalMutation({
       .query("bookmarks")
       .withIndex("by_section", (q) => q.eq("section", section))
       .collect();
-    for (const row of rows) {
-      if (row.previewId) await ctx.storage.delete(row.previewId);
-      await ctx.db.delete(row._id);
-    }
+    await Promise.all(
+      rows.map(async (row) => {
+        if (row.previewId) await ctx.storage.delete(row.previewId);
+        await ctx.db.delete(row._id);
+      })
+    );
     return { deleted: rows.length };
   },
 });

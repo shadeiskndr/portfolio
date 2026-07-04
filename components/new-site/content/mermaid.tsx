@@ -1,6 +1,5 @@
 "use client";
 
-import mermaid from "mermaid";
 import { useId, useState, useSyncExternalStore } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
@@ -39,20 +38,25 @@ function MermaidCanvas({
 
   useMountEffect(() => {
     let cancelled = false;
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: dark ? "dark" : "default",
-      securityLevel: "strict",
-      fontFamily: "inherit",
-    });
-    mermaid
-      .render(id, chart.trim())
-      .then(({ svg: rendered }) => {
-        if (!cancelled) setSvg(rendered);
-      })
-      .catch(() => {
-        if (!cancelled) setError(true);
+    // Load mermaid (~0.5MB) on demand so it stays out of every MDX page's
+    // initial bundle — it's only needed once a diagram actually mounts.
+    import("mermaid").then(({ default: mermaid }) => {
+      if (cancelled) return;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: dark ? "dark" : "default",
+        securityLevel: "strict",
+        fontFamily: "inherit",
       });
+      mermaid
+        .render(id, chart.trim())
+        .then(({ svg: rendered }) => {
+          if (!cancelled) setSvg(rendered);
+        })
+        .catch(() => {
+          if (!cancelled) setError(true);
+        });
+    });
     return () => {
       cancelled = true;
     };

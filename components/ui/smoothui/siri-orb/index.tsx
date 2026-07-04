@@ -41,19 +41,33 @@ export interface SiriOrbProps {
   size?: string;
 }
 
+const defaultColors = {
+  bg: "oklch(95% 0.02 264.695)",
+  c1: "oklch(75% 0.15 350)", // Pastel pink
+  c2: "oklch(80% 0.12 200)", // Pastel blue
+  c3: "oklch(78% 0.14 280)", // Pastel purple/lavender
+};
+
+// Adjust mask radius based on size to reduce black center in small sizes
+const getMaskRadius = (value: number) => {
+  if (value < SIZE_THRESHOLD_TINY) {
+    return MASK_RADIUS_TINY;
+  }
+  if (value < SIZE_THRESHOLD_SMALL) {
+    return MASK_RADIUS_SMALL;
+  }
+  if (value < SIZE_THRESHOLD_MEDIUM) {
+    return MASK_RADIUS_MEDIUM;
+  }
+  return MASK_RADIUS_LARGE;
+};
+
 const SiriOrb: React.FC<SiriOrbProps> = ({
   size = "192px",
   className,
   colors,
   animationDuration = 20,
 }) => {
-  const defaultColors = {
-    bg: "oklch(95% 0.02 264.695)",
-    c1: "oklch(75% 0.15 350)", // Pastel pink
-    c2: "oklch(80% 0.12 200)", // Pastel blue
-    c3: "oklch(78% 0.14 280)", // Pastel purple/lavender
-  };
-
   const finalColors = { ...defaultColors, ...colors };
 
   // Extract numeric value from size for calculations
@@ -79,20 +93,6 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
     sizeValue < SIZE_THRESHOLD_SMALL
       ? Math.max(sizeValue * SHADOW_MULTIPLIER_SMALL, SHADOW_MIN_SMALL) // Reduced shadow for small sizes
       : Math.max(sizeValue * SHADOW_MULTIPLIER_LARGE, SHADOW_MIN_LARGE);
-
-  // Adjust mask radius based on size to reduce black center in small sizes
-  const getMaskRadius = (value: number) => {
-    if (value < SIZE_THRESHOLD_TINY) {
-      return MASK_RADIUS_TINY;
-    }
-    if (value < SIZE_THRESHOLD_SMALL) {
-      return MASK_RADIUS_SMALL;
-    }
-    if (value < SIZE_THRESHOLD_MEDIUM) {
-      return MASK_RADIUS_MEDIUM;
-    }
-    return MASK_RADIUS_LARGE;
-  };
 
   const maskRadius = getMaskRadius(sizeValue);
 

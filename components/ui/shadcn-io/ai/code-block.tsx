@@ -7,6 +7,7 @@ import {
   type HTMLAttributes,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -96,8 +97,10 @@ export const CodeBlock = ({
     };
   }, [code, language, showLineNumbers]);
 
+  const contextValue = useMemo(() => ({ code }), [code]);
+
   return (
-    <CodeBlockContext.Provider value={{ code }}>
+    <CodeBlockContext.Provider value={contextValue}>
       <div
         className={cn(
           "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
@@ -108,10 +111,16 @@ export const CodeBlock = ({
         <div className="relative">
           <div
             className="overflow-auto dark:hidden [&>pre]:m-0 [&>pre]:bg-background! [&>pre]:p-4 [&>pre]:text-foreground! [&>pre]:text-sm [&_code]:font-mono [&_code]:text-sm"
+            // Safe: `html` is shiki `codeToHtml` output, which HTML-escapes the
+            // source code before wrapping it in styled spans — the code content
+            // can never break out as markup. Shiki is the well-reviewed sanitizer.
+            // react-doctor-disable-next-line react-doctor/dangerous-html-sink
             dangerouslySetInnerHTML={{ __html: html }}
           />
           <div
             className="hidden overflow-auto dark:block [&>pre]:m-0 [&>pre]:bg-background! [&>pre]:p-4 [&>pre]:text-foreground! [&>pre]:text-sm [&_code]:font-mono [&_code]:text-sm"
+            // Same as above: shiki-escaped output, not caller-supplied markup.
+            // react-doctor-disable-next-line react-doctor/dangerous-html-sink
             dangerouslySetInnerHTML={{ __html: darkHtml }}
           />
           {children && (

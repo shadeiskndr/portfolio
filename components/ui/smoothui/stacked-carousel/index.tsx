@@ -17,6 +17,8 @@ const FRAMES_VISIBLE_LENGTH = 3;
 // collapses a single trackpad/wheel gesture's burst of events into one step.
 const WHEEL_OPTIONS = { passive: false } as const;
 const WHEEL_COOLDOWN_MS = 450;
+// Stable default so the filteredItems memo isn't invalidated every render.
+const DEFAULT_EXCLUDE_IDS: (string | number)[] = [];
 
 function clamp(val: number, [min, max]: [number, number]): number {
   return Math.min(Math.max(val, min), max);
@@ -66,7 +68,6 @@ function StackedCard({ item, index, activeIndex, totalCards }: StackedCardProps)
       className="absolute left-1/2 w-[calc(100%-2rem)] max-w-150 -translate-x-1/2 -translate-y-1/2"
       initial={false}
       style={{
-        willChange: "opacity, filter, transform",
         filter: `blur(${blur}px)`,
         opacity,
         transitionProperty: "opacity, filter",
@@ -143,7 +144,7 @@ export default function StackedCarousel({
   items,
   className = "",
   height = "300px",
-  excludeIds = [],
+  excludeIds = DEFAULT_EXCLUDE_IDS,
   showIndicators = true,
   showNavigation = true,
   autoPlay = false,

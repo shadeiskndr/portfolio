@@ -1,7 +1,7 @@
 "use client";
 
 import { Paperclip } from "lucide-react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import * as React from "react";
 import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
@@ -26,7 +26,7 @@ function formatRange(start: Date, end?: Date): string {
 
 function ToggleIcon({ isOpen }: { isOpen: boolean }) {
   return (
-    <motion.span
+    <m.span
       aria-hidden="true"
       initial={false}
       animate={{ rotate: isOpen ? 180 : 0, scale: isOpen ? 1.05 : 1 }}
@@ -44,7 +44,7 @@ function ToggleIcon({ isOpen }: { isOpen: boolean }) {
           <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
         </svg>
       )}
-    </motion.span>
+    </m.span>
   );
 }
 
@@ -74,7 +74,7 @@ function ExperienceCard({
   }, []);
 
   return (
-    <motion.div
+    <m.div
       layout
       transition={{ type: "spring", stiffness: 280, damping: 28, mass: 0.9 }}
       animate={{ scale: isOpen ? 1 : 0.99 }}
@@ -132,7 +132,7 @@ function ExperienceCard({
           <ToggleIcon isOpen={isOpen} />
         </button>
 
-        <motion.div
+        <m.div
           id={panelId}
           role="region"
           aria-labelledby={itemId}
@@ -144,7 +144,7 @@ function ExperienceCard({
           }}
           style={{ overflow: "hidden" }}
         >
-          <motion.div
+          <m.div
             ref={contentRef}
             animate={{ y: isOpen ? 0 : -8 }}
             transition={{ type: "spring", stiffness: 360, damping: 30, mass: 0.8 }}
@@ -170,10 +170,10 @@ function ExperienceCard({
                 </button>
               </AttachmentDialog>
             ) : null}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </SpotlightCard>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -185,7 +185,7 @@ export default function ExperienceCards() {
   const toggle = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
 
   return (
-    <motion.div layout className="flex flex-col gap-4">
+    <m.div layout className="flex flex-col gap-4">
       {EXPERIENCES.map((experience, i) => (
         <ExperienceCard
           key={experience.company}
@@ -196,6 +196,6 @@ export default function ExperienceCards() {
           panelId={`${baseId}-panel-${i}`}
         />
       ))}
-    </motion.div>
+    </m.div>
   );
 }

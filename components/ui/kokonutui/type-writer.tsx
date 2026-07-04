@@ -11,7 +11,7 @@
  */
 
 import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
@@ -63,9 +63,12 @@ export default function TypewriterTitle({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Keep ref in sync with latest sequences so the timer loop reads fresh values
-  // without restarting on every array reference change.
+  // without restarting on every array reference change. Written in an effect,
+  // not during render, since React may replay or discard render work.
   const sequencesRef = useRef(sequences);
-  sequencesRef.current = sequences;
+  useEffect(() => {
+    sequencesRef.current = sequences;
+  });
 
   useMountEffect(() => {
     const getTypingDelay = () => {

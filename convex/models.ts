@@ -84,8 +84,12 @@ export const seed = internalMutation({
   args: {},
   handler: async (ctx) => {
     let inserted = 0;
+    // One-time idempotent seed over a static ~dozen-entry array (`order: i`
+    // depends on iteration index); parallelizing this CLI-run backfill would
+    // add complexity for no perf that matters.
     for (let i = 0; i < CHAT_MODELS.length; i++) {
       const model = CHAT_MODELS[i];
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop
       const existing = await ctx.db
         .query("chatModels")
         .withIndex("by_modelId", (q) => q.eq("modelId", model.id))

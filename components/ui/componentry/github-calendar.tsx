@@ -196,6 +196,10 @@ export function GithubCalendar({
                     <TooltipTrigger
                       render={
                         <motion.div
+                          // Tiny (~14px) decorative contribution cell: the staggered
+                          // grow-from-a-point pop is the intended effect, not a
+                          // vanishing UI element the eye needs to track.
+                          // react-doctor-disable-next-line react-doctor/no-scale-from-zero
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{

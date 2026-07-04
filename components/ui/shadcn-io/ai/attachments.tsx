@@ -193,6 +193,30 @@ export type AttachmentPreviewProps = HTMLAttributes<HTMLDivElement> & {
   fallbackIcon?: ReactNode;
 };
 
+const renderImage = (url: string, filename: string | undefined, isGrid: boolean) =>
+  isGrid ? (
+    // Attachment previews render blob:/data: URLs from local file uploads
+    // (see prompt-input.tsx URL.createObjectURL), which next/image cannot optimize.
+    // react-doctor-disable-next-line react-doctor/nextjs-no-img-element
+    <img
+      alt={filename || "Image"}
+      className="size-full object-cover"
+      height={96}
+      src={url}
+      width={96}
+    />
+  ) : (
+    // Same as above: blob:/data: object URLs can't go through next/image.
+    // react-doctor-disable-next-line react-doctor/nextjs-no-img-element
+    <img
+      alt={filename || "Image"}
+      className="size-full rounded object-cover"
+      height={20}
+      src={url}
+      width={20}
+    />
+  );
+
 export const AttachmentPreview = ({
   fallbackIcon,
   className,
@@ -201,25 +225,6 @@ export const AttachmentPreview = ({
   const { data, mediaCategory, variant } = useAttachmentContext();
 
   const iconSize = variant === "inline" ? "size-3" : "size-4";
-
-  const renderImage = (url: string, filename: string | undefined, isGrid: boolean) =>
-    isGrid ? (
-      <img
-        alt={filename || "Image"}
-        className="size-full object-cover"
-        height={96}
-        src={url}
-        width={96}
-      />
-    ) : (
-      <img
-        alt={filename || "Image"}
-        className="size-full rounded object-cover"
-        height={20}
-        src={url}
-        width={20}
-      />
-    );
 
   const renderIcon = (Icon: typeof ImageIcon) => (
     <Icon className={cn(iconSize, "text-muted-foreground")} />
@@ -385,39 +390,39 @@ export const AttachmentEmpty = ({ className, children, ...props }: AttachmentEmp
   </div>
 );
 
+const imageAttachments: AttachmentData[] = [
+  {
+    id: "1",
+    type: "file",
+    filename: "photo-1.jpg",
+    mediaType: "image/jpeg",
+    url: "https://picsum.photos/seed/attach1/200/200",
+  },
+  {
+    id: "2",
+    type: "file",
+    filename: "photo-2.jpg",
+    mediaType: "image/jpeg",
+    url: "https://picsum.photos/seed/attach2/200/200",
+  },
+  {
+    id: "3",
+    type: "file",
+    filename: "landscape.png",
+    mediaType: "image/png",
+    url: "https://picsum.photos/seed/attach3/200/200",
+  },
+];
+
+const mixedAttachments: AttachmentData[] = [
+  { id: "4", type: "file", filename: "report.pdf", mediaType: "application/pdf" },
+  { id: "5", type: "file", filename: "podcast.mp3", mediaType: "audio/mpeg" },
+  { id: "6", type: "file", filename: "demo.mp4", mediaType: "video/mp4" },
+  { id: "7", type: "source-document", title: "API Documentation" },
+];
+
 /** Demo component for preview */
 export default function AttachmentsDemo() {
-  const imageAttachments: AttachmentData[] = [
-    {
-      id: "1",
-      type: "file",
-      filename: "photo-1.jpg",
-      mediaType: "image/jpeg",
-      url: "https://picsum.photos/seed/attach1/200/200",
-    },
-    {
-      id: "2",
-      type: "file",
-      filename: "photo-2.jpg",
-      mediaType: "image/jpeg",
-      url: "https://picsum.photos/seed/attach2/200/200",
-    },
-    {
-      id: "3",
-      type: "file",
-      filename: "landscape.png",
-      mediaType: "image/png",
-      url: "https://picsum.photos/seed/attach3/200/200",
-    },
-  ];
-
-  const mixedAttachments: AttachmentData[] = [
-    { id: "4", type: "file", filename: "report.pdf", mediaType: "application/pdf" },
-    { id: "5", type: "file", filename: "podcast.mp3", mediaType: "audio/mpeg" },
-    { id: "6", type: "file", filename: "demo.mp4", mediaType: "video/mp4" },
-    { id: "7", type: "source-document", title: "API Documentation" },
-  ];
-
   return (
     <div className="flex w-full max-w-2xl flex-col gap-8 p-6">
       {/* Grid Variant - Image Gallery */}

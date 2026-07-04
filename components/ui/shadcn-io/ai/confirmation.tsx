@@ -2,7 +2,7 @@
 
 import type { ToolUIPart } from "ai";
 import { CheckIcon, XIcon } from "lucide-react";
-import { type ComponentProps, createContext, type ReactNode, useContext } from "react";
+import { type ComponentProps, createContext, type ReactNode, useContext, useMemo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,12 +58,14 @@ export type ConfirmationProps = ComponentProps<typeof Alert> & {
 };
 
 export const Confirmation = ({ className, approval, state, ...props }: ConfirmationProps) => {
+  const contextValue = useMemo(() => ({ approval, state }), [approval, state]);
+
   if (!approval || state === "input-streaming" || state === "input-available") {
     return null;
   }
 
   return (
-    <ConfirmationContext.Provider value={{ approval, state }}>
+    <ConfirmationContext.Provider value={contextValue}>
       <Alert className={cn("flex flex-col gap-2", className)} {...props} />
     </ConfirmationContext.Provider>
   );

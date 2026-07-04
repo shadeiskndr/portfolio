@@ -327,7 +327,7 @@ function BeamSpotlightCard({
     >
       {/* Vertical beam */}
       <div
-        className="pointer-events-none absolute transition-all duration-150"
+        className="pointer-events-none absolute transition-[left,opacity] duration-150"
         style={{
           left: position.x - beamWidth / 2,
           top: 0,
@@ -341,7 +341,7 @@ function BeamSpotlightCard({
 
       {/* Horizontal beam */}
       <div
-        className="pointer-events-none absolute transition-all duration-150"
+        className="pointer-events-none absolute transition-[top,opacity] duration-150"
         style={{
           left: 0,
           top: position.y - beamWidth / 2,
@@ -355,7 +355,7 @@ function BeamSpotlightCard({
 
       {/* Intersection glow */}
       <div
-        className="pointer-events-none absolute transition-all duration-150"
+        className="pointer-events-none absolute transition-[left,top,opacity] duration-150"
         style={{
           left: position.x,
           top: position.y,

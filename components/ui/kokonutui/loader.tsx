@@ -9,6 +9,30 @@ interface LoaderProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg";
 }
 
+const sizeConfig = {
+  sm: {
+    container: "size-20",
+    titleClass: "text-sm/tight font-medium",
+    subtitleClass: "text-xs/relaxed",
+    spacing: "space-y-2",
+    maxWidth: "max-w-48",
+  },
+  md: {
+    container: "size-32",
+    titleClass: "text-base/snug font-medium",
+    subtitleClass: "text-sm/relaxed",
+    spacing: "space-y-3",
+    maxWidth: "max-w-56",
+  },
+  lg: {
+    container: "size-40",
+    titleClass: "text-lg/tight font-semibold",
+    subtitleClass: "text-base/relaxed",
+    spacing: "space-y-4",
+    maxWidth: "max-w-64",
+  },
+};
+
 export default function Loader({
   title = "Configuring your account...",
   subtitle = "Please wait while we prepare everything for you",
@@ -16,30 +40,6 @@ export default function Loader({
   className,
   ...props
 }: LoaderProps) {
-  const sizeConfig = {
-    sm: {
-      container: "size-20",
-      titleClass: "text-sm/tight font-medium",
-      subtitleClass: "text-xs/relaxed",
-      spacing: "space-y-2",
-      maxWidth: "max-w-48",
-    },
-    md: {
-      container: "size-32",
-      titleClass: "text-base/snug font-medium",
-      subtitleClass: "text-sm/relaxed",
-      spacing: "space-y-3",
-      maxWidth: "max-w-56",
-    },
-    lg: {
-      container: "size-40",
-      titleClass: "text-lg/tight font-semibold",
-      subtitleClass: "text-base/relaxed",
-      spacing: "space-y-4",
-      maxWidth: "max-w-64",
-    },
-  };
-
   const config = sizeConfig[size];
 
   return (

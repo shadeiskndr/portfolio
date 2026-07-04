@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useState } from "react";
 import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
@@ -33,7 +33,7 @@ export default function SpotifyCard() {
   );
 
   const wrapper = (
-    <motion.div
+    <m.div
       className="relative"
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
@@ -60,7 +60,7 @@ export default function SpotifyCard() {
       {/* Popover with vinyl + track info */}
       <AnimatePresence>
         {expanded && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
@@ -84,10 +84,10 @@ export default function SpotifyCard() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 
   if (hasTrack && status?.url) {

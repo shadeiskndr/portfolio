@@ -102,6 +102,12 @@ export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
   status?: "complete" | "active" | "pending";
 };
 
+const statusStyles = {
+  complete: "text-muted-foreground",
+  active: "text-foreground",
+  pending: "text-muted-foreground/50",
+};
+
 export const ChainOfThoughtStep = memo(
   ({
     className,
@@ -112,12 +118,6 @@ export const ChainOfThoughtStep = memo(
     children,
     ...props
   }: ChainOfThoughtStepProps) => {
-    const statusStyles = {
-      complete: "text-muted-foreground",
-      active: "text-foreground",
-      pending: "text-muted-foreground/50",
-    };
-
     return (
       <div
         className={cn(

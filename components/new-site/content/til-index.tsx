@@ -27,10 +27,18 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
     );
   }, [posts]);
 
+  // Build each post's tags into a Set once (per posts change) so the tag
+  // filter does O(1) membership checks instead of rescanning the array on
+  // every keystroke / tag click.
+  const tagSetByPost = useMemo(
+    () => new Map(posts.map((p) => [p, new Set(p.tags ?? [])])),
+    [posts]
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return posts.filter((p) => {
-      if (activeTag !== "all" && !(p.tags ?? []).includes(activeTag)) return false;
+      if (activeTag !== "all" && !tagSetByPost.get(p)?.has(activeTag)) return false;
       if (!q) return true;
       return (
         p.title.toLowerCase().includes(q) ||
@@ -38,7 +46,7 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
         (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [posts, search, activeTag]);
+  }, [posts, search, activeTag, tagSetByPost]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);

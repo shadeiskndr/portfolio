@@ -440,11 +440,16 @@ function MarqueeContent(props: DivProps) {
   );
 
   React.useEffect(() => {
-    if (context.rootRef.current && context.contentRef.current) {
-      resizeObserverStore.observe(context.rootRef.current, context.contentRef.current);
+    // Capture the nodes once so the cleanup unobserves the exact elements that
+    // were observed, instead of re-reading .current (which may have changed or
+    // been nulled by unmount time).
+    const rootElement = context.rootRef.current;
+    const contentElement = context.contentRef.current;
+    if (rootElement && contentElement) {
+      resizeObserverStore.observe(rootElement, contentElement);
 
       return () => {
-        resizeObserverStore.unobserve(context.rootRef.current, context.contentRef.current);
+        resizeObserverStore.unobserve(rootElement, contentElement);
       };
     }
   }, [context.rootRef, context.contentRef]);

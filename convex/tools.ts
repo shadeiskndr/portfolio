@@ -11,6 +11,10 @@ import { evaluateExpression } from "../lib/chat/np-eval";
  *    small safe interpreter (`lib/chat/np-eval.ts`) — no `eval`/`new Function`,
  *    only numpy-ts functions are reachable.
  */
+// No code-execution capability: free-form expressions run through the safe
+// np-eval interpreter (no eval / new Function; only numpy-ts functions are
+// reachable) and all inputs are validated by the Convex validators below.
+// react-doctor-disable-next-line react-doctor/agent-tool-capability-risk
 export const calculate = defineTool({
   description:
     "Perform an exact numeric calculation with NumPy. Use this instead of doing arithmetic or " +

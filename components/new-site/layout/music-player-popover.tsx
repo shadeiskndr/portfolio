@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { ListMusic, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
-import { AnimatePresence, motion, type Variants } from "motion/react";
+import { AnimatePresence, m, type Variants } from "motion/react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
@@ -64,6 +64,8 @@ const blobVariants: Variants = {
 };
 
 const CONTROL_BTN_CLASS = "text-muted-foreground hover:bg-background/60 hover:text-foreground";
+
+type Track = { src: string; title: string; artist: string; cover: string | null };
 
 export default function MusicPlayerPopover() {
   const [isOpen, setIsOpen] = useState(false);
@@ -133,6 +135,30 @@ export default function MusicPlayerPopover() {
 
   const prevTrack = () =>
     changeTrack((trackIndex - 1 + playlist.length) % playlist.length, { switchToControls: false });
+
+  // Scrub handlers pause during drag and resume on commit; kept here (not in
+  // ControlsView) so the audio ref and playback state stay in one place.
+  const scrub = (pct: number) => {
+    if (!duration) return;
+    if (isPlaying) {
+      wasPlayingRef.current = true;
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    }
+    seek((pct / 100) * duration);
+  };
+
+  const commitScrub = (pct: number) => {
+    if (!duration) return;
+    seek((pct / 100) * duration);
+    if (wasPlayingRef.current) {
+      wasPlayingRef.current = false;
+      audioRef.current
+        ?.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {});
+    }
+  };
 
   if (playlist.length === 0 || !currentTrack) return null;
 
@@ -228,7 +254,7 @@ export default function MusicPlayerPopover() {
 
         <AnimatePresence>
           {isOpen && (
-            <motion.div
+            <m.div
               key="music-blob"
               variants={blobVariants}
               initial="closed"
@@ -236,7 +262,7 @@ export default function MusicPlayerPopover() {
               exit="closed"
               className="absolute top-0 right-0 overflow-hidden bg-muted text-foreground shadow-lg ring-1 ring-foreground/10"
             >
-              <motion.div
+              <m.div
                 className="relative w-[320px] overflow-hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -246,7 +272,7 @@ export default function MusicPlayerPopover() {
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {view === "controls" ? (
-                    <motion.div
+                    <m.div
                       key="controls"
                       initial={{ opacity: 0, x: -16 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -254,154 +280,30 @@ export default function MusicPlayerPopover() {
                       transition={{ duration: 0.18, ease: "easeOut" }}
                       className="flex flex-col gap-3 p-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <MusicPlayer
-                          coverArt={coverArt}
-                          isPlaying={isPlaying}
-                          discClassName="h-12 w-12"
-                          hideTonearm
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-medium text-sm">{currentTrack.title}</div>
-                          <div className="truncate text-muted-foreground text-xs">
-                            {currentTrack.artist}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <TooltipProvider delay={0}>
-                          <Tooltip trackCursorAxis="x">
-                            <TooltipTrigger
-                              render={
-                                <div
-                                  onPointerMove={(e) => {
-                                    if (!duration) return;
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    const pct = Math.max(
-                                      0,
-                                      Math.min(1, (e.clientX - rect.left) / rect.width)
-                                    );
-                                    setHoverTime(pct * duration);
-                                  }}
-                                >
-                                  <Slider
-                                    value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
-                                    onValueChange={(v) => {
-                                      if (!duration) return;
-                                      const pct = Array.isArray(v) ? v[0] : v;
-                                      if (isPlaying) {
-                                        wasPlayingRef.current = true;
-                                        audioRef.current?.pause();
-                                        setIsPlaying(false);
-                                      }
-                                      seek((pct / 100) * duration);
-                                    }}
-                                    onValueCommitted={(v) => {
-                                      if (!duration) return;
-                                      const pct = Array.isArray(v) ? v[0] : v;
-                                      seek((pct / 100) * duration);
-                                      if (wasPlayingRef.current) {
-                                        wasPlayingRef.current = false;
-                                        audioRef.current
-                                          ?.play()
-                                          .then(() => setIsPlaying(true))
-                                          .catch(() => {});
-                                      }
-                                    }}
-                                    min={0}
-                                    max={100}
-                                    step={0.1}
-                                    disabled={!duration}
-                                  />
-                                </div>
-                              }
-                            />
-                            {duration > 0 && (
-                              <TooltipContent sideOffset={8}>
-                                {formatTime(hoverTime)}
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        </TooltipProvider>
-                        <div className="flex justify-between text-muted-foreground text-xs tabular-nums">
-                          <span>{formatTime(currentTime)}</span>
-                          <span>{duration ? formatTime(duration) : "--:--"}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Previous track"
-                            onClick={prevTrack}
-                            disabled={playlist.length < 2}
-                            className={CONTROL_BTN_CLASS}
-                          >
-                            <SkipBack />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={isPlaying ? "Pause" : "Play"}
-                            onClick={togglePlay}
-                            className={CONTROL_BTN_CLASS}
-                          >
-                            {isPlaying ? <Pause /> : <Play />}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Next track"
-                            onClick={nextTrack}
-                            disabled={playlist.length < 2}
-                            className={CONTROL_BTN_CLASS}
-                          >
-                            <SkipForward />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Show playlist"
-                            onClick={() => setView("playlist")}
-                            className={CONTROL_BTN_CLASS}
-                          >
-                            <ListMusic />
-                          </Button>
-                        </div>
-                        <div className="flex flex-1 items-center gap-1 pl-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={isMuted ? "Unmute" : "Mute"}
-                            aria-pressed={isMuted}
-                            onClick={() => applyVolume(isMuted ? 10 : 0)}
-                            className={CONTROL_BTN_CLASS}
-                          >
-                            {isMuted ? <VolumeX /> : <Volume2 />}
-                          </Button>
-                          <Slider
-                            value={[volume]}
-                            onValueChange={(v) => {
-                              const next = Array.isArray(v) ? v[0] : v;
-                              applyVolume(next);
-                            }}
-                            min={0}
-                            max={100}
-                            step={1}
-                            className="flex-1"
-                            aria-label="Volume"
-                          />
-                          <span className="w-7 text-right text-muted-foreground text-xs tabular-nums">
-                            {Math.round(volume)}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
+                      <ControlsView
+                        coverArt={coverArt}
+                        isPlaying={isPlaying}
+                        title={currentTrack.title}
+                        artist={currentTrack.artist}
+                        currentTime={currentTime}
+                        duration={duration}
+                        hoverTime={hoverTime}
+                        volume={volume}
+                        isMuted={isMuted}
+                        canSkip={playlist.length >= 2}
+                        onHoverTime={setHoverTime}
+                        onScrub={scrub}
+                        onCommitScrub={commitScrub}
+                        onTogglePlay={togglePlay}
+                        onPrev={prevTrack}
+                        onNext={nextTrack}
+                        onShowPlaylist={() => setView("playlist")}
+                        onToggleMute={() => applyVolume(isMuted ? 10 : 0)}
+                        onVolumeChange={applyVolume}
+                      />
+                    </m.div>
                   ) : (
-                    <motion.div
+                    <m.div
                       key="playlist"
                       initial={{ opacity: 0, x: 16 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -409,99 +311,289 @@ export default function MusicPlayerPopover() {
                       transition={{ duration: 0.18, ease: "easeOut" }}
                       className="flex flex-col gap-2 p-4"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium text-sm">Playlist</div>
-                        <button
-                          type="button"
-                          onClick={() => setView("controls")}
-                          className="text-muted-foreground text-xs transition-colors hover:text-foreground"
-                        >
-                          Back to controls
-                        </button>
-                      </div>
-                      <ul className="-mx-1 flex max-h-64 flex-col overflow-y-auto">
-                        {playlist.map((track, index) => {
-                          const isActive = index === trackIndex;
-                          return (
-                            <li key={track.src}>
-                              <button
-                                type="button"
-                                onClick={() => selectTrack(index)}
-                                className={cn(
-                                  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-background/60",
-                                  isActive && "bg-background/60"
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    "w-4 text-right text-muted-foreground text-xs tabular-nums",
-                                    isActive && "text-foreground"
-                                  )}
-                                >
-                                  {index + 1}
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span
-                                    className={cn(
-                                      "block truncate text-sm",
-                                      isActive ? "text-foreground" : "text-muted-foreground"
-                                    )}
-                                  >
-                                    {track.title}
-                                  </span>
-                                  <span className="block truncate text-muted-foreground text-xs">
-                                    {track.artist}
-                                  </span>
-                                </span>
-                                {isActive && isPlaying && (
-                                  <span
-                                    aria-hidden
-                                    className="ml-2 inline-flex h-3 items-end gap-0.5"
-                                  >
-                                    <motion.span
-                                      className="w-0.5 bg-foreground"
-                                      animate={{ height: ["20%", "100%", "40%"] }}
-                                      transition={{
-                                        duration: 0.9,
-                                        repeat: Number.POSITIVE_INFINITY,
-                                        ease: "easeInOut",
-                                      }}
-                                    />
-                                    <motion.span
-                                      className="w-0.5 bg-foreground"
-                                      animate={{ height: ["80%", "30%", "90%"] }}
-                                      transition={{
-                                        duration: 0.9,
-                                        repeat: Number.POSITIVE_INFINITY,
-                                        ease: "easeInOut",
-                                        delay: 0.15,
-                                      }}
-                                    />
-                                    <motion.span
-                                      className="w-0.5 bg-foreground"
-                                      animate={{ height: ["50%", "100%", "20%"] }}
-                                      transition={{
-                                        duration: 0.9,
-                                        repeat: Number.POSITIVE_INFINITY,
-                                        ease: "easeInOut",
-                                        delay: 0.3,
-                                      }}
-                                    />
-                                  </span>
-                                )}
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </motion.div>
+                      <PlaylistView
+                        playlist={playlist}
+                        trackIndex={trackIndex}
+                        isPlaying={isPlaying}
+                        onSelect={selectTrack}
+                        onBack={() => setView("controls")}
+                      />
+                    </m.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+/** Now-playing panel: cover, title, scrubber, transport, and volume. */
+// isPlaying/isMuted each just swap one icon (Pause/Play, VolumeX/Volume2), not a
+// whole subtree — a variant-component split would be pure over-engineering here.
+// react-doctor-disable-next-line react-doctor/prefer-explicit-variants
+function ControlsView({
+  coverArt,
+  isPlaying,
+  title,
+  artist,
+  currentTime,
+  duration,
+  hoverTime,
+  volume,
+  isMuted,
+  canSkip,
+  onHoverTime,
+  onScrub,
+  onCommitScrub,
+  onTogglePlay,
+  onPrev,
+  onNext,
+  onShowPlaylist,
+  onToggleMute,
+  onVolumeChange,
+}: {
+  coverArt: string;
+  isPlaying: boolean;
+  title: string;
+  artist: string;
+  currentTime: number;
+  duration: number;
+  hoverTime: number;
+  volume: number;
+  isMuted: boolean;
+  canSkip: boolean;
+  onHoverTime: (time: number) => void;
+  onScrub: (pct: number) => void;
+  onCommitScrub: (pct: number) => void;
+  onTogglePlay: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onShowPlaylist: () => void;
+  onToggleMute: () => void;
+  onVolumeChange: (volume: number) => void;
+}) {
+  return (
+    <>
+      <div className="flex items-center gap-3">
+        <MusicPlayer
+          coverArt={coverArt}
+          isPlaying={isPlaying}
+          discClassName="h-12 w-12"
+          hideTonearm
+        />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium text-sm">{title}</div>
+          <div className="truncate text-muted-foreground text-xs">{artist}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <TooltipProvider delay={0}>
+          <Tooltip trackCursorAxis="x">
+            <TooltipTrigger
+              render={
+                <div
+                  onPointerMove={(e) => {
+                    if (!duration) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    onHoverTime(pct * duration);
+                  }}
+                >
+                  <Slider
+                    value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
+                    onValueChange={(v) => onScrub(Array.isArray(v) ? v[0] : v)}
+                    onValueCommitted={(v) => onCommitScrub(Array.isArray(v) ? v[0] : v)}
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    disabled={!duration}
+                  />
+                </div>
+              }
+            />
+            {duration > 0 && (
+              <TooltipContent sideOffset={8}>{formatTime(hoverTime)}</TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+        <div className="flex justify-between text-muted-foreground text-xs tabular-nums">
+          <span>{formatTime(currentTime)}</span>
+          <span>{duration ? formatTime(duration) : "--:--"}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Previous track"
+            onClick={onPrev}
+            disabled={!canSkip}
+            className={CONTROL_BTN_CLASS}
+          >
+            <SkipBack />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={isPlaying ? "Pause" : "Play"}
+            onClick={onTogglePlay}
+            className={CONTROL_BTN_CLASS}
+          >
+            {isPlaying ? <Pause /> : <Play />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Next track"
+            onClick={onNext}
+            disabled={!canSkip}
+            className={CONTROL_BTN_CLASS}
+          >
+            <SkipForward />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Show playlist"
+            onClick={onShowPlaylist}
+            className={CONTROL_BTN_CLASS}
+          >
+            <ListMusic />
+          </Button>
+        </div>
+        <div className="flex flex-1 items-center gap-1 pl-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            aria-pressed={isMuted}
+            onClick={onToggleMute}
+            className={CONTROL_BTN_CLASS}
+          >
+            {isMuted ? <VolumeX /> : <Volume2 />}
+          </Button>
+          <Slider
+            value={[volume]}
+            onValueChange={(v) => onVolumeChange(Array.isArray(v) ? v[0] : v)}
+            min={0}
+            max={100}
+            step={1}
+            className="flex-1"
+            aria-label="Volume"
+          />
+          <span className="w-7 text-right text-muted-foreground text-xs tabular-nums">
+            {Math.round(volume)}
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Track list; the active, playing row shows an animated equalizer. */
+function PlaylistView({
+  playlist,
+  trackIndex,
+  isPlaying,
+  onSelect,
+  onBack,
+}: {
+  playlist: Track[];
+  trackIndex: number;
+  isPlaying: boolean;
+  onSelect: (index: number) => void;
+  onBack: () => void;
+}) {
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <div className="font-medium text-sm">Playlist</div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-muted-foreground text-xs transition-colors hover:text-foreground"
+        >
+          Back to controls
+        </button>
+      </div>
+      <ul className="-mx-1 flex max-h-64 flex-col overflow-y-auto">
+        {playlist.map((track, index) => {
+          const isActive = index === trackIndex;
+          return (
+            <li key={track.src}>
+              <button
+                type="button"
+                onClick={() => onSelect(index)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-background/60",
+                  isActive && "bg-background/60"
+                )}
+              >
+                <span
+                  className={cn(
+                    "w-4 text-right text-muted-foreground text-xs tabular-nums",
+                    isActive && "text-foreground"
+                  )}
+                >
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={cn(
+                      "block truncate text-sm",
+                      isActive ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {track.title}
+                  </span>
+                  <span className="block truncate text-muted-foreground text-xs">
+                    {track.artist}
+                  </span>
+                </span>
+                {isActive && isPlaying && (
+                  <span aria-hidden className="ml-2 inline-flex h-3 items-end gap-0.5">
+                    <m.span
+                      className="h-full w-0.5 origin-bottom bg-foreground"
+                      animate={{ scaleY: [0.2, 1, 0.4] }}
+                      transition={{
+                        duration: 0.9,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                      }}
+                    />
+                    <m.span
+                      className="h-full w-0.5 origin-bottom bg-foreground"
+                      animate={{ scaleY: [0.8, 0.3, 0.9] }}
+                      transition={{
+                        duration: 0.9,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                        delay: 0.15,
+                      }}
+                    />
+                    <m.span
+                      className="h-full w-0.5 origin-bottom bg-foreground"
+                      animate={{ scaleY: [0.5, 1, 0.2] }}
+                      transition={{
+                        duration: 0.9,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                        delay: 0.3,
+                      }}
+                    />
+                  </span>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }

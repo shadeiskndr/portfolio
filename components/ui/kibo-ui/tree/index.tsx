@@ -10,6 +10,7 @@ import {
   useCallback,
   useContext,
   useId,
+  useMemo,
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
@@ -81,7 +82,7 @@ export const TreeProvider = ({
   animateExpand = true,
   className,
 }: TreeProviderProps) => {
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(defaultExpandedIds));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(defaultExpandedIds));
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>(selectedIds ?? []);
 
   const isControlled = selectedIds !== undefined && onSelectionChange !== undefined;
@@ -124,21 +125,35 @@ export const TreeProvider = ({
     [selectable, multiSelect, currentSelectedIds, isControlled, onSelectionChange]
   );
 
+  const contextValue = useMemo(
+    () => ({
+      expandedIds,
+      selectedIds: currentSelectedIds,
+      toggleExpanded,
+      handleSelection,
+      showLines,
+      showIcons,
+      selectable,
+      multiSelect,
+      indent,
+      animateExpand,
+    }),
+    [
+      expandedIds,
+      currentSelectedIds,
+      toggleExpanded,
+      handleSelection,
+      showLines,
+      showIcons,
+      selectable,
+      multiSelect,
+      indent,
+      animateExpand,
+    ]
+  );
+
   return (
-    <TreeContext.Provider
-      value={{
-        expandedIds,
-        selectedIds: currentSelectedIds,
-        toggleExpanded,
-        handleSelection,
-        showLines,
-        showIcons,
-        selectable,
-        multiSelect,
-        indent,
-        animateExpand,
-      }}
-    >
+    <TreeContext.Provider value={contextValue}>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className={cn("w-full", className)}
@@ -167,11 +182,13 @@ export type TreeNodeProps = HTMLAttributes<HTMLDivElement> & {
   children?: ReactNode;
 };
 
+const DEFAULT_PARENT_PATH: boolean[] = [];
+
 export const TreeNode = ({
   nodeId: providedNodeId,
   level = 0,
   isLast = false,
-  parentPath = [],
+  parentPath = DEFAULT_PARENT_PATH,
   children,
   className,
   onClick,
@@ -180,27 +197,29 @@ export const TreeNode = ({
   const generatedId = useId();
   const nodeId = providedNodeId ?? generatedId;
 
-  // Build the parent path - mark positions where the parent was the last child
-  const currentPath = level === 0 ? [] : [...parentPath];
-  if (level > 0 && parentPath.length < level - 1) {
-    // Fill in missing levels with false (not last)
-    while (currentPath.length < level - 1) {
-      currentPath.push(false);
+  const contextValue = useMemo(() => {
+    // Build the parent path - mark positions where the parent was the last child
+    const currentPath = level === 0 ? [] : [...parentPath];
+    if (level > 0 && parentPath.length < level - 1) {
+      // Fill in missing levels with false (not last)
+      while (currentPath.length < level - 1) {
+        currentPath.push(false);
+      }
     }
-  }
-  if (level > 0) {
-    currentPath[level - 1] = isLast;
-  }
+    if (level > 0) {
+      currentPath[level - 1] = isLast;
+    }
+
+    return {
+      nodeId,
+      level,
+      isLast,
+      parentPath: currentPath,
+    };
+  }, [nodeId, level, isLast, parentPath]);
 
   return (
-    <TreeNodeContext.Provider
-      value={{
-        nodeId,
-        level,
-        isLast,
-        parentPath: currentPath,
-      }}
-    >
+    <TreeNodeContext.Provider value={contextValue}>
       <div className={cn("select-none", className)} {...props}>
         {children}
       </div>

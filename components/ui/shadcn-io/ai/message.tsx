@@ -3,7 +3,7 @@
 import type { FileUIPart, UIMessage } from "ai";
 import { ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, XIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
-import { createContext, memo, useContext, useEffect, useState } from "react";
+import { createContext, memo, useContext, useEffect, useMemo, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
@@ -120,29 +120,24 @@ export const MessageBranch = ({
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
   const [branches, setBranches] = useState<ReactElement[]>([]);
 
-  const handleBranchChange = (newBranch: number) => {
-    setCurrentBranch(newBranch);
-    onBranchChange?.(newBranch);
-  };
+  // Memoized so context consumers don't redraw on every parent render.
+  const contextValue = useMemo<MessageBranchContextType>(() => {
+    const handleBranchChange = (newBranch: number) => {
+      setCurrentBranch(newBranch);
+      onBranchChange?.(newBranch);
+    };
 
-  const goToPrevious = () => {
-    const newBranch = currentBranch > 0 ? currentBranch - 1 : branches.length - 1;
-    handleBranchChange(newBranch);
-  };
-
-  const goToNext = () => {
-    const newBranch = currentBranch < branches.length - 1 ? currentBranch + 1 : 0;
-    handleBranchChange(newBranch);
-  };
-
-  const contextValue: MessageBranchContextType = {
-    currentBranch,
-    totalBranches: branches.length,
-    goToPrevious,
-    goToNext,
-    branches,
-    setBranches,
-  };
+    return {
+      currentBranch,
+      totalBranches: branches.length,
+      goToPrevious: () =>
+        handleBranchChange(currentBranch > 0 ? currentBranch - 1 : branches.length - 1),
+      goToNext: () =>
+        handleBranchChange(currentBranch < branches.length - 1 ? currentBranch + 1 : 0),
+      branches,
+      setBranches,
+    };
+  }, [currentBranch, branches, onBranchChange]);
 
   return (
     <MessageBranchContext.Provider value={contextValue}>
@@ -157,12 +152,15 @@ export const MessageBranchContent = ({ children, ...props }: MessageBranchConten
   const { currentBranch, setBranches, branches } = useMessageBranch();
   const childrenArray = Array.isArray(children) ? children : [children];
 
-  // Use useEffect to update branches when they change
+  // Use useEffect to update branches when they change. The array is built
+  // inside the effect from `children` so the deps don't include a locally
+  // rebuilt array that would re-run the effect every render.
   useEffect(() => {
-    if (branches.length !== childrenArray.length) {
-      setBranches(childrenArray);
+    const nextBranches = Array.isArray(children) ? children : [children];
+    if (branches.length !== nextBranches.length) {
+      setBranches(nextBranches);
     }
-  }, [childrenArray, branches, setBranches]);
+  }, [children, branches, setBranches]);
 
   return childrenArray.map((branch, index) => (
     <div
@@ -291,6 +289,10 @@ export function MessageAttachment({ data, className, onRemove, ...props }: Messa
     <div className={cn("group relative size-24 overflow-hidden rounded-lg", className)} {...props}>
       {isImage ? (
         <>
+          {/* Attachment URLs are blob:/data: URIs (object-URL previews; data URLs
+              after submit conversion), which next/image cannot optimize — same
+              rationale as the bookmarks-board favicon suppression. */}
+          {/* react-doctor-disable-next-line react-doctor/nextjs-no-img-element */}
           <img
             alt={filename || "attachment"}
             className="size-full object-cover"

@@ -46,15 +46,15 @@ export const Suggestion = ({
   );
 };
 
+const suggestions = [
+  "What are the latest trends in AI?",
+  "How does machine learning work?",
+  "Explain quantum computing",
+  "Best practices for React development",
+];
+
 /** Demo component for preview */
 export default function SuggestionDemo() {
-  const suggestions = [
-    "What are the latest trends in AI?",
-    "How does machine learning work?",
-    "Explain quantum computing",
-    "Best practices for React development",
-  ];
-
   return (
     <div className="p-6">
       <Suggestions>

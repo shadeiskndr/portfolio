@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useState } from "react";
 import AnimatedTabs from "@/components/ui/smoothui/animated-tabs";
 import StackedCarousel, { type CarouselItem } from "@/components/ui/smoothui/stacked-carousel";
@@ -60,7 +60,7 @@ export default function AccoladesTabs() {
         className="max-w-full overflow-x-auto"
       />
 
-      <motion.div
+      <m.div
         key={active}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,7 +71,7 @@ export default function AccoladesTabs() {
         {active === "kind-words" && hasTestimonials ? (
           <StackedCarousel items={TESTIMONIAL_ITEMS} autoPlay height="320px" />
         ) : null}
-      </motion.div>
+      </m.div>
     </div>
   );
 }

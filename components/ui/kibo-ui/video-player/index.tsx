@@ -95,5 +95,8 @@ export const VideoPlayerMuteButton = ({ className, ...props }: VideoPlayerMuteBu
 export type VideoPlayerContentProps = ComponentProps<"video">;
 
 export const VideoPlayerContent = ({ className, ...props }: VideoPlayerContentProps) => (
+  // Library-level passthrough: children (including <track kind="captions">) are
+  // forwarded via the props spread, so caption tracks are the consumer's call.
+  // react-doctor-disable-next-line react-doctor/media-has-caption
   <video className={cn("mt-0 mb-0", className)} {...props} />
 );

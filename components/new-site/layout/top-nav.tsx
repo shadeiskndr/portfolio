@@ -1,7 +1,7 @@
 "use client";
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
+import { LayoutGroup, m } from "motion/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useHorizontalScrollState } from "@/hooks/use-horizontal-scroll-state";
@@ -69,7 +69,7 @@ export default function TopNav() {
                     )}
                   >
                     {active && (
-                      <motion.span
+                      <m.span
                         layoutId="top-nav-active"
                         className="absolute inset-0 rounded-md bg-muted"
                         transition={{

@@ -120,7 +120,14 @@ export function EchoGuardDemo() {
           min={0}
           max={100}
           value={value}
-          onChange={(e) => commit(Number(e.target.value), "grid")}
+          onChange={(e) => {
+            const raw = e.target.value;
+            // Guard the parse: a cleared field keeps the current value and
+            // partial input (NaN) is ignored, rather than storing 0/NaN.
+            const next = raw === "" ? value : Number(raw);
+            if (Number.isNaN(next)) return;
+            commit(next, "grid");
+          }}
           className="w-24 rounded-md border bg-transparent px-2 py-1 font-mono text-sm outline-none"
           aria-label="Grid value"
         />

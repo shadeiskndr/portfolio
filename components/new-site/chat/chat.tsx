@@ -88,6 +88,10 @@ const SESSION_ID_KEY = "portfolio-chat-session-id";
 const MODEL_ID_KEY = "portfolio-chat-model-id";
 const REASONING_KEY = "portfolio-chat-reasoning";
 
+// Stable reference for useLocalStorage's options arg so the hook's internal
+// callbacks (which depend on `options`) don't rebuild every render.
+const EMPTY_STORAGE_OPTIONS = {};
+
 // Empty-state hero: cycles a few friendly greetings under the "Hi there" line.
 const HERO_SEQUENCES = [
   { text: "Where should we start?", deleteAfter: true },
@@ -201,8 +205,10 @@ export default function Chat() {
   // Stable per-browser id scoping the visitor's sessions; and the currently
   // open session, persisted so a reload resumes the last conversation.
   const clientId = usePersistentId(CLIENT_ID_KEY);
-  const [activeSessionId, setActiveSessionId] = useLocalStorage<string>(SESSION_ID_KEY, () =>
-    uuidv7()
+  const [activeSessionId, setActiveSessionId] = useLocalStorage<string>(
+    SESSION_ID_KEY,
+    () => uuidv7(),
+    EMPTY_STORAGE_OPTIONS
   );
   // Model choice is a per-browser preference, applied to the next message. Seed
   // as null = "no explicit pick" so the client holds no default of its own; an

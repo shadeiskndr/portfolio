@@ -53,18 +53,7 @@
         "noArrayIndexKey": "off"
       },
       "style": {
-        "noNonNullAssertion": "off",
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "paths": {
-              "react": {
-                "importNames": ["useEffect"],
-                "message": "Use useMountEffect from @/hooks/use-mount-effect, derived state, an event handler, or a key prop instead. See .claude/skills/no-use-effect/SKILL.md."
-              }
-            }
-          }
-        }
+        "noNonNullAssertion": "off"
       },
       "performance": {
         "noImgElement": "off"
@@ -85,25 +74,6 @@
     {
       "includes": ["**/*.config.js", "**/*.config.mjs", "**/*.config.cjs", "**/*.config.ts"],
       "formatter": { "enabled": false }
-    },
-    {
-      "includes": [
-        "hooks/use-mount-effect.ts",
-        "hooks/use-event-listener.ts",
-        "hooks/use-horizontal-scroll-state.ts",
-        "hooks/use-local-storage.ts",
-        "hooks/use-scroll.ts",
-        "lib/light-dark-providers.tsx",
-        "lib/color-provider.tsx",
-        "components/old-portfolio/**"
-      ],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": "off"
-          }
-        }
-      }
     },
     {
       "includes": ["components/ui/**", "hooks/**"],
@@ -134,9 +104,6 @@
       "includes": ["components/ui/shadcn-io/**"],
       "linter": {
         "rules": {
-          "style": {
-            "noRestrictedImports": "off"
-          },
           "suspicious": {
             "noExplicitAny": "off"
           }

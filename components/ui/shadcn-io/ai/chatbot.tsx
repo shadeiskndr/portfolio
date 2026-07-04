@@ -421,7 +421,7 @@ export function ChatbotDemo() {
                 {versions.map((version) => (
                   <Message from={message.from} key={`${message.key}-${version.id}`}>
                     <div>
-                      {message.sources?.length && (
+                      {message.sources && message.sources.length > 0 && (
                         <Sources>
                           <SourcesTrigger count={message.sources.length} />
                           <SourcesContent>

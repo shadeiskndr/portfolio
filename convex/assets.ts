@@ -12,8 +12,10 @@ export const list = query({
       : await ctx.db.query("assets").collect();
     return await Promise.all(
       rows.map(async (row) => {
-        const url = await ctx.storage.getUrl(row.storageId);
-        const meta = await ctx.db.system.get(row.storageId);
+        const [url, meta] = await Promise.all([
+          ctx.storage.getUrl(row.storageId),
+          ctx.db.system.get(row.storageId),
+        ]);
         return {
           url,
           key: row.key,

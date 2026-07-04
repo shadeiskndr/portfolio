@@ -7,26 +7,20 @@ import { cn } from "@/lib/utils";
 
 // The same tagged union from the post: the `kind` literal selects exactly one
 // schema, so a bad block yields ONE targeted error, not "no variant matched".
-const Heading = z
-  .object({
-    kind: z.literal("heading"),
-    text: z.string().min(1),
-    level: z.number().int().min(1).max(4),
-  })
-  .strict();
-const Table = z
-  .object({
-    kind: z.literal("table"),
-    columns: z.array(z.string()).min(1),
-    rows: z.array(z.array(z.union([z.string(), z.number(), z.null()]))),
-  })
-  .strict();
-const Image = z
-  .object({
-    kind: z.literal("image"),
-    ref: z.string().regex(/^asset:[0-9a-f-]{36}$/),
-  })
-  .strict();
+const Heading = z.strictObject({
+  kind: z.literal("heading"),
+  text: z.string().min(1),
+  level: z.number().int().min(1).max(4),
+});
+const Table = z.strictObject({
+  kind: z.literal("table"),
+  columns: z.array(z.string()).min(1),
+  rows: z.array(z.array(z.union([z.string(), z.number(), z.null()]))),
+});
+const Image = z.strictObject({
+  kind: z.literal("image"),
+  ref: z.string().regex(/^asset:[0-9a-f-]{36}$/),
+});
 
 const Block = z.discriminatedUnion("kind", [Heading, Table, Image]);
 
@@ -95,7 +89,7 @@ export function DiscriminatedUnionDemo() {
           spellCheck={false}
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          className="min-h-[220px] resize-y border-b bg-transparent p-4 font-mono text-xs leading-relaxed outline-none md:border-r md:border-b-0"
+          className="min-h-55 resize-y border-b bg-transparent p-4 font-mono text-xs leading-relaxed outline-none md:border-r md:border-b-0"
         />
         <div className="min-w-0 p-4">
           {result.status === "valid" ? (

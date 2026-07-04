@@ -1,0 +1,144 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "ignore": {
+    "overrides": [
+      {
+        // Convex functions are runtime entry points invoked via the generated
+        // `api` object, never imported statically — the dead-code analyzer
+        // (deslop) can't see those call edges and reports them all as unused.
+        "files": ["convex/**"],
+        "rules": ["deslop/unused-file", "deslop/unused-export"]
+      },
+      {
+        // Vendored component registry (shadcn / kibo-ui / smoothui / etc.).
+        // Kept as a library on purpose; "unused" files aren't dead, and the
+        // registry convention co-locates a component with its cva variants,
+        // which trips only-export-components. use-lazy-motion: these import
+        // `motion` directly upstream; rewriting them to `m` under our
+        // LazyMotion provider would fork the registry from upstream, and the
+        // shell already loads domMax eagerly, so the deferral win is moot here.
+        // prefer-dynamic-import: same reasoning — these are registry leaves;
+        // where a heavy one matters we wrap it in next/dynamic at the
+        // first-party call site rather than editing the vendored module.
+        "files": ["components/ui/**"],
+        "rules": [
+          "deslop/unused-file",
+          "deslop/unused-export",
+          "react-doctor/only-export-components",
+          "react-doctor/use-lazy-motion",
+          "react-doctor/prefer-dynamic-import"
+        ]
+      },
+      {
+        // Frozen archive of the previous portfolio, still served read-only at
+        // /old for posterity. It is not maintained to current standards and will
+        // not be refactored, so it's excluded wholesale (omitting `rules`
+        // suppresses every rule for these files) rather than triaged finding by
+        // finding. If /old is ever retired, delete this dir and this entry.
+        "files": ["components/old-portfolio/**"]
+      },
+      {
+        // These leaves statically import heavy libs (CodeMirror, recharts) by
+        // necessity — the libs render as JSX, so they can't be reduced to an
+        // inline `import()`. Each is already isolated behind a next/dynamic
+        // boundary so the bundle is deferred: the two demos via lazy-demos.tsx,
+        // and commit-diff-body via commit-diff-dialog.tsx. The rule flags the
+        // leaf regardless of the dynamic boundary above it, so suppress here.
+        "files": [
+          "components/new-site/content/codemirror-demo.tsx",
+          "components/new-site/content/synced-charts-demo.tsx",
+          "components/new-site/data-display/commit-diff-body.tsx"
+        ],
+        "rules": ["react-doctor/prefer-dynamic-import"]
+      },
+      {
+        // Expand/collapse accordions animate height (0 ↔ auto, or a measured
+        // pixel height). There is no transform equivalent: scaleY distorts the
+        // text content, and auto/measured height can't be composited. The motion
+        // `layout` prop animates persistent-element layout shifts, not the
+        // AnimatePresence mount/unmount height reveals these use. Intentional.
+        "files": [
+          "components/new-site/data-display/changelog-list.tsx",
+          "components/new-site/data-display/experience-cards.tsx",
+          "components/ui/kibo-ui/tree/index.tsx",
+          "components/ui/shadcn-io/ai/reasoning.tsx",
+          "components/ui/unlumen-ui/motion-faqs-accordion.tsx"
+        ],
+        "rules": ["react-doctor/no-layout-property-animation"]
+      },
+      {
+        // Intentional: memoize the composed ref callback by the full spread of
+        // input refs (the Radix compose-refs pattern). An inline suppression here
+        // would displace the adjacent biome-ignore, so it's scoped in config.
+        "files": ["lib/compose-refs.ts"],
+        "rules": ["react-doctor/exhaustive-deps"]
+      },
+      {
+        // The lightbox morphs the thumbnail into the modal image via framer-motion
+        // shared-layout (matched `layoutId`). A native <dialog>/showModal() promotes
+        // the element to the top layer, which breaks that cross-element layout
+        // animation. The custom modal already provides the accessibility a <dialog>
+        // would (aria-modal, role="dialog", focus-on-open, Escape + arrow-key
+        // handling, and a labeled Close button), so the trade-off isn't worth it.
+        "files": ["components/new-site/content/photo-gallery.tsx"],
+        "rules": ["react-doctor/prefer-html-dialog"]
+      },
+      {
+        // Same blind spot as the convex/** override above: these lib modules are
+        // reached only through Convex functions (tools.ts, agent.ts, chat.ts) and
+        // the ingest scripts, none of which deslop treats as entry points, so it
+        // reports them unused. They are all live.
+        "files": ["lib/chat/**"],
+        "rules": ["deslop/unused-file", "deslop/unused-export"]
+      },
+      {
+        // Companion to the vendored shadcn `sidebar` block, which imports this
+        // hook. sidebar itself is a kept-but-unreachable registry leaf (suppressed
+        // under components/ui/** above), so deslop sees this hook as unused too.
+        // Deleting it would fork the sidebar registry component from upstream.
+        "files": ["hooks/use-mobile.ts"],
+        "rules": ["deslop/unused-file"]
+      },
+      {
+        // These <img> render inlined favicon `data:` URIs (base64, byte-capped by
+        // the ingest script) at 14–32px. next/image can't optimize a data URI and
+        // there's nothing to optimize at that size — the actual preview screenshots
+        // in this file already use next/image against Convex storage URLs.
+        "files": ["components/new-site/data-display/bookmarks-board.tsx"],
+        "rules": ["react-doctor/nextjs-no-img-element"]
+      },
+      {
+        // prefer-tag-over-role: the commit list uses role="list"/role="listitem"
+        // on <div>s (see the adjacent biome-ignore) because an AnimatePresence
+        // height-reveal wrapper sits between the container and the rows, which
+        // would break strict <ul>/<li> nesting. no-scale-from-zero: the hover
+        // accent bar is a 2px, aria-hidden decoration whose resting state IS
+        // hidden — scale-y-0 is correct; a nonzero scale would leave a sliver.
+        "files": ["components/new-site/data-display/changelog-list.tsx"],
+        "rules": ["react-doctor/prefer-tag-over-role", "react-doctor/no-scale-from-zero"]
+      },
+      {
+        // This module's whole purpose is to export the `MDXComponents` map that
+        // next-mdx-remote-client consumes; the object shape is the library's
+        // required API, not an incidental non-component export.
+        "files": ["components/new-site/content/mdx-components.tsx"],
+        "rules": ["react-doctor/only-export-components"]
+      },
+      {
+        // These are readable `.filter().map()` chains over small, fully-controlled
+        // inputs: the chat transcript to summarize, a theme's CSS-var map, the
+        // blog's MDX file list, and the fetched tweakcn registry. Folding each into
+        // a single-pass reduce() trades clarity for no measurable gain at these
+        // sizes — the "theoretical, no real impact" case the rule says to skip.
+        "files": [
+          "convex/chat.ts",
+          "convex/rag.ts",
+          "convex/themes.ts",
+          "lib/apply-theme-css-vars.ts",
+          "lib/new-site/mdx.ts"
+        ],
+        "rules": ["react-doctor/js-combine-iterations"]
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Award, ChevronRight, ExternalLink } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useRef, useState } from "react";
 import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
@@ -68,7 +68,7 @@ export default function CertificatesList() {
     <>
       <AnimatePresence>
         {active ? (
-          <motion.div
+          <m.div
             key="cert-overlay"
             className="fixed inset-0 z-50 grid place-items-center bg-background/60 p-4 backdrop-blur-sm"
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
@@ -76,19 +76,19 @@ export default function CertificatesList() {
             exit={shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
           >
-            <motion.div
+            <m.div
               ref={ref}
               layoutId={shouldReduceMotion ? undefined : `cert-${active.name}`}
               className="flex w-full max-w-md cursor-default select-none flex-col gap-4 overflow-hidden rounded-2xl border bg-card p-5 shadow-lg"
               transition={morph}
             >
               <div className="flex items-start gap-3">
-                <motion.div
+                <m.div
                   layoutId={shouldReduceMotion ? undefined : `cert-logo-${active.name}`}
                   style={{ flexShrink: 0 }}
                 >
                   <CertLogo cert={active} size={48} />
-                </motion.div>
+                </m.div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-sm leading-snug">{active.name}</h3>
                   <p className="mt-0.5 text-muted-foreground text-xs">{active.issuer}</p>
@@ -107,14 +107,14 @@ export default function CertificatesList() {
                 </div>
               ) : null}
 
-              <motion.p
+              <m.p
                 className="text-muted-foreground text-sm leading-relaxed"
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2, delay: 0.05 }}
               >
                 {active.description}
-              </motion.p>
+              </m.p>
 
               {active.url ? (
                 <a
@@ -127,14 +127,14 @@ export default function CertificatesList() {
                   <ExternalLink className="size-3.5" />
                 </a>
               ) : null}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
 
       <div className="flex flex-col gap-2.5">
         {CERTIFICATES.map((cert) => (
-          <motion.button
+          <m.button
             key={cert.name}
             type="button"
             layoutId={shouldReduceMotion ? undefined : `cert-${cert.name}`}
@@ -145,12 +145,12 @@ export default function CertificatesList() {
           >
             <SpotlightCard borderColor="var(--border)" className="p-3 shadow-sm dark:shadow-xl">
               <div className="flex items-center gap-3">
-                <motion.div
+                <m.div
                   layoutId={shouldReduceMotion ? undefined : `cert-logo-${cert.name}`}
                   style={{ flexShrink: 0 }}
                 >
                   <CertLogo cert={cert} size={40} />
-                </motion.div>
+                </m.div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-sm">{cert.name}</p>
                   <p className="truncate text-muted-foreground text-xs">{cert.issuer}</p>
@@ -158,7 +158,7 @@ export default function CertificatesList() {
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </div>
             </SpotlightCard>
-          </motion.button>
+          </m.button>
         ))}
       </div>
     </>

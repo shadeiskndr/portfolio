@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
-type Msg = { role: "user" | "assistant" | "tool"; text: string };
+type Msg = { id: number; role: "user" | "assistant" | "tool"; text: string };
 type Phase = "idle" | "running" | "awaiting" | "done";
 
 const QUESTION = "Which source should I summarize from?";
@@ -16,12 +16,16 @@ export function AskUserDemo() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const nextId = useRef(0);
 
   const clear = () => {
     for (const t of timers.current) clearTimeout(t);
     timers.current = [];
   };
-  const push = (m: Msg) => setMessages((xs) => [...xs, m]);
+  const push = (m: Omit<Msg, "id">) => {
+    const id = nextId.current++;
+    setMessages((xs) => [...xs, { ...m, id }]);
+  };
   const after = (ms: number, fn: () => void) => {
     timers.current.push(setTimeout(fn, ms));
   };
@@ -29,7 +33,9 @@ export function AskUserDemo() {
   const run = () => {
     clear();
     setPhase("running");
-    setMessages([{ role: "user", text: "Summarize last quarter's numbers." }]);
+    setMessages([
+      { id: nextId.current++, role: "user", text: "Summarize last quarter's numbers." },
+    ]);
     after(500, () => push({ role: "assistant", text: "I can pull these from two places." }));
     after(1300, () => {
       push({ role: "tool", text: `ask_user — ${QUESTION}` });
@@ -86,9 +92,9 @@ export function AskUserDemo() {
         {messages.length === 0 ? (
           <p className="text-muted-foreground text-sm">Press run to start a turn.</p>
         ) : null}
-        {messages.map((m, i) => (
+        {messages.map((m) => (
           <div
-            key={`${i}:${m.text}`}
+            key={m.id}
             className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
           >
             {m.role === "tool" ? (

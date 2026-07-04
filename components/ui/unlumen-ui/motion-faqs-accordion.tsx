@@ -141,6 +141,10 @@ export function MotionAccordion({ items, gap = 10, className }: MotionAccordionP
       <div className="flex flex-col rounded-[34px] p-3" style={{ gap }}>
         {items.map((item, i) => (
           <AccordionItem
+            // MotionAccordionItem has no id field (question/answer are ReactNodes),
+            // and FAQ lists are static — never reordered or inserted mid-list — so
+            // the index is a stable identity here.
+            // react-doctor-disable-next-line react-doctor/no-array-index-as-key
             key={i}
             item={item}
             isOpen={openIndex === i}

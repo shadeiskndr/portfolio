@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_FONT_URL = "/LastoriaBoldRegular.otf";
 
+const PATH_VARIANTS = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: { pathLength: 1, opacity: 1 },
+};
+
 interface SignatureProps {
   /** Text to generate signature for */
   text?: string;
@@ -102,11 +107,6 @@ function SignatureInner({
     return { paths: newPaths, width: x + horizontalPadding };
   }, [font, loadFailed, text, fontSize, baseline, horizontalPadding]);
 
-  const variants = {
-    hidden: { pathLength: 0, opacity: 0 },
-    visible: { pathLength: 1, opacity: 1 },
-  };
-
   return (
     <motion.svg
       key={paths.length}
@@ -124,12 +124,17 @@ function SignatureInner({
         <mask id={maskId} maskUnits="userSpaceOnUse">
           {paths.map((d, i) => (
             <motion.path
+              // Index keys are safe here: `paths` is regenerated wholesale by the
+              // useMemo (never reordered/spliced), and each entry's identity IS its
+              // character position in `text`. Path data can collide (e.g. repeated
+              // spaces yield identical empty paths), so `d` cannot be the key.
+              // react-doctor-disable-next-line react-doctor/no-array-index-as-key
               key={i}
               d={d}
               stroke="white"
               strokeWidth={fontSize * 0.22}
               fill="none"
-              variants={variants}
+              variants={PATH_VARIANTS}
               transition={{
                 pathLength: {
                   delay: delay + i * 0.2,
@@ -151,12 +156,15 @@ function SignatureInner({
 
       {paths.map((d, i) => (
         <motion.path
+          // Safe for the same reason as the mask paths above: positional identity,
+          // array replaced atomically, path data not guaranteed unique.
+          // react-doctor-disable-next-line react-doctor/no-array-index-as-key
           key={i}
           d={d}
           stroke={color}
           strokeWidth={2}
           fill="none"
-          variants={variants}
+          variants={PATH_VARIANTS}
           transition={{
             pathLength: {
               delay: delay + i * 0.2,

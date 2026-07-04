@@ -82,10 +82,10 @@ export default function CardFlip({
           <div className="absolute right-0 bottom-0 left-0 p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1.5">
-                <h3 className="font-semibold text-lg text-zinc-900 leading-snug tracking-tighter transition-all duration-500 ease-out-expo group-hover:translate-y-[-4px] dark:text-white">
+                <h3 className="font-semibold text-lg text-zinc-900 leading-snug tracking-tighter transition-transform duration-500 ease-out-expo group-hover:translate-y-[-4px] dark:text-white">
                   {title}
                 </h3>
-                <p className="line-clamp-2 text-sm text-zinc-600 tracking-tight transition-all delay-[50ms] duration-500 ease-out-expo group-hover:translate-y-[-4px] dark:text-zinc-200">
+                <p className="line-clamp-2 text-sm text-zinc-600 tracking-tight transition-transform delay-[50ms] duration-500 ease-out-expo group-hover:translate-y-[-4px] dark:text-zinc-200">
                   {subtitle}
                 </p>
               </div>
@@ -119,10 +119,10 @@ export default function CardFlip({
         >
           <div className="flex-1 space-y-6">
             <div className="space-y-2">
-              <h3 className="font-semibold text-lg text-zinc-900 leading-snug tracking-tight transition-all duration-500 ease-out-expo group-hover:translate-y-[-2px] dark:text-white">
+              <h3 className="font-semibold text-lg text-zinc-900 leading-snug tracking-tight transition-transform duration-500 ease-out-expo group-hover:translate-y-[-2px] dark:text-white">
                 {title}
               </h3>
-              <p className="line-clamp-2 text-sm text-zinc-600 tracking-tight transition-all duration-500 ease-out-expo group-hover:translate-y-[-2px] dark:text-zinc-400">
+              <p className="line-clamp-2 text-sm text-zinc-600 tracking-tight transition-transform duration-500 ease-out-expo group-hover:translate-y-[-2px] dark:text-zinc-400">
                 {description}
               </p>
             </div>
@@ -130,7 +130,7 @@ export default function CardFlip({
             <div className="space-y-2">
               {features.map((feature, index) => (
                 <div
-                  className="flex items-center gap-2 text-sm text-zinc-700 transition-all duration-500 dark:text-zinc-300"
+                  className="flex items-center gap-2 text-sm text-zinc-700 transition-[transform,opacity] duration-500 dark:text-zinc-300"
                   key={feature}
                   style={{
                     transform: isFlipped ? "translateX(0)" : "translateX(-10px)",
@@ -170,7 +170,7 @@ export default function CardFlip({
                     "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
                   )}
                 />
-                <ArrowRight className="relative z-10 h-4 w-4 text-orange-500 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+                <ArrowRight className="relative z-10 h-4 w-4 text-orange-500 transition-transform duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
               </div>
             </div>
           </div>

@@ -139,7 +139,15 @@ export function NestedFormDemo() {
                         <input
                           type="number"
                           value={f.state.value}
-                          onChange={(e) => f.handleChange(Number(e.target.value))}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            // Guard the parse: keep the current weight when the
+                            // field is cleared and ignore partial input (NaN),
+                            // rather than storing 0/NaN into the model.
+                            const next = raw === "" ? f.state.value : Number(raw);
+                            if (Number.isNaN(next)) return;
+                            f.handleChange(next);
+                          }}
                           onBlur={f.handleBlur}
                           className={inputClass}
                           aria-label={`Item ${i + 1} weight`}

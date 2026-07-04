@@ -257,19 +257,19 @@ export const Spinner = ({ variant, ...props }: SpinnerProps) => {
   }
 };
 
+const variants: SpinnerProps["variant"][] = [
+  "default",
+  "circle",
+  "pinwheel",
+  "circle-filled",
+  "ellipsis",
+  "ring",
+  "bars",
+  "infinite",
+];
+
 // Demo
 export function Demo() {
-  const variants: SpinnerProps["variant"][] = [
-    "default",
-    "circle",
-    "pinwheel",
-    "circle-filled",
-    "ellipsis",
-    "ring",
-    "bars",
-    "infinite",
-  ];
-
   return (
     <div className="grid grid-cols-4 gap-8 p-8">
       {variants.map((variant) => (

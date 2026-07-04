@@ -59,9 +59,11 @@ function useEventListener<
   // Create a ref that stores handler
   const savedHandler = useRef(handler);
 
+  // No dependency array: a fresh handler each render must not re-run the effect;
+  // syncing the ref every commit keeps the listener calling the latest handler.
   useIsomorphicLayoutEffect(() => {
     savedHandler.current = handler;
-  }, [handler]);
+  });
 
   useEffect(() => {
     // Define the listening target

@@ -21,6 +21,14 @@ export interface MusicPlayerProps extends React.HTMLAttributes<HTMLDivElement> {
   hideTonearm?: boolean;
 }
 
+// Extract YouTube ID if it's a YouTube URL
+const getYoutubeId = (url: string) => {
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
+  );
+  return match ? match[1] : null;
+};
+
 export function MusicPlayer({
   className,
   src,
@@ -38,14 +46,6 @@ export function MusicPlayer({
   const isSpinning = isPlaying && !isHovered;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-
-  // Extract YouTube ID if it's a YouTube URL
-  const getYoutubeId = (url: string) => {
-    const match = url.match(
-      /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
-    );
-    return match ? match[1] : null;
-  };
 
   const youtubeId = !isControlled && src ? getYoutubeId(src) : null;
 
@@ -100,6 +100,13 @@ export function MusicPlayer({
               autoPlay ? 1 : 0
             }&controls=0`}
             allow="autoplay"
+            // YouTube's JS-API player needs both allow-scripts (to run) and
+            // allow-same-origin (to operate under youtube.com for postMessage +
+            // storage). The rule warns that this pair lets a frame drop its own
+            // sandbox — true only for a SAME-origin frame; this src is cross-
+            // origin, so Same-Origin Policy isolates it from this page either way.
+            // react-doctor-disable-next-line react-doctor/iframe-missing-sandbox
+            sandbox="allow-scripts allow-same-origin allow-presentation"
           />
         ) : src ? (
           <audio
@@ -119,8 +126,16 @@ export function MusicPlayer({
           discClassName ?? "h-64 w-64 md:h-80 md:w-80"
         )}
         onClick={togglePlay}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            togglePlay();
+          }
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        role={isControlled ? undefined : "button"}
+        tabIndex={isControlled ? undefined : 0}
         title={isControlled ? undefined : isPlaying ? "Pause" : "Play"}
       >
         {/* Tonearm */}

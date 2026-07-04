@@ -1,7 +1,7 @@
 "use client";
 
 import type { LanguageModelUsage } from "ai";
-import { type ComponentProps, createContext, useContext } from "react";
+import { type ComponentProps, createContext, useContext, useMemo } from "react";
 import { getUsage } from "tokenlens";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -64,13 +64,22 @@ const useContextValue = () => {
 
 const MICRO_USD_THRESHOLD = 0.01;
 
+// Hoisted Intl formatters — constructing one is expensive, so build each once
+// at module scope instead of on every call/render.
+const USD_FORMAT = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const PERCENT_FORMAT = new Intl.NumberFormat("en-US", {
+  style: "percent",
+  maximumFractionDigits: 1,
+});
+const COMPACT_FORMAT = new Intl.NumberFormat("en-US", { notation: "compact" });
+
 /** Currency format that keeps sub-cent amounts legible instead of rounding to $0.00. */
 function formatUSD(value: number | undefined): string {
   const v = value ?? 0;
   if (v > 0 && v < MICRO_USD_THRESHOLD) {
     return `$${v.toPrecision(2)}`;
   }
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
+  return USD_FORMAT.format(v);
 }
 
 /** Cost from explicit `pricing`; returns undefined when no matching price is set. */
@@ -107,9 +116,9 @@ export const Context = ({
   usedPercent,
   cost,
   ...props
-}: ContextProps) => (
-  <ContextContext.Provider
-    value={{
+}: ContextProps) => {
+  const contextValue = useMemo<ContextSchema>(
+    () => ({
       usedTokens,
       maxTokens,
       usage,
@@ -117,11 +126,16 @@ export const Context = ({
       pricing,
       usedPercent,
       cost,
-    }}
-  >
-    <HoverCard {...props} />
-  </ContextContext.Provider>
-);
+    }),
+    [usedTokens, maxTokens, usage, modelId, pricing, usedPercent, cost]
+  );
+
+  return (
+    <ContextContext.Provider value={contextValue}>
+      <HoverCard {...props} />
+    </ContextContext.Provider>
+  );
+};
 
 const ContextIcon = () => {
   const { usedTokens, maxTokens, usedPercent } = useContextValue();
@@ -169,10 +183,7 @@ export type ContextTriggerProps = ComponentProps<typeof Button>;
 export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
   const { usedTokens, maxTokens, usedPercent } = useContextValue();
   const percent = usedPercent ?? usedTokens / maxTokens;
-  const renderedPercent = new Intl.NumberFormat("en-US", {
-    style: "percent",
-    maximumFractionDigits: 1,
-  }).format(percent);
+  const renderedPercent = PERCENT_FORMAT.format(percent);
 
   return (
     <HoverCardTrigger closeDelay={0} delay={0}>
@@ -201,16 +212,9 @@ export const ContextContentHeader = ({
 }: ContextContentHeaderProps) => {
   const { usedTokens, maxTokens, usedPercent } = useContextValue();
   const percent = usedPercent ?? usedTokens / maxTokens;
-  const displayPct = new Intl.NumberFormat("en-US", {
-    style: "percent",
-    maximumFractionDigits: 1,
-  }).format(percent);
-  const used = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-  }).format(usedTokens);
-  const total = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-  }).format(maxTokens);
+  const displayPct = PERCENT_FORMAT.format(percent);
+  const used = COMPACT_FORMAT.format(usedTokens);
+  const total = COMPACT_FORMAT.format(maxTokens);
 
   return (
     <div className={cn("w-full space-y-2 p-3", className)} {...props}>
@@ -417,11 +421,7 @@ export const ContextCacheUsage = ({ className, children, ...props }: ContextCach
 
 const TokensWithCost = ({ tokens, costText }: { tokens?: number; costText?: string }) => (
   <span>
-    {tokens === undefined
-      ? "—"
-      : new Intl.NumberFormat("en-US", {
-          notation: "compact",
-        }).format(tokens)}
+    {tokens === undefined ? "—" : COMPACT_FORMAT.format(tokens)}
     {costText ? <span className="ml-2 text-muted-foreground">• {costText}</span> : null}
   </span>
 );

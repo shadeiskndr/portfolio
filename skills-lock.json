@@ -67,12 +67,6 @@
       "skillPath": "skills/migration-helper/SKILL.md",
       "computedHash": "42d7bf896bba3a4109b9094f9f59d80c0acef83bf60199f892e2a128b278872e"
     },
-    "no-use-effect": {
-      "source": "factory-ai/factory-plugins",
-      "sourceType": "github",
-      "skillPath": "plugins/typescript/skills/no-use-effect/SKILL.md",
-      "computedHash": "3c4d9c9a65312482569bf3ad27d149c5c339567b52009f90ac29d212beee3766"
-    },
     "react-flow": {
       "source": "existential-birds/beagle",
       "sourceType": "github",
