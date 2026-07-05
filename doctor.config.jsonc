@@ -138,6 +138,43 @@
           "lib/new-site/mdx.ts"
         ],
         "rules": ["react-doctor/js-combine-iterations"]
+      },
+      {
+        // resume-builder is one cohesive TanStack Form. no-array-index-as-key:
+        // its array sections (competencies, experience → roles → bullets,
+        // education, systems, references) are addressed positionally by TanStack
+        // Form (`experience[0].firm`, …). The inputs are fully controlled by those
+        // indexed field names, so add/remove/reorder via removeValue/moveValue
+        // rewrite the value at each index and the controlled inputs follow — index
+        // keys are correct here, not a stale-state hazard. no-giant-component: the
+        // form is intentionally one component so the typed `form` never crosses a
+        // boundary (TanStack's withForm split is the eventual refactor).
+        "files": ["components/new-site/resume-builder/resume-builder.tsx"],
+        "rules": ["react-doctor/no-array-index-as-key", "react-doctor/no-giant-component"]
+      },
+      {
+        // useResumeAssistant exposes imperative startImport/startTailor to the
+        // Import/Tailor dialogs via useImperativeHandle with empty deps, so the
+        // handle is created once. Those closures are captured from the first render,
+        // but every value they touch is a stable reference that reads live state
+        // (setMessages, and the form via applyEdits/applyResume) — so the frozen
+        // closures never go stale; the one primitive they needed, `pending`, is read
+        // from busyRef instead. Adding them to the deps would recreate the handle on
+        // every render for no benefit. Like lib/compose-refs.ts, an inline
+        // suppression can't sit here without displacing the adjacent biome-ignore, so
+        // it's scoped in config. The hook's other effect (transcript autoscroll)
+        // keeps complete deps.
+        "files": ["components/new-site/resume-builder/use-resume-assistant.ts"],
+        "rules": ["react-doctor/exhaustive-deps"]
+      },
+      {
+        // The deterministic .tex parser is imported only by convex/resumeImport.ts
+        // (the import extractor's primary tool). deslop can't see convex→lib edges
+        // (Convex functions run via the generated `api`, not a static app import),
+        // so it reports this reachable file as unused — same false positive as the
+        // convex/** entry above.
+        "files": ["lib/resume/parse-tex.ts"],
+        "rules": ["deslop/unused-file", "deslop/unused-export"]
       }
     ]
   }
