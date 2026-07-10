@@ -54,6 +54,17 @@ export default defineSchema({
     fetchedAt: v.number(),
   }).index("by_username", ["username"]),
 
+  // Code::Stats snapshot backing /stats. One row per username; `payload` is the
+  // raw public-profile JSON (total/recent XP, per-language and per-machine XP,
+  // and a full "YYYY-MM-DD" -> XP history), refreshed on a cron in
+  // `convex/codestats.ts`. Stored whole rather than shredded into columns
+  // because the page derives everything client-side and the doc is a few KB.
+  codestatsProfile: defineTable({
+    username: v.string(),
+    payload: v.string(),
+    fetchedAt: v.number(),
+  }).index("by_username", ["username"]),
+
   tweakcnThemes: defineTable({
     key: v.string(),
     payload: v.string(),

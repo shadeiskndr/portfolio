@@ -13,6 +13,7 @@ const STATIC_ROUTES = [
   "/photography",
   "/projects",
   "/songs",
+  "/stats",
   "/thoughts",
   "/til",
   "/uses",

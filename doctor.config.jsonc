@@ -42,11 +42,13 @@
         // necessity — the libs render as JSX, so they can't be reduced to an
         // inline `import()`. Each is already isolated behind a next/dynamic
         // boundary so the bundle is deferred: the two demos via lazy-demos.tsx,
-        // and commit-diff-body via commit-diff-dialog.tsx. The rule flags the
-        // leaf regardless of the dynamic boundary above it, so suppress here.
+        // commit-diff-body via commit-diff-dialog.tsx, and codestats-charts via
+        // the activity/languages cards. The rule flags the leaf regardless of
+        // the dynamic boundary above it, so suppress here.
         "files": [
           "components/new-site/content/codemirror-demo.tsx",
           "components/new-site/content/synced-charts-demo.tsx",
+          "components/new-site/data-display/codestats-charts.tsx",
           "components/new-site/data-display/commit-diff-body.tsx"
         ],
         "rules": ["react-doctor/prefer-dynamic-import"]

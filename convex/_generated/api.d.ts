@@ -12,6 +12,7 @@ import type * as agent from "../agent.js";
 import type * as assets from "../assets.js";
 import type * as bookmarks from "../bookmarks.js";
 import type * as chat from "../chat.js";
+import type * as codestats from "../codestats.js";
 import type * as commits from "../commits.js";
 import type * as crons from "../crons.js";
 import type * as github from "../github.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   bookmarks: typeof bookmarks;
   chat: typeof chat;
+  codestats: typeof codestats;
   commits: typeof commits;
   crons: typeof crons;
   github: typeof github;
