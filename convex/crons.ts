@@ -3,7 +3,18 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-crons.interval("poll spotify", { seconds: 30 }, internal.spotify.pollSpotify);
+// 30s was ~2.9k polls/day, and every idle tick also hit `recently-played` —
+// which has a much tighter quota and started returning 429 QUOTA_EXCEEDED with
+// a 16-hour Retry-After, silently blanking the now-playing widget. A minute is
+// still comfortably "live" for a status card.
+crons.interval("poll spotify", { minutes: 1 }, internal.spotify.pollSpotify);
+
+crons.interval(
+  "refresh spotify top tracks",
+  { hours: 24 },
+  internal.topTracks.refreshTopTracks,
+  {}
+);
 
 crons.interval("refresh github contributions", { hours: 6 }, internal.github.refreshContributions, {
   username: "shadeiskndr",

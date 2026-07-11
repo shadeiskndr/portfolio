@@ -9,7 +9,6 @@ const STATIC_ROUTES = [
   "/changelog",
   "/chat",
   "/experience",
-  "/networks",
   "/photography",
   "/projects",
   "/songs",

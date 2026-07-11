@@ -12,7 +12,52 @@ export default defineSchema({
     url: v.optional(v.string()),
     playedAt: v.optional(v.number()),
     fetchedAt: v.number(),
+    // When `recently-played` was last called. That endpoint has a far tighter
+    // quota than `currently-playing`, so the poller only falls back to it once
+    // per RECENTLY_PLAYED_TTL_MS instead of on every idle tick.
+    recentCheckedAt: v.optional(v.number()),
   }),
+
+  // Cached Spotify access token. Tokens live an hour; minting a fresh one on
+  // every 30s poll was ~2.9k needless token exchanges a day.
+  spotifyAuth: defineTable({
+    accessToken: v.string(),
+    expiresAt: v.number(),
+  }),
+
+  // Per-endpoint rate-limit state. Spotify's developer guidance requires
+  // honouring `Retry-After` on a 429 and backing off exponentially rather than
+  // retrying in a tight loop, so a 429 parks the endpoint until `blockedUntil`
+  // and callers check here *before* spending a request. `attempts` drives the
+  // exponential fallback for the case where Spotify omits the header.
+  spotifyBackoff: defineTable({
+    endpoint: v.string(),
+    blockedUntil: v.number(),
+    attempts: v.number(),
+  }).index("by_endpoint", ["endpoint"]),
+
+  // Snapshot of `GET /v1/me/top/tracks` for each of Spotify's three windows,
+  // refreshed daily by `internal.topTracks.refreshTopTracks`. Rows are replaced
+  // wholesale per `timeRange`; `rank` is Spotify's own ordering (0-based).
+  // Requires the `user-top-read` scope on SPOTIFY_REFRESH_TOKEN — mint one with
+  // `bun run scripts/spotify-auth.ts`.
+  //
+  // The 24-hour refresh is deliberate: the Spotify Developer Terms only permit
+  // caching content as needed to operate the app, so every row is replaced on a
+  // daily cycle rather than accumulating history.
+  topTracks: defineTable({
+    timeRange: v.union(v.literal("short_term"), v.literal("medium_term"), v.literal("long_term")),
+    rank: v.number(),
+    trackId: v.string(),
+    song: v.string(),
+    artist: v.string(),
+    album: v.string(),
+    albumArtUrl: v.optional(v.string()),
+    url: v.string(),
+    durationMs: v.number(),
+    releaseDate: v.optional(v.string()),
+    fetchedAt: v.number(),
+  }).index("by_range_rank", ["timeRange", "rank"]),
 
   commits: defineTable({
     sha: v.string(),

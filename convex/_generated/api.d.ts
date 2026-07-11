@@ -32,6 +32,7 @@ import type * as spotify from "../spotify.js";
 import type * as storage from "../storage.js";
 import type * as themes from "../themes.js";
 import type * as tools from "../tools.js";
+import type * as topTracks from "../topTracks.js";
 
 import type {
   ApiFromModules,
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   storage: typeof storage;
   themes: typeof themes;
   tools: typeof tools;
+  topTracks: typeof topTracks;
 }>;
 
 /**

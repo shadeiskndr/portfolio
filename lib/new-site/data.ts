@@ -117,7 +117,6 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Songs", href: "/songs" },
   { label: "Stats", href: "/stats" },
   { label: "Uses", href: "/uses" },
-  { label: "Networks", href: "/networks" },
   { label: "Chat", href: "/chat" },
   { label: "Resume Builder", href: "/resume-builder" },
 ];
