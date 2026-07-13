@@ -1,15 +1,14 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { ListMusic, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { AnimatePresence, m, type Variants } from "motion/react";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import MobileSheet from "@/components/new-site/layout/mobile-sheet";
+import { type Track, useMusicPlayer } from "@/components/new-site/layout/music-player-provider";
 import { Button } from "@/components/ui/button";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { api } from "@/convex/_generated/api";
-import { useMountEffect } from "@/hooks/use-mount-effect";
 import { playClick } from "@/hooks/use-sound";
 import { cn } from "@/lib/utils";
 
@@ -23,13 +22,6 @@ function formatTime(seconds: number) {
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
-
-function colorCoverUri(color: string) {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='${color}'/></svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-}
-
-const FALLBACK_COVER = colorCoverUri("hsl(0 0% 30%)");
 
 const blobVariants: Variants = {
   closed: {
@@ -65,141 +57,222 @@ const blobVariants: Variants = {
 
 const CONTROL_BTN_CLASS = "text-muted-foreground hover:bg-background/60 hover:text-foreground";
 
-type Track = { src: string; title: string; artist: string; cover: string | null };
-
-export default function MusicPlayerPopover() {
+export default function MusicPlayerPopover({
+  variant = "popover",
+}: {
+  variant?: "popover" | "sheet";
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<"controls" | "playlist">("controls");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [hoverTime, setHoverTime] = useState(0);
-  const [trackIndex, setTrackIndex] = useState(0);
-  const [volume, setVolume] = useState(10);
-  const isMuted = volume === 0;
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const wasPlayingRef = useRef(false);
-
-  const playlist = useQuery(api.songs.list) ?? [];
-  const currentTrack = playlist[trackIndex];
-  const coverArt = currentTrack?.cover ?? FALLBACK_COVER;
-
-  useMountEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume / 100;
-  });
-
-  const applyVolume = (v: number) => {
-    setVolume(v);
-    if (audioRef.current) audioRef.current.volume = v / 100;
-  };
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-    } else {
-      audio
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
-    }
-  };
-
-  const seek = (time: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const clamped = Math.max(0, Math.min(duration || 0, time));
-    audio.currentTime = clamped;
-    setCurrentTime(clamped);
-  };
-
-  const changeTrack = (index: number, { switchToControls }: { switchToControls: boolean }) => {
-    if (index === trackIndex) {
-      if (switchToControls) setView("controls");
-      return;
-    }
-    setTrackIndex(index);
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
-    wasPlayingRef.current = true;
-    if (switchToControls) setView("controls");
-  };
-
-  const selectTrack = (index: number) => changeTrack(index, { switchToControls: true });
-
-  const nextTrack = () =>
-    changeTrack((trackIndex + 1) % playlist.length, { switchToControls: false });
-
-  const prevTrack = () =>
-    changeTrack((trackIndex - 1 + playlist.length) % playlist.length, { switchToControls: false });
-
-  // Scrub handlers pause during drag and resume on commit; kept here (not in
-  // ControlsView) so the audio ref and playback state stay in one place.
-  const scrub = (pct: number) => {
-    if (!duration) return;
-    if (isPlaying) {
-      wasPlayingRef.current = true;
-      audioRef.current?.pause();
-      setIsPlaying(false);
-    }
-    seek((pct / 100) * duration);
-  };
-
-  const commitScrub = (pct: number) => {
-    if (!duration) return;
-    seek((pct / 100) * duration);
-    if (wasPlayingRef.current) {
-      wasPlayingRef.current = false;
-      audioRef.current
-        ?.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {});
-    }
-  };
+  const {
+    playlist,
+    currentTrack,
+    coverArt,
+    trackIndex,
+    isPlaying,
+    currentTime,
+    duration,
+    hoverTime,
+    volume,
+    isMuted,
+    setHoverTime,
+    scrub,
+    commitScrub,
+    togglePlay,
+    prevTrack,
+    nextTrack,
+    selectTrack,
+    applyVolume,
+  } = useMusicPlayer();
 
   if (playlist.length === 0 || !currentTrack) return null;
 
+  const player: PlayerApi = {
+    isOpen,
+    setIsOpen,
+    view,
+    setView,
+    coverArt,
+    currentTrack,
+    playlist,
+    trackIndex,
+    isPlaying,
+    currentTime,
+    duration,
+    hoverTime,
+    volume,
+    isMuted,
+    setHoverTime,
+    scrub,
+    commitScrub,
+    togglePlay,
+    prevTrack,
+    nextTrack,
+    // Picking a track from the playlist should also return to the transport;
+    // that is a view concern, so it is bound here rather than in the provider.
+    selectTrack: (index: number) => {
+      selectTrack(index);
+      setView("controls");
+    },
+    applyVolume,
+  };
+
   return (
     <div className="relative">
-      {/** biome-ignore lint/a11y/useMediaCaption: background audio player has no caption track */}
-      <audio
-        ref={audioRef}
-        src={currentTrack.src}
-        preload="auto"
-        onTimeUpdate={(e) => {
-          setCurrentTime(e.currentTarget.currentTime);
-          const d = e.currentTarget.duration;
-          if (Number.isFinite(d) && d > 0) setDuration(d);
-        }}
-        onLoadedMetadata={(e) => {
-          const d = e.currentTarget.duration;
-          if (Number.isFinite(d) && d > 0) setDuration(d);
-          e.currentTarget.volume = volume / 100;
-          if (wasPlayingRef.current) {
-            wasPlayingRef.current = false;
-            e.currentTarget
-              .play()
-              .then(() => setIsPlaying(true))
-              .catch(() => setIsPlaying(false));
-          }
-        }}
-        onDurationChange={(e) => {
-          const d = e.currentTarget.duration;
-          if (Number.isFinite(d) && d > 0) setDuration(d);
-        }}
-        onEnded={() => {
-          if (playlist.length > 1) {
-            nextTrack();
-          } else {
-            setIsPlaying(false);
-          }
-        }}
-        className="pointer-events-none absolute h-0 w-0 opacity-0"
-      />
+      {/* The goo blob expands to a fixed 320px anchored to the top bar, which
+          does not fit a phone and has nothing to anchor to now that the mobile
+          chrome is a bottom dock. Same transport, different container. */}
+      {variant === "sheet" ? <MusicSheetPanel {...player} /> : <MusicBlobPanel {...player} />}
+    </div>
+  );
+}
 
+type PlayerApi = {
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  view: "controls" | "playlist";
+  setView: React.Dispatch<React.SetStateAction<"controls" | "playlist">>;
+  coverArt: string;
+  currentTrack: Track;
+  playlist: Track[];
+  trackIndex: number;
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  hoverTime: number;
+  volume: number;
+  isMuted: boolean;
+  setHoverTime: (n: number) => void;
+  scrub: (pct: number) => void;
+  commitScrub: (pct: number) => void;
+  togglePlay: () => void;
+  prevTrack: () => void;
+  nextTrack: () => void;
+  selectTrack: (index: number) => void;
+  applyVolume: (v: number) => void;
+};
+
+/** Mobile presentation: a touch-scrollable bottom sheet, trigger optional. */
+function MusicSheetPanel(p: PlayerApi) {
+  const {
+    isOpen,
+    setIsOpen,
+    view,
+    setView,
+    coverArt,
+    currentTrack,
+    playlist,
+    trackIndex,
+    isPlaying,
+    currentTime,
+    duration,
+    hoverTime,
+    volume,
+    isMuted,
+    setHoverTime,
+    scrub,
+    commitScrub,
+    togglePlay,
+    prevTrack,
+    nextTrack,
+    selectTrack,
+    applyVolume,
+  } = p;
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={isOpen ? "Close music player" : "Open music player"}
+        aria-expanded={isOpen}
+        onClick={() => {
+          playClick("icon");
+          setIsOpen(true);
+        }}
+        className="size-10 rounded-full text-muted-foreground"
+      >
+        <Play className="h-4 w-4" />
+      </Button>
+      {/* Constant title: PlaylistView renders its own "Playlist" heading (it
+          carries the back button), so switching this one would double up. */}
+      <MobileSheet
+        open={isOpen}
+        onOpenChange={(next) => {
+          setIsOpen(next);
+          if (!next) setView("controls");
+        }}
+        title="Music"
+        description={currentTrack.title}
+      >
+        {view === "controls" ? (
+          <ControlsView
+            coverArt={coverArt}
+            isPlaying={isPlaying}
+            title={currentTrack.title}
+            artist={currentTrack.artist}
+            currentTime={currentTime}
+            duration={duration}
+            hoverTime={hoverTime}
+            volume={volume}
+            isMuted={isMuted}
+            canSkip={playlist.length >= 2}
+            onHoverTime={setHoverTime}
+            onScrub={scrub}
+            onCommitScrub={commitScrub}
+            onTogglePlay={togglePlay}
+            onPrev={prevTrack}
+            onNext={nextTrack}
+            onShowPlaylist={() => setView("playlist")}
+            onToggleMute={() => applyVolume(isMuted ? 10 : 0)}
+            onVolumeChange={applyVolume}
+          />
+        ) : (
+          <PlaylistView
+            playlist={playlist}
+            trackIndex={trackIndex}
+            isPlaying={isPlaying}
+            onSelect={selectTrack}
+            onBack={() => setView("controls")}
+          />
+        )}
+      </MobileSheet>
+    </>
+  );
+}
+
+/**
+ * Desktop presentation: the gooey blob that expands out of the top-bar trigger.
+ * Kept in its own component so its `AnimatePresence` is not itself inside a
+ * conditional — a boundary that unmounts with its child can never play the
+ * child's exit animation.
+ */
+function MusicBlobPanel(p: PlayerApi) {
+  const {
+    isOpen,
+    setIsOpen,
+    view,
+    setView,
+    coverArt,
+    currentTrack,
+    playlist,
+    trackIndex,
+    isPlaying,
+    currentTime,
+    duration,
+    hoverTime,
+    volume,
+    isMuted,
+    setHoverTime,
+    scrub,
+    commitScrub,
+    togglePlay,
+    prevTrack,
+    nextTrack,
+    selectTrack,
+    applyVolume,
+  } = p;
+  return (
+    <>
       {isOpen && (
         <button
           type="button"
@@ -326,7 +399,7 @@ export default function MusicPlayerPopover() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </>
   );
 }
 

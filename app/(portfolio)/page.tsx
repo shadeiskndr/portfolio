@@ -5,7 +5,7 @@ import { GITHUB_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export default function AboutHome() {
   return (
-    <article className="mx-auto max-w-2xl space-y-6">
+    <article className="mx-auto max-w-2xl space-y-5 sm:space-y-6">
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -25,7 +25,7 @@ export default function AboutHome() {
         }}
       />
       <RevealFade delay={0}>
-        <h1 className="font-medium font-serif text-3xl tracking-tight md:text-4xl">
+        <h1 className="text-pretty font-medium font-serif text-[1.75rem] leading-[1.2] tracking-tight sm:text-3xl md:text-4xl">
           hi, i&apos;m <Highlight>shahathir</Highlight> — a software developer building things at{" "}
           <Highlight variant="underline">FRG</Highlight>.
         </h1>

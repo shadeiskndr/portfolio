@@ -40,7 +40,9 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
         <m.div
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className={cn(
-            "fixed z-30 flex flex-col overflow-hidden border border-foreground/10 bg-background shadow-2xl",
+            // z-50 so the full-bleed mobile panel covers the bottom dock
+            // (z-40) rather than having it float on top.
+            "fixed z-50 flex flex-col overflow-hidden border border-foreground/10 bg-background shadow-2xl",
             isDesktop
               ? "right-4 bottom-4 h-[min(40rem,calc(100dvh-2rem))] w-96 rounded-xl"
               : "inset-2 rounded-xl"
@@ -178,14 +180,18 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
       ) : (
         <m.div
           animate={{ opacity: 1, scale: 1 }}
-          className="fixed right-4 bottom-4 z-30"
+          // Lifted clear of the mobile dock; back to the corner once the dock
+          // gives way to the desktop top nav.
+          className="fixed right-4 bottom-(--dock-clearance) z-30 lg:bottom-4"
           exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
           initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
           key="launcher"
           transition={{ duration: 0.15 }}
         >
+          {/* Drop lives on the button, not the motion wrapper — putting a
+              transform transition there would fight the mount animation. */}
           <Button
-            className="gap-1.5 rounded-full shadow-lg"
+            className="translate-y-(--dock-shift) gap-1.5 rounded-full shadow-lg transition-transform duration-300 ease-out"
             onClick={() => setOpen(true)}
             size="sm"
             type="button"

@@ -568,20 +568,30 @@ function ChatSession({
         })}
       </div>
 
-      <div className="sticky bottom-0 z-20 bg-background/80 pb-4 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
-        {showScrollButton ? (
-          <Button
-            aria-label="Scroll to bottom"
-            className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-full shadow-sm"
-            onClick={scrollToBottom}
-            size="icon"
-            type="button"
-            variant="outline"
-          >
-            <ArrowDownIcon className="size-4" />
-          </Button>
-        ) : null}
-        {composer}
+      {/* Stays flush to the viewport bottom so the blurred band covers the
+          messages scrolling behind it, and pads its own content up clear of
+          the mobile dock. The page cancels `main`'s dock clearance so this
+          padding is the only reservation — otherwise the two stack up once
+          the containing block clamps the sticky element at the page end. */}
+      <div className="sticky bottom-0 z-20 bg-background/80 pb-(--dock-clearance) backdrop-blur-xl supports-backdrop-filter:bg-background/60 lg:pb-4">
+        {/* The band above keeps its height so it always covers to the screen
+            edge; only the controls slide down into the space the dock frees,
+            which buys the transcript ~64px while scrolling. */}
+        <div className="translate-y-(--dock-shift) transition-transform duration-300 ease-out">
+          {showScrollButton ? (
+            <Button
+              aria-label="Scroll to bottom"
+              className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-full shadow-sm"
+              onClick={scrollToBottom}
+              size="icon"
+              type="button"
+              variant="outline"
+            >
+              <ArrowDownIcon className="size-4" />
+            </Button>
+          ) : null}
+          {composer}
+        </div>
       </div>
     </div>
   );

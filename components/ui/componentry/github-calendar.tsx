@@ -147,8 +147,10 @@ export function GithubCalendar({
   return (
     <TooltipProvider delay={50}>
       <div className={cn("flex w-max max-w-full flex-col gap-4", className)}>
+        {/* The header stacks on a phone: side by side, the contribution count
+            wrapped to two lines and sat misaligned against the username. */}
         {showTotal && (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               <svg
                 height="16"

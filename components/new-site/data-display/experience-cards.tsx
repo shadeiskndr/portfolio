@@ -88,7 +88,7 @@ function ExperienceCard({
           aria-controls={panelId}
           aria-expanded={isOpen}
           onClick={onToggle}
-          className="flex w-full cursor-pointer select-none items-center gap-4 px-6 py-5 text-left"
+          className="flex w-full cursor-pointer select-none items-center gap-3 px-4 py-4 text-left sm:gap-4 sm:px-6 sm:py-5"
         >
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted/50 ring-1 ring-border">
             <AssetImage
@@ -113,8 +113,10 @@ function ExperienceCard({
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="truncate font-semibold text-sm">{experience.position}</p>
+            {/* Wraps rather than truncates on a phone — the row is only ~200px
+                wide there, which clipped "Assistant Software Developer". */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <p className="min-w-0 font-semibold text-sm sm:truncate">{experience.position}</p>
               {experience.current ? (
                 <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 font-medium text-[10px] text-primary">
                   Current

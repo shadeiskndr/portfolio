@@ -4,6 +4,7 @@ import { Caveat, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 
 import "@/app/globals.css";
+import { HideDevIndicator } from "@/components/dev/hide-dev-indicator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { api } from "@/convex/_generated/api";
 import { buildThemeCSSText, THEME_VARS_STYLE_ID } from "@/lib/apply-theme-css-vars";
@@ -105,6 +106,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
       </head>
       <body className="antialiased">
+        {process.env.NODE_ENV === "development" ? <HideDevIndicator /> : null}
         <ConvexClientProvider>
           <AssetsProvider preloaded={preloadedAssets}>
             <QueryProvider>
