@@ -21,8 +21,6 @@ const percentFormatter = new Intl.NumberFormat("en-US", {
 });
 
 export default function CodestatsLanguages({ breakdown }: { breakdown: LanguageBreakdown }) {
-  // The tail folds into one "Other" row rather than growing the chart — past a
-  // handful of bars the ranking stops being readable and the table takes over.
   const rows = breakdown.top.map((slice) => ({ name: slice.name, xp: slice.xp }));
   if (breakdown.otherCount > 0) {
     rows.push({ name: `Other (${breakdown.otherCount})`, xp: breakdown.otherXp });

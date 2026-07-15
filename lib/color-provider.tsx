@@ -14,8 +14,6 @@ import {
   type ThemeOption,
 } from "@/lib/color-themes";
 
-// Stable reference for useLocalStorage's options arg so the hook's internal
-// callbacks (which depend on `options`) don't rebuild every render.
 const EMPTY_STORAGE_OPTIONS = {};
 
 type ColorThemeProviderProps = {
@@ -85,7 +83,6 @@ export function ColorThemeProvider({
     applyThemeFonts(window.document, theme);
   }, [colorTheme, themesById]);
 
-  // Clean up animation styles after transition
   useTimeout(
     () => {
       if (styleId) {
@@ -106,7 +103,6 @@ export function ColorThemeProvider({
         return;
       }
 
-      // Inject polygon wipe animation styles
       const newStyleId = `color-theme-transition-${Date.now()}`;
       const style = document.createElement("style");
       style.id = newStyleId;
@@ -134,7 +130,6 @@ export function ColorThemeProvider({
       document.head.appendChild(style);
       setStyleId(newStyleId);
 
-      // Use View Transitions API if supported
       if ("startViewTransition" in document) {
         document.startViewTransition(() => {
           setColorTheme(newTheme);

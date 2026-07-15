@@ -4,10 +4,6 @@ import { Flame, Languages, Laptop, Trophy } from "lucide-react";
 import type { CodestatsSummary } from "@/lib/new-site/codestats";
 import { formatDayLong, formatFullXp, formatXp } from "@/lib/new-site/codestats";
 
-/**
- * The headline is one number, so it gets a hero figure and a meter — not a
- * chart. Total XP is the figure; the level is a single ratio against a limit.
- */
 export function CodestatsHero({
   summary,
   username,
@@ -22,7 +18,6 @@ export function CodestatsHero({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-muted-foreground text-xs uppercase tracking-wide">Total XP</p>
-          {/* Sans, proportional figures: a hero number is not a table column. */}
           <p className="mt-1 font-semibold text-4xl leading-none tracking-tight sm:text-5xl">
             {formatFullXp(summary.totalXp)}
           </p>
@@ -46,8 +41,6 @@ export function CodestatsHero({
               {percent}% to {summary.level + 1}
             </span>
           </div>
-          {/* Decorative: the same ratio is spelled out in the two labels around
-              it, so the bar adds no information a screen reader would miss. */}
           <div aria-hidden className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full transition-[width] duration-500"

@@ -27,12 +27,6 @@ function FieldError({ errors, isTouched }: { errors: unknown[]; isTouched: boole
   return <p className="mt-1 text-red-600 text-xs dark:text-red-400">{String(errors[0])}</p>;
 }
 
-/**
- * The nested-forms shape from the post, built with TanStack Form (a real React
- * form library) since the portfolio isn't Angular. One form built once; an
- * array of item sub-forms that flex as you add/remove rows (the applyEach
- * analog); per-field validity rolling up to a single Save gate.
- */
 export function NestedFormDemo() {
   const [savedCount, setSavedCount] = useState(0);
 
@@ -53,7 +47,6 @@ export function NestedFormDemo() {
         }}
         className="space-y-4"
       >
-        {/* Top-level field. */}
         <form.Field
           name="name"
           validators={{
@@ -78,7 +71,6 @@ export function NestedFormDemo() {
           )}
         </form.Field>
 
-        {/* Nested array of item sub-forms — the applyEach analog. */}
         <form.Field name="items">
           {(itemsField) => (
             <div className="space-y-2">
@@ -141,9 +133,6 @@ export function NestedFormDemo() {
                           value={f.state.value}
                           onChange={(e) => {
                             const raw = e.target.value;
-                            // Guard the parse: keep the current weight when the
-                            // field is cleared and ignore partial input (NaN),
-                            // rather than storing 0/NaN into the model.
                             const next = raw === "" ? f.state.value : Number(raw);
                             if (Number.isNaN(next)) return;
                             f.handleChange(next);
@@ -174,7 +163,6 @@ export function NestedFormDemo() {
           )}
         </form.Field>
 
-        {/* Aggregate validity + the live model, the form's one source of truth. */}
         <form.Subscribe
           selector={(s) => ({ canSubmit: s.canSubmit, isValid: s.isValid, values: s.values })}
         >

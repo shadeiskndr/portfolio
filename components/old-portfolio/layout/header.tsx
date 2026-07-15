@@ -34,14 +34,12 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const size = useWindowSize();
 
-  // close sidebar if open in screen size < 768px
   useEffect(() => {
     if (size?.width && size?.width > 1024 && isOpen) {
       setIsOpen(false);
     }
   }, [size, isOpen]);
 
-  // Split NAV_LINKS into two groups
   const mainLinks = NAV_LINKS.slice(0, 4);
   const moreLinks = size?.width && size.width < 1024 ? NAV_LINKS.slice(4, 6) : NAV_LINKS.slice(4);
 
@@ -56,7 +54,6 @@ const Header = () => {
         <Link href="/" noCustomization>
           <Logo />
         </Link>
-        {/* Navigation links visible on large screens */}
         <div className="hidden items-center gap-6 lg:flex">
           <ul className="flex list-none items-center gap-6">
             {mainLinks.map((link, index) => (
@@ -94,7 +91,6 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Drawer trigger visible on small screens */}
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
           <DrawerTrigger asChild className="flex lg:hidden">
             <IconButton>

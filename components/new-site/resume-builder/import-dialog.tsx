@@ -20,8 +20,6 @@ type Mammoth = {
   extractRawText: (opts: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string }>;
 };
 
-// Extract plain text from a file for the importer. .docx goes through mammoth
-// (lazy-loaded); .tex keeps its raw LaTeX so the deterministic parser can run.
 async function readFile(file: File): Promise<{ source: string; format: ImportFormat }> {
   const name = file.name.toLowerCase();
   if (name.endsWith(".docx")) {
@@ -35,10 +33,6 @@ async function readFile(file: File): Promise<{ source: string; format: ImportFor
   return { source, format: name.endsWith(".tex") ? "tex" : "text" };
 }
 
-// Import a résumé from a .tex/.docx file or pasted text. The file is read to plain
-// text here (client-side), then handed to the assistant, which extracts it (exact
-// LaTeX parse first, else AI) and streams a review — so the wait happens in the
-// chat, not this dialog.
 export function ImportDialog({
   onSubmit,
 }: {

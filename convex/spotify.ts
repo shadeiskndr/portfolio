@@ -30,19 +30,10 @@ type NormalizedTrack = {
   url: string;
 };
 
-/**
- * `currently-playing` is polled continuously and tolerates it; the
- * `recently-played` endpoint does not — hammering it once per idle tick earned
- * this app a `429 QUOTA_EXCEEDED` with a ~16 hour `Retry-After`. It only exists
- * to answer "what was the last thing played", which changes slowly, so consult
- * it at most this often.
- */
 const RECENTLY_PLAYED_TTL_MS = 30 * 60 * 1000;
 
-/** Backoff-table key for `/v1/me/player/recently-played`. */
 const RECENTLY_PLAYED_ENDPOINT = "recently-played";
 
-/** Refresh the cached access token slightly before Spotify actually expires it. */
 const TOKEN_SKEW_MS = 60 * 1000;
 
 function normalize(item: NonNullable<SpotifyTrackResponse["item"]>): NormalizedTrack {
@@ -87,12 +78,6 @@ async function mintAccessToken(): Promise<{ token: string; expiresAt: number }> 
   };
 }
 
-/**
- * Access token for the user-scoped endpoints, cached in `spotifyAuth` so a
- * 30-second poll doesn't mint a fresh hour-long token every time.
- *
- * Exported for `topTracks.ts`, which shares the same credentials.
- */
 export async function getAccessToken(ctx: ActionCtx): Promise<string> {
   const cached = await ctx.runQuery(internal.spotify.getCachedToken, {});
   if (cached && cached.expiresAt - TOKEN_SKEW_MS > Date.now()) {
@@ -104,13 +89,6 @@ export async function getAccessToken(ctx: ActionCtx): Promise<string> {
   return token;
 }
 
-/**
- * Rate-limit bookkeeping, shared by every caller of a `/v1/me/*` endpoint.
- *
- * Spotify's guidance is to respect `Retry-After` and back off exponentially on
- * a 429. `RATE_LIMITED_ENDPOINTS` keys are arbitrary labels — one per endpoint
- * whose quota is tracked separately.
- */
 const BACKOFF_BASE_MS = 60 * 1000;
 const BACKOFF_CAP_MS = 6 * 60 * 60 * 1000;
 
@@ -119,11 +97,6 @@ export async function isRateLimited(ctx: ActionCtx, endpoint: string): Promise<b
   return row !== null && row.blockedUntil > Date.now();
 }
 
-/**
- * Park `endpoint` until Spotify says it is safe again. Prefers the server's own
- * `Retry-After` (in seconds); falls back to exponential backoff when the header
- * is absent, which is the case for some 5xx responses.
- */
 export async function recordRateLimit(
   ctx: ActionCtx,
   endpoint: string,
@@ -221,18 +194,9 @@ export const pollSpotify = internalAction({
       }
     }
 
-    // Nothing playing (or Spotify is unhappy). Fall back to the last-played
-    // track, but only if the cached answer has gone stale — see the TTL note.
-    // The TTL is the *only* gate on purpose: an earlier version also forced a
-    // check whenever no track was cached, which meant a rate-limited account
-    // (no track to cache → always "needs" a check) re-hit the blocked endpoint
-    // every single tick and never let the quota recover.
     const status = await ctx.runQuery(internal.spotify.getStatusMeta, {});
     const staleAt = Date.now() - RECENTLY_PLAYED_TTL_MS;
 
-    // Two independent gates: the TTL sets the normal cadence, and the backoff
-    // table honours a `Retry-After` Spotify has already handed us. Checking the
-    // latter first means a rate-limited endpoint costs zero requests.
     if (
       (status?.recentCheckedAt ?? 0) >= staleAt ||
       (await isRateLimited(ctx, RECENTLY_PLAYED_ENDPOINT))
@@ -262,11 +226,6 @@ export const pollSpotify = internalAction({
       await recordRateLimit(ctx, RECENTLY_PLAYED_ENDPOINT, recent.headers.get("retry-after"));
     }
 
-    // Reached on a 429/5xx, or on an empty history. This used to blank the
-    // widget out — keep whatever track was last resolved and just flip the
-    // playing flag. Stamp the check either way: none of these outcomes get
-    // better by asking again in sixty seconds, and retrying is what exhausted
-    // the quota in the first place.
     await ctx.runMutation(internal.spotify.markNotPlaying, { recentChecked: true });
   },
 });
@@ -279,7 +238,6 @@ export const getStatusMeta = internalQuery({
   },
 });
 
-/** Flip to "not playing" without discarding the cached track metadata. */
 export const markNotPlaying = internalMutation({
   args: { recentChecked: v.optional(v.boolean()) },
   handler: async (ctx, { recentChecked }) => {

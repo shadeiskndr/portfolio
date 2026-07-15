@@ -113,8 +113,6 @@ function ExperienceCard({
           </div>
 
           <div className="min-w-0 flex-1">
-            {/* Wraps rather than truncates on a phone — the row is only ~200px
-                wide there, which clipped "Assistant Software Developer". */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <p className="min-w-0 font-semibold text-sm sm:truncate">{experience.position}</p>
               {experience.current ? (

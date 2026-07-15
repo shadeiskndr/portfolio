@@ -14,10 +14,6 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-// Paste a job description → hand it to the assistant, which rewrites the summary
-// to foreground relevant existing experience and reorders skills (never
-// added/dropped — the server reconciles to the original set), then streams an
-// explanation of what changed. The wait happens in the chat, not this dialog.
 export function TailorDialog({ onSubmit }: { onSubmit: (jobDescription: string) => void }) {
   const [open, setOpen] = useState(false);
   const [jd, setJd] = useState("");

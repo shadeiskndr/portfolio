@@ -52,9 +52,6 @@ export const addAsset = internalMutation({
   },
 });
 
-// Swap an existing asset's file in place (same key/url-less identity): deletes the
-// old storage blob and repoints the row at a newly-uploaded one. Used to replace a
-// file with an optimized version without creating a duplicate row.
 export const replaceAssetFile = internalMutation({
   args: {
     key: v.string(),

@@ -108,8 +108,6 @@ export default function MusicPlayerPopover({
     togglePlay,
     prevTrack,
     nextTrack,
-    // Picking a track from the playlist should also return to the transport;
-    // that is a view concern, so it is bound here rather than in the provider.
     selectTrack: (index: number) => {
       selectTrack(index);
       setView("controls");
@@ -119,9 +117,6 @@ export default function MusicPlayerPopover({
 
   return (
     <div className="relative">
-      {/* The goo blob expands to a fixed 320px anchored to the top bar, which
-          does not fit a phone and has nothing to anchor to now that the mobile
-          chrome is a bottom dock. Same transport, different container. */}
       {variant === "sheet" ? <MusicSheetPanel {...player} /> : <MusicBlobPanel {...player} />}
     </div>
   );
@@ -152,7 +147,6 @@ type PlayerApi = {
   applyVolume: (v: number) => void;
 };
 
-/** Mobile presentation: a touch-scrollable bottom sheet, trigger optional. */
 function MusicSheetPanel(p: PlayerApi) {
   const {
     isOpen,
@@ -193,8 +187,6 @@ function MusicSheetPanel(p: PlayerApi) {
       >
         <Play className="h-4 w-4" />
       </Button>
-      {/* Constant title: PlaylistView renders its own "Playlist" heading (it
-          carries the back button), so switching this one would double up. */}
       <MobileSheet
         open={isOpen}
         onOpenChange={(next) => {
@@ -240,12 +232,6 @@ function MusicSheetPanel(p: PlayerApi) {
   );
 }
 
-/**
- * Desktop presentation: the gooey blob that expands out of the top-bar trigger.
- * Kept in its own component so its `AnimatePresence` is not itself inside a
- * conditional — a boundary that unmounts with its child can never play the
- * child's exit animation.
- */
 function MusicBlobPanel(p: PlayerApi) {
   const {
     isOpen,
@@ -403,9 +389,6 @@ function MusicBlobPanel(p: PlayerApi) {
   );
 }
 
-/** Now-playing panel: cover, title, scrubber, transport, and volume. */
-// isPlaying/isMuted each just swap one icon (Pause/Play, VolumeX/Volume2), not a
-// whole subtree — a variant-component split would be pure over-engineering here.
 // react-doctor-disable-next-line react-doctor/prefer-explicit-variants
 function ControlsView({
   coverArt,
@@ -569,7 +552,6 @@ function ControlsView({
   );
 }
 
-/** Track list; the active, playing row shows an animated equalizer. */
 function PlaylistView({
   playlist,
   trackIndex,

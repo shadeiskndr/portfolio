@@ -4,9 +4,6 @@ import { useId, useState, useSyncExternalStore } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
-// The active light/dark theme is toggled via a `.dark` class on <html>. Subscribe
-// to it as an external store so the diagram re-renders (via a changing key) when
-// the theme flips, without reaching for useEffect.
 function subscribeToTheme(onChange: () => void) {
   const observer = new MutationObserver(onChange);
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -19,10 +16,6 @@ function useIsDark() {
   return useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
 }
 
-/**
- * Renders one Mermaid diagram. Remounted (via its key) whenever the source or
- * theme changes, so the one-time render on mount is the whole lifecycle.
- */
 function MermaidCanvas({
   chart,
   dark,
@@ -38,8 +31,6 @@ function MermaidCanvas({
 
   useMountEffect(() => {
     let cancelled = false;
-    // Load mermaid (~0.5MB) on demand so it stays out of every MDX page's
-    // initial bundle — it's only needed once a diagram actually mounts.
     import("mermaid").then(({ default: mermaid }) => {
       if (cancelled) return;
       mermaid.initialize({
@@ -82,11 +73,6 @@ function MermaidCanvas({
   );
 }
 
-/**
- * Renders a Mermaid diagram from its source. Used in MDX prose as
- * `<Mermaid chart={`flowchart LR; A --> B`} />`. Tracks the light/dark theme and
- * falls back to the raw source if the definition fails to parse.
- */
 export function Mermaid({ chart, className }: { chart: string; className?: string }) {
   const dark = useIsDark();
   return (

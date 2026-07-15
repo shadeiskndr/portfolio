@@ -9,7 +9,6 @@ const HeroSection = () => {
   return (
     <Container id="hero">
       <div className="flex flex-col gap-12 md:flex-row">
-        {/* Image */}
         <div className="flex items-center justify-center md:order-last md:grow md:justify-end">
           <div className="relative h-75 w-70 md:h-87.5 md:w-[320px]">
             <AssetImage
@@ -22,7 +21,6 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex max-w-3xl grow flex-col justify-center gap-8 md:order-first md:items-start md:justify-center 2xl:gap-12">
           <div className="flex flex-col gap-2">
             <Typography>Hey, I&apos;m</Typography>

@@ -205,7 +205,6 @@ const models = [
   },
 ];
 
-/** Demo component for preview */
 export default function ModelSelectorDemo() {
   const [open, setOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("gpt-4o");

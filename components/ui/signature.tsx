@@ -14,28 +14,18 @@ const PATH_VARIANTS = {
 };
 
 interface SignatureProps {
-  /** Text to generate signature for */
   text?: string;
-  /** Color of the signature path */
   color?: string;
-  /** Font size of the signature */
   fontSize?: number;
-  /** Animation duration in seconds */
   duration?: number;
-  /** Delay before animation starts in seconds */
   delay?: number;
-  /** Additional CSS classes */
   className?: string;
-  /** Only animate when in view */
   inView?: boolean;
-  /** Only animate once */
   once?: boolean;
-  /** Custom font URL to load */
   fontUrl?: string;
 }
 
 export function Signature({ fontUrl, ...props }: SignatureProps) {
-  // Remount (and reload the font) whenever the source font changes.
   return <SignatureInner key={fontUrl ?? "default"} fontUrl={fontUrl} {...props} />;
 }
 
@@ -53,12 +43,11 @@ function SignatureInner({
   const [font, setFont] = useState<opentype.Font | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
-  const height = fontSize * 3; // Give plenty of vertical space
+  const height = fontSize * 3;
   const horizontalPadding = fontSize * 0.1;
-  const baseline = fontSize * 1.5; // Shift down
+  const baseline = fontSize * 1.5;
   const maskId = `signature-reveal-${useId().replace(/:/g, "")}`;
 
-  // Load the font once on mount (external async sync, not derivable state).
   useMountEffect(() => {
     let cancelled = false;
 
@@ -83,7 +72,6 @@ function SignatureInner({
     };
   });
 
-  // Derive the glyph paths from the loaded font (Rule 1: derive, don't sync).
   const { paths, width } = useMemo(() => {
     if (!font) {
       return {
@@ -124,10 +112,6 @@ function SignatureInner({
         <mask id={maskId} maskUnits="userSpaceOnUse">
           {paths.map((d, i) => (
             <motion.path
-              // Index keys are safe here: `paths` is regenerated wholesale by the
-              // useMemo (never reordered/spliced), and each entry's identity IS its
-              // character position in `text`. Path data can collide (e.g. repeated
-              // spaces yield identical empty paths), so `d` cannot be the key.
               // react-doctor-disable-next-line react-doctor/no-array-index-as-key
               key={i}
               d={d}
@@ -156,8 +140,6 @@ function SignatureInner({
 
       {paths.map((d, i) => (
         <motion.path
-          // Safe for the same reason as the mask paths above: positional identity,
-          // array replaced atomically, path data not guaranteed unique.
           // react-doctor-disable-next-line react-doctor/no-array-index-as-key
           key={i}
           d={d}

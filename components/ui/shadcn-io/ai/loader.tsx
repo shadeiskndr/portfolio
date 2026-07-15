@@ -46,7 +46,6 @@ export const Loader = ({ className, size = 16, ...props }: LoaderProps) => (
   </div>
 );
 
-/** Demo component for preview */
 export default function LoaderDemo() {
   return (
     <div className="flex flex-col items-center justify-center gap-6 p-8">

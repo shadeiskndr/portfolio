@@ -120,7 +120,6 @@ export const MessageBranch = ({
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
   const [branches, setBranches] = useState<ReactElement[]>([]);
 
-  // Memoized so context consumers don't redraw on every parent render.
   const contextValue = useMemo<MessageBranchContextType>(() => {
     const handleBranchChange = (newBranch: number) => {
       setCurrentBranch(newBranch);
@@ -152,9 +151,6 @@ export const MessageBranchContent = ({ children, ...props }: MessageBranchConten
   const { currentBranch, setBranches, branches } = useMessageBranch();
   const childrenArray = Array.isArray(children) ? children : [children];
 
-  // Use useEffect to update branches when they change. The array is built
-  // inside the effect from `children` so the deps don't include a locally
-  // rebuilt array that would re-run the effect every render.
   useEffect(() => {
     const nextBranches = Array.isArray(children) ? children : [children];
     if (branches.length !== nextBranches.length) {
@@ -187,7 +183,6 @@ export const MessageBranchSelector = ({
 }: MessageBranchSelectorProps) => {
   const { totalBranches } = useMessageBranch();
 
-  // Don't render if there's only one branch
   if (totalBranches <= 1) {
     return null;
   }
@@ -262,8 +257,6 @@ export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
     <Streamdown
       className={cn("size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0", className)}
-      // The external-link safety modal renders a fixed <div> inside the markdown
-      // <p>, which is invalid HTML (hydration error). Links stay plain anchors.
       linkSafety={{ enabled: false }}
       {...props}
     />
@@ -289,9 +282,6 @@ export function MessageAttachment({ data, className, onRemove, ...props }: Messa
     <div className={cn("group relative size-24 overflow-hidden rounded-lg", className)} {...props}>
       {isImage ? (
         <>
-          {/* Attachment URLs are blob:/data: URIs (object-URL previews; data URLs
-              after submit conversion), which next/image cannot optimize — same
-              rationale as the bookmarks-board favicon suppression. */}
           {/* react-doctor-disable-next-line react-doctor/nextjs-no-img-element */}
           <img
             alt={filename || "attachment"}
@@ -373,7 +363,6 @@ export const MessageToolbar = ({ className, children, ...props }: MessageToolbar
   </div>
 );
 
-/** Demo component for preview */
 export default function MessageDemo() {
   return (
     <TooltipProvider>

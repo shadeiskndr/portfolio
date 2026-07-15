@@ -6,8 +6,6 @@ import { useTimeout } from "@/hooks/use-timeout";
 
 type Theme = "dark" | "light" | "system";
 
-// Stable reference for useLocalStorage's options arg so the hook's internal
-// callbacks (which depend on `options`) don't rebuild every render.
 const EMPTY_STORAGE_OPTIONS = {};
 
 type ThemeProviderProps = {
@@ -61,7 +59,6 @@ export function Providers({
     setResolvedTheme(theme);
   }, [theme]);
 
-  // Clean up animation styles after transition
   useTimeout(
     () => {
       if (styleId) {
@@ -77,7 +74,6 @@ export function Providers({
 
   const setThemeWithTransition = useCallback(
     (newTheme: Theme) => {
-      // Inject circle-blur animation styles
       const newStyleId = `theme-transition-${Date.now()}`;
       const style = document.createElement("style");
       style.id = newStyleId;
@@ -113,7 +109,6 @@ export function Providers({
       document.head.appendChild(style);
       setStyleId(newStyleId);
 
-      // Use View Transitions API if supported
       if ("startViewTransition" in document) {
         document.startViewTransition(() => {
           setTheme(newTheme);

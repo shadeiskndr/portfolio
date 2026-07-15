@@ -11,7 +11,6 @@ const EducationSection = () => {
       </div>
 
       <div className="flex w-full flex-col justify-between gap-12 md:flex-row">
-        {/* Image */}
         <div className="flex justify-center md:justify-end">
           <div className="relative h-[380px] w-[320px] md:h-[460px] md:w-[380px] lg:h-[520px] lg:w-[440px]">
             <AssetImage
@@ -24,7 +23,6 @@ const EducationSection = () => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex max-w-xl flex-col gap-6 sm:order-last md:order-first lg:order-first">
           <Typography variant="h3">
             Bachelor of Information Technology (Hons.) in Software Engineering

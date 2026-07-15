@@ -1,6 +1,5 @@
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
-/** A two-tone diagonal gradient with a few soft blurred blobs — abstract album art. */
 export function coverSvg() {
   const h1 = Math.floor(rand(0, 360));
   const h2 = (h1 + Math.floor(rand(40, 160))) % 360;
@@ -25,7 +24,6 @@ export function coverSvg() {
 </svg>`;
 }
 
-/** Upload a freshly generated cover SVG to Convex storage; returns its storageId. */
 export async function uploadCover(
   generateUploadUrl: () => Promise<string>
 ): Promise<string | null> {

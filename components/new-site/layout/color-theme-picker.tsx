@@ -81,8 +81,6 @@ export default function ColorThemePicker({
           description={selectedTheme ? `Currently ${selectedTheme.label}.` : undefined}
           contentClassName="px-0 pt-0"
         >
-          {/* The sheet body is the scroller, so the list must not open a
-              nested one — cmdk defaults `CommandList` to its own overflow. */}
           <ThemeCommand
             colorTheme={colorTheme}
             setColorThemeWithTransition={setColorThemeWithTransition}
@@ -149,7 +147,6 @@ type ThemeCommandProps = {
   listClassName?: string;
 };
 
-/** Shared by the desktop popover and the mobile sheet. */
 function ThemeCommand({
   colorTheme,
   setColorThemeWithTransition,

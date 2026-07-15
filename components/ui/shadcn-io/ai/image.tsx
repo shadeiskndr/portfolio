@@ -17,7 +17,6 @@ export const Image = ({ base64, uint8Array, mediaType, ...props }: ImageProps) =
   />
 );
 
-/** Demo component for preview */
 export default function ImageDemo() {
   return (
     <div className="flex items-center justify-center p-8">

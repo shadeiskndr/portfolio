@@ -11,7 +11,6 @@ type Phase = "idle" | "running" | "awaiting" | "done";
 const QUESTION = "Which source should I summarize from?";
 const OPTIONS = ["Finance export", "Shared drive"];
 
-/** A mock turn that streams, calls `ask_user`, blocks for your answer, then resumes. */
 export function AskUserDemo() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [phase, setPhase] = useState<Phase>("idle");

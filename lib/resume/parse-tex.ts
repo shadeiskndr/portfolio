@@ -1,16 +1,6 @@
 import type { Education, Experience, Reference, ResumeData, SystemGroup } from "./schema";
 import { resumeSchema } from "./schema";
 
-// Import a résumé from LaTeX. This is NOT a general LaTeX parser — it targets the
-// macro grammar of the `nina-resume2.tex` template family (`\resumeSubheading`,
-// `\subheadingSingle` + `\resumeSubSubheading`/`\resumeSubRole`, `\resumeItem`,
-// `\section{}`, the two-minipage references block). Résumés built from that
-// template round-trip; anything else degrades gracefully (unknown sections are
-// skipped, and the result is normalised through the zod schema).
-
-// ── low-level LaTeX helpers ──────────────────────────────────────────────────
-
-/** Strip `%` comments, honouring escaped `\%`. */
 function stripComments(src: string): string {
   return src
     .split("\n")
@@ -30,7 +20,6 @@ function stripComments(src: string): string {
     .join("\n");
 }
 
-/** Given the index of a `{`, return the balanced group content and the index past `}`. */
 function matchBalanced(src: string, open: number): { content: string; end: number } {
   let depth = 0;
   for (let i = open; i < src.length; i++) {
@@ -48,7 +37,6 @@ function matchBalanced(src: string, open: number): { content: string; end: numbe
   throw new Error("Unbalanced braces in .tex");
 }
 
-/** Read `n` consecutive `{…}` groups starting at `from` (skipping whitespace). */
 function readArgs(src: string, from: number, n: number): { args: string[]; end: number } {
   const args: string[] = [];
   let i = from;
@@ -69,27 +57,16 @@ function extractEmail(s: string): string {
   return plain ? plain[0] : "";
 }
 
-/**
- * Convert an inline LaTeX fragment to plain text. With `bold: true`, `\textbf{…}`
- * is preserved as the *bold* convention instead of being flattened away.
- */
 function delatex(input: string, opts: { bold?: boolean } = {}): string {
   let s = input;
-  // hyperlinks → display text
   s = s.replace(/\\href\{[^}]*\}\{([^}]*)\}/g, "$1");
-  // bold → *convention* (before the generic unwrap would strip it)
   if (opts.bold) s = s.replace(/\\textbf\s*\{([^{}]*)\}/g, "*$1*");
-  // unwrap the remaining formatting commands from the inside out
   const fmt =
     /\\(?:textbf|textit|emph|textsc|textrm|mbox|underline|small|Large|large|scshape|itshape|bfseries)\s*\{([^{}]*)\}/g;
   for (let i = 0; i < 8 && fmt.test(s); i++) s = s.replace(fmt, "$1");
-  // math separators
   s = s.replace(/\$\\cdot\$/g, "·").replace(/\$\\circ\$/g, "◦");
-  // dashes (order matters: --- before --)
   s = s.replace(/---/g, "—").replace(/--/g, "–");
-  // line breaks / nbsp
   s = s.replace(/\\\\/g, " ").replace(/~/g, " ");
-  // escaped specials
   s = s
     .replace(/\\&/g, "&")
     .replace(/\\%/g, "%")
@@ -98,14 +75,10 @@ function delatex(input: string, opts: { bold?: boolean } = {}): string {
     .replace(/\\\$/g, "$")
     .replace(/\\\{/g, "")
     .replace(/\\\}/g, "");
-  // remove any leftover commands (with optional [..]/{..} arguments)
   s = s.replace(/\\[a-zA-Z]+\*?(?:\[[^\]]*\])?(?:\{[^{}]*\})?/g, "");
-  // strip stray braces
   s = s.replace(/[{}]/g, "");
   return s.replace(/\s+/g, " ").trim();
 }
-
-// ── section walker ───────────────────────────────────────────────────────────
 
 const ARG_COUNT: Record<string, number> = {
   resumeSubheading: 4,
@@ -116,7 +89,6 @@ const ARG_COUNT: Record<string, number> = {
   resumeItemWithHeading: 2,
   resumeItemTwoFields: 2,
 };
-// longer names first so alternation is unambiguous
 const MACRO_RE =
   /\\(resumeSubSubheading|resumeSubheading|subheadingSingle|resumeSubRole|resumeItemWithHeading|resumeItemTwoFields|resumeItem)(?![a-zA-Z])/g;
 
@@ -173,9 +145,7 @@ function parseEducation(body: string): Education[] {
         institution: delatex(args[2]),
         location: delatex(args[3]),
       });
-    } catch {
-      // skip malformed entry
-    }
+    } catch {}
   }
   return out;
 }
@@ -216,8 +186,6 @@ function parseReferences(body: string): Reference[] {
 }
 
 function parseHeading(head: string): Pick<ResumeData, "name" | "email" | "phone" | "location"> {
-  // Skip past `\begin{tabular*}{width}{colspec}` so the column spec (e.g.
-  // `l@{\extracolsep{\fill}}r`) doesn't leak into the first cell.
   let inner = head;
   const bt = head.indexOf("\\begin{tabular*}");
   if (bt >= 0) {
@@ -225,9 +193,7 @@ function parseHeading(head: string): Pick<ResumeData, "name" | "email" | "phone"
       const { end } = readArgs(head, bt + "\\begin{tabular*}".length, 2);
       const stop = head.indexOf("\\end{tabular*}", end);
       inner = head.slice(end, stop >= 0 ? stop : undefined);
-    } catch {
-      // fall back to the whole heading region
-    }
+    } catch {}
   }
   const rows = inner.split(/\\\\/);
   const cells = (row: string) => (row ?? "").split(/(?<!\\)&/);
@@ -240,8 +206,6 @@ function parseHeading(head: string): Pick<ResumeData, "name" | "email" | "phone"
     phone: delatex(phoneCell ?? ""),
   };
 }
-
-// ── entry point ──────────────────────────────────────────────────────────────
 
 export function parseTex(source: string): ResumeData {
   const src = stripComments(source);
@@ -286,6 +250,5 @@ export function parseTex(source: string): ResumeData {
     references: parseReferences(bodyOf("references")),
   };
 
-  // normalise (fills defaults, enforces shape); throws only on a genuinely broken result
   return resumeSchema.parse(draft);
 }

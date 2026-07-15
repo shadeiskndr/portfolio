@@ -7,10 +7,6 @@ import ProfileSheet from "@/components/new-site/layout/profile-sheet";
 import ThemeControls from "@/components/new-site/layout/theme-controls";
 import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 
-// Long enough for the drawer's 0.5s slide-out to be visibly under way before
-// the sheet starts rising, short enough that the handoff still feels like one
-// gesture. Also keeps the two vaul roots from fighting over the body scroll
-// lock, which they do if the second opens while the first is still mounted.
 const HANDOFF_MS = 220;
 
 export default function SidebarDrawer() {
@@ -39,9 +35,6 @@ export default function SidebarDrawer() {
         </DrawerTrigger>
         <DrawerContent className="overflow-y-auto data-[vaul-drawer-direction=left]:w-[86%] data-[vaul-drawer-direction=left]:sm:max-w-sm">
           <DrawerTitle className="sr-only">Navigation</DrawerTitle>
-          {/* Profile is a handoff rather than a stacked sheet: it is a whole
-              page of content, so the drawer steps out of its way. The control
-              row below opens smaller sheets that sit on top instead. */}
           <DrawerNav
             onNavigate={() => setOpen(false)}
             onOpenProfile={() => {

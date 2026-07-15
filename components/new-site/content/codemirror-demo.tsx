@@ -42,7 +42,6 @@ class Point:
 }`,
 };
 
-/** A live, editable CodeMirror instance — the editor this post migrated to. */
 export function CodeMirrorDemo() {
   const { resolvedTheme } = useTheme();
   const [lang, setLang] = useState<LangKey>("tsx");

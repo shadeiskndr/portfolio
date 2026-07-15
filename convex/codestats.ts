@@ -2,21 +2,10 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, query } from "./_generated/server";
 
-/**
- * Shape of `GET https://codestats.net/api/users/:username`.
- *
- * That endpoint is public and unauthenticated — the CODESTATS_API_KEY machine
- * token is write-only (it authorizes `POST /api/my/pulses` from an editor
- * plugin), and every token-scoped read path 404s. So nothing here needs a key;
- * only the username is configuration.
- *
- * `new_xp` / `new_xps` are XP earned in the last 12 hours, not a lifetime delta.
- */
 export type CodestatsProfileData = {
   user: string;
   total_xp: number;
   new_xp: number;
-  /** "YYYY-MM-DD" (profile-local) -> XP earned that day, for all of history. */
   dates: Record<string, number>;
   languages: Record<string, { xps: number; new_xps: number }>;
   machines: Record<string, { xps: number; new_xps: number }>;
@@ -64,10 +53,6 @@ export const upsertProfile = internalMutation({
   },
 });
 
-/**
- * The cached snapshot for the site owner. Single-tenant like `spotify.getNowPlaying`:
- * the username lives in the Convex env, so the client never has to supply it.
- */
 export const getProfile = query({
   args: {},
   handler: async (ctx) => {

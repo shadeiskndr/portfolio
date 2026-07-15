@@ -10,12 +10,6 @@ import { NAV_LINKS } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
 import NavScrollButton from "./nav-scroll-button";
 
-/**
- * The horizontal route strip, shared by the desktop top nav and the mobile
- * dock. Both are mounted at once (each hidden by a breakpoint), so `id` has to
- * scope the layout animation — two live elements sharing a `layoutId` make
- * motion try to animate between them.
- */
 export default function NavStrip({
   id,
   showArrows = false,
@@ -30,14 +24,9 @@ export default function NavStrip({
     useHorizontalScrollState<HTMLUListElement>();
   const hasCentered = useRef(false);
 
-  // On a phone the strip shows two or three of thirteen routes, so the active
-  // one is usually out of sight. Recenter it on route change, measured via
-  // rects because the links are `relative` and the chrome is positioned — so
-  // offsetParent is not the scroller.
   // biome-ignore lint/correctness/useExhaustiveDependencies: route-change trigger
   useEffect(() => {
     const list = ref.current;
-    // The copy hidden by its breakpoint measures zero; skip it.
     if (!list?.clientWidth) return;
     const active = list.querySelector<HTMLElement>("[data-active='true']");
     if (!active) return;
@@ -50,8 +39,6 @@ export default function NavStrip({
     const delta = activeRect.left - listRect.left - (list.clientWidth - activeRect.width) / 2;
     list.scrollTo({
       left: Math.max(0, list.scrollLeft + delta),
-      // `auto` defers to the scroller's `scroll-smooth`; the first centering
-      // should land instantly rather than animate on load.
       behavior: hasCentered.current ? "smooth" : "instant",
     });
     hasCentered.current = true;

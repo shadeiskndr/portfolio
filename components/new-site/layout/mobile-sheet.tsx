@@ -4,18 +4,6 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { Drawer, DrawerOverlay, DrawerPortal, DrawerTitle } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
-/**
- * Bottom sheet whose body scrolls by touch.
- *
- * vaul's default `touch-action: none` means a finger drag never scrolls the
- * content. `handleOnly` confines the dismiss gesture to the grab handle, which
- * frees the body to pan — see the `[data-scroll-sheet]` rules in globals.css
- * for the touch-action half of that trade.
- *
- * Built on the vaul primitives rather than our styled `DrawerContent`, which
- * renders its own decorative bar for bottom drawers and would double up with
- * the real (draggable) handle.
- */
 export default function MobileSheet({
   open,
   onOpenChange,
@@ -54,7 +42,6 @@ export default function MobileSheet({
           <div
             className={cn(
               "min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pt-2",
-              // Clears the home indicator on gesture-nav phones.
               "pb-[max(1rem,env(safe-area-inset-bottom))]",
               contentClassName
             )}

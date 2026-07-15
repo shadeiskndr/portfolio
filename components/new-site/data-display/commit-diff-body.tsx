@@ -233,12 +233,8 @@ const THEMES: ThemeOption[] = [
 const THEME_BY_KEY = new Map(THEMES.map((t) => [t.key, t]));
 const DEFAULT_THEME_KEY = "github";
 
-// Stable reference for useLocalStorage's options arg so the hook's internal
-// callbacks (which depend on `options`) don't rebuild every render.
 const EMPTY_STORAGE_OPTIONS = {};
 
-// Pin locale + timeZone so server and client render identical text (no
-// hydration mismatch); hoisted to module scope so it's built once.
 const COMMIT_DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "long",
   day: "numeric",

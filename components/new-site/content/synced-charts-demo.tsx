@@ -5,9 +5,6 @@ import { Brush, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "re
 import { Button } from "@/components/ui/button";
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 
-// Deterministic, illustrative signals sharing one time axis — generic
-// market-style series, nothing domain-specific. A closed form (not random)
-// keeps the render identical on every reload.
 const DATA = Array.from({ length: 36 }, (_, i) => {
   const t = i / 5;
   return {
@@ -38,8 +35,6 @@ function Panel({
   synced: boolean;
   showAxis?: boolean;
 }) {
-  // Measure the container ourselves and hand recharts explicit numeric
-  // dimensions — ResponsiveContainer warns on its first (-1×-1) render.
   const ref = useRef<HTMLDivElement>(null);
   const { width } = useResizeObserver({ ref });
   const height = showAxis ? 128 : 84;
@@ -56,8 +51,6 @@ function Panel({
             width={width}
             height={height}
             data={DATA}
-            // The whole trick: one shared id links every panel's cursor and
-            // brush window. Drop the id and the panels stop talking.
             syncId={synced ? "scenario" : undefined}
             margin={{ top: 4, right: 8, bottom: 0, left: -18 }}
           >
@@ -104,7 +97,6 @@ function Panel({
   );
 }
 
-/** Three stacked charts sharing one x-axis via recharts' `syncId`. */
 export function SyncedChartsDemo() {
   const [synced, setSynced] = useState(true);
 

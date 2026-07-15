@@ -22,8 +22,6 @@ import { cn } from "@/lib/utils";
 type Status = "ok" | "running" | "failed" | "idle";
 type StepNodeType = Node<{ label: string; status: Status }, "step">;
 
-// Presentation is driven entirely by node.data.status — the whole point of a
-// custom node: the library owns layout/edges, you own how a node looks.
 const statusBorder: Record<Status, string> = {
   ok: "border-emerald-500/70",
   running: "border-amber-500/70",
@@ -68,8 +66,6 @@ function StepNode({ data, selected }: NodeProps<StepNodeType>) {
   );
 }
 
-// Defined once, outside the component — a fresh object every render remounts
-// every node in the graph.
 const nodeTypes: NodeTypes = { step: StepNode };
 
 const initialNodes: StepNodeType[] = [
@@ -134,7 +130,6 @@ function WorkflowGraphInner() {
       colorMode={theme}
       fitView
       fitViewOptions={{ padding: 0.2 }}
-      // Let the article scroll normally over the canvas; zoom via the controls.
       zoomOnScroll={false}
       panOnScroll={false}
       preventScrolling={false}
@@ -153,7 +148,6 @@ function WorkflowGraphInner() {
   );
 }
 
-/** Live, draggable workflow DAG rendered with a custom React Flow node. */
 export function WorkflowGraphDemo() {
   return (
     <div className="my-6 h-[420px] overflow-hidden rounded-xl border">

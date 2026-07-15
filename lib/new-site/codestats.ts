@@ -1,12 +1,5 @@
 import type { CodestatsProfileData } from "@/convex/codestats";
 
-/**
- * Pure derivations over a Code::Stats profile snapshot. Everything here takes
- * `today` as an argument rather than reading the clock, so the output is a
- * function of its inputs (no hidden per-render drift, trivially checkable).
- */
-
-/** Code::Stats' own level curve: level = floor(LEVEL_FACTOR * sqrt(xp)). */
 const LEVEL_FACTOR = 0.025;
 
 export function levelFromXp(xp: number): number {
@@ -17,7 +10,6 @@ export function xpForLevel(level: number): number {
   return Math.round((level / LEVEL_FACTOR) ** 2);
 }
 
-/** "YYYY-MM-DD" in *local* time — never `toISOString()`, which shifts to UTC. */
 export function toDayKey(date: Date): string {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
@@ -29,12 +21,6 @@ export function fromDayKey(key: string): Date {
   return new Date(year, month - 1, day);
 }
 
-/**
- * Code::Stats buckets XP into calendar days in the *profile owner's* timezone,
- * so "today" has to be resolved in that zone too — not the visitor's. Read from
- * Los Angeles, a browser-local "today" is up to 15 hours off Kuala Lumpur and
- * would slide the calendar's last column and misreport today's XP.
- */
 export const PROFILE_TIME_ZONE = "Asia/Kuala_Lumpur";
 
 const zonedDayParts = new Intl.DateTimeFormat("en-US", {
@@ -44,7 +30,6 @@ const zonedDayParts = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
 });
 
-/** The profile's current calendar day, as a local-midnight Date. */
 export function todayInProfileZone(now: Date): Date {
   const parts = zonedDayParts.formatToParts(now);
   const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
@@ -57,7 +42,6 @@ function addDays(date: Date, amount: number): Date {
   return next;
 }
 
-/** Whole calendar days between two dates, immune to DST hour shifts. */
 function daysBetween(later: Date, earlier: Date): number {
   const ms =
     Date.UTC(later.getFullYear(), later.getMonth(), later.getDate()) -
@@ -65,7 +49,6 @@ function daysBetween(later: Date, earlier: Date): number {
   return Math.round(ms / 86_400_000);
 }
 
-/** Day keys with XP on them, ascending. */
 function activeDayKeys(dates: Record<string, number>): string[] {
   const keys: string[] = [];
   for (const [key, xp] of Object.entries(dates)) {
@@ -92,8 +75,6 @@ export function computeStreaks(
     previous = day;
   }
 
-  // A streak is only "current" if it reaches today or yesterday — the day isn't
-  // over yet, so a gap of one doesn't break it.
   let current = 0;
   const lastKey = keys.at(-1);
   if (lastKey && daysBetween(today, fromDayKey(lastKey)) <= 1) {
@@ -109,9 +90,7 @@ export function computeStreaks(
 
 export type DailyPoint = {
   date: string;
-  /** XP earned that day. */
   xp: number;
-  /** All-time XP as of that day — seeded with everything before the window. */
   cumulative: number;
 };
 
@@ -140,7 +119,6 @@ export function buildDailySeries(
 export type LanguageSlice = {
   name: string;
   xp: number;
-  /** XP in the last 12 hours. */
   recentXp: number;
   level: number;
   share: number;
@@ -206,24 +184,16 @@ export function buildMachines(machines: CodestatsProfileData["machines"]): Machi
 export type CalendarCell = {
   date: string;
   xp: number;
-  /** 0 = no XP, 1-4 = ascending quartile of the non-zero days in view. */
   level: number;
-  /** Padding cells past today (the current week's tail) render as empty. */
   future: boolean;
 };
 
 export type Calendar = {
   weeks: CalendarCell[][];
-  /** Upper XP bound of levels 1-3, for the scale legend. */
   thresholds: number[];
   totalXp: number;
 };
 
-/**
- * A GitHub-style week grid (columns = weeks, rows = Sun..Sat) sized to the
- * history that actually exists: it grows with the profile and caps at a year,
- * so a two-month-old account doesn't render ten empty columns.
- */
 export function buildCalendar(
   dates: Record<string, number>,
   today: Date,
@@ -241,7 +211,6 @@ export function buildCalendar(
     Math.max(minWeeks, Math.ceil((spanDays + today.getDay()) / 7))
   );
 
-  // End on the Saturday of the current week so today sits in the last column.
   const end = addDays(today, 6 - today.getDay());
   const start = addDays(end, -(weekCount * 7 - 1));
 
@@ -284,12 +253,10 @@ function levelFor(xp: number, thresholds: number[]): number {
 
 export type CodestatsSummary = {
   totalXp: number;
-  /** XP in the last 12 hours. */
   recentXp: number;
   level: number;
   levelStartXp: number;
   nextLevelXp: number;
-  /** 0-1 progress through the current level. */
   levelRatio: number;
   xpToNextLevel: number;
   todayXp: number;
@@ -384,13 +351,6 @@ const MONTH_NAMES = [
   "Dec",
 ];
 
-/**
- * Day labels are formatted straight off the "YYYY-MM-DD" key rather than through
- * Intl.DateTimeFormat on a Date. A day key names a calendar day, not an instant,
- * so routing it through a Date only introduces a timezone that can shift the
- * label — and `Intl` with no explicit `timeZone` renders differently on the
- * server than in the browser. This is deterministic everywhere.
- */
 export function formatDayShort(key: string): string {
   const [, month, day] = key.split("-");
   return `${MONTH_NAMES[Number(month) - 1]} ${Number(day)}`;
@@ -405,7 +365,6 @@ export function formatMonthShort(key: string): string {
   return MONTH_NAMES[Number(key.split("-")[1]) - 1];
 }
 
-/** Same calendar month? Compares the "YYYY-MM" prefix of two day keys. */
 export function isSameMonth(a: string, b: string): boolean {
   return a.slice(0, 7) === b.slice(0, 7);
 }

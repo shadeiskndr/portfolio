@@ -30,15 +30,11 @@ export function defineChatModel(
   api: ChatModel["api"],
   reasoning: boolean = DEFAULT_REASONING
 ) {
-  // Reasoning provider options ride on the Mantle responses route only.
   const usesResponsesApi = surface === "mantle" && api === "responses";
   const reasoningOn = usesResponsesApi && reasoning;
   return defineModel({
     model: getChatModel(modelId, surface, api),
     instructions: SYSTEM_PROMPT,
-    // Reasoning is a responses-API feature and binary for these models. When on,
-    // force it at high effort (the only supported mode); when off, disable it so
-    // the model answers plainly. The caller gates `reasoning` on model support.
     ...(usesResponsesApi
       ? {
           providerOptions: {
@@ -57,8 +53,6 @@ export function defineChatModel(
 
 export const chatAgent = new Agent(components.agent, {
   name: "portfolio-assistant",
-  // Bootstrap model for Agent construction only; every real run passes an
-  // explicit model resolved from the chatModels table (see chat.execute).
   model: defineChatModel(DEFAULT_MODEL.id, DEFAULT_MODEL.surface, DEFAULT_MODEL.api),
   tools: { calculate },
 });

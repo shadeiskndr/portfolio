@@ -7,15 +7,9 @@ import NavStrip from "./nav-strip";
 import SidebarDrawer from "./sidebar-drawer";
 import ThemeControls from "./theme-controls";
 
-/**
- * Mobile navigation. Replaces the top bar below `lg` and tucks itself away on
- * scroll down so a phone spends its height on content rather than chrome.
- */
 export default function BottomDock() {
   const hidden = useHideOnScroll();
 
-  // Published on <html> so bottom-anchored page UI can drop into the space the
-  // dock gives up — see --dock-shift in globals.css.
   useEffect(() => {
     document.documentElement.dataset.dockHidden = hidden ? "true" : "false";
     return () => {
@@ -27,7 +21,6 @@ export default function BottomDock() {
     <div
       className={cn(
         "fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ease-out lg:hidden",
-        // Past 100% so the shadow clears the edge too.
         hidden ? "translate-y-[calc(100%+1.5rem)]" : "translate-y-0"
       )}
     >

@@ -84,7 +84,6 @@ export interface ConfirmationRequestProps {
 export const ConfirmationRequest = ({ children }: ConfirmationRequestProps) => {
   const { state } = useConfirmation();
 
-  // Only show when approval is requested
   if (state !== "approval-requested") {
     return null;
   }
@@ -99,7 +98,6 @@ export interface ConfirmationAcceptedProps {
 export const ConfirmationAccepted = ({ children }: ConfirmationAcceptedProps) => {
   const { approval, state } = useConfirmation();
 
-  // Only show when approved and in response states
   if (
     !approval?.approved ||
     (state !== "approval-responded" && state !== "output-denied" && state !== "output-available")
@@ -117,7 +115,6 @@ export interface ConfirmationRejectedProps {
 export const ConfirmationRejected = ({ children }: ConfirmationRejectedProps) => {
   const { approval, state } = useConfirmation();
 
-  // Only show when rejected and in response states
   if (
     approval?.approved !== false ||
     (state !== "approval-responded" && state !== "output-denied" && state !== "output-available")
@@ -133,7 +130,6 @@ export type ConfirmationActionsProps = ComponentProps<"div">;
 export const ConfirmationActions = ({ className, ...props }: ConfirmationActionsProps) => {
   const { state } = useConfirmation();
 
-  // Only show when approval is requested
   if (state !== "approval-requested") {
     return null;
   }
@@ -149,7 +145,6 @@ export const ConfirmationAction = (props: ConfirmationActionProps) => (
   <Button className="h-8 px-3 text-sm" type="button" {...props} />
 );
 
-/** Demo component for preview */
 export default function ConfirmationDemo() {
   return (
     <div className="w-full max-w-2xl p-6">

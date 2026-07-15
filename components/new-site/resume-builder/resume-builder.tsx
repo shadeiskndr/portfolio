@@ -71,8 +71,6 @@ export default function ResumeBuilder() {
   const [exporting, setExporting] = useState(false);
   const assistantRef = useRef<ResumeAssistantHandle>(null);
 
-  // Warm the engine (WASM + fonts) as soon as the builder mounts so the first
-  // preview and the first export don't pay cold-start latency.
   useMountEffect(() => {
     warmTypst();
   });
@@ -106,9 +104,6 @@ export default function ResumeBuilder() {
     }
   }
 
-  // Load a full résumé into the form. `form.reset` doesn't reliably resize array
-  // fields (a shorter imported list leaves ghost empty rows), so set each array
-  // explicitly after the reset to force the field lengths to match.
   function loadResume(resume: ResumeData) {
     form.reset(resume);
     form.setFieldValue("competencies", resume.competencies);
@@ -118,9 +113,6 @@ export default function ResumeBuilder() {
     form.setFieldValue("references", resume.references);
   }
 
-  // Load an imported résumé into the form. Invoked by the assistant's import turn
-  // (via the `applyResume` prop) when the `resume` stream frame arrives, so the
-  // form/preview fill in while the assistant streams its review; keeps an Undo.
   function handleImport(resume: ResumeData, method: "deterministic" | "ai") {
     const previous = structuredClone(form.state.values);
     loadResume(resume);
@@ -132,14 +124,6 @@ export default function ResumeBuilder() {
     );
   }
 
-  // Apply the assistant's structured edits to the form, with a single Undo that
-  // restores the whole snapshot. Returns how many were applied.
-  //
-  // Field edits (prose, contact, update_*, add_*) mutate a working draft in place.
-  // Deletions are collected as index sets and applied AFTER, in one compaction
-  // pass, so each edit's index — which refers to the résumé the model was shown —
-  // stays valid no matter how many items are removed in the same turn. The draft
-  // is loaded via loadResume so array lengths resize correctly (deletes shrink them).
   function applyResumeEdits(edits: ResumeEdit[]): number {
     if (edits.length === 0) return 0;
     const previous = structuredClone(form.state.values) as ResumeData;
@@ -147,7 +131,7 @@ export default function ResumeBuilder() {
     let applied = 0;
 
     const deleteEmployers = new Set<number>();
-    const deleteRoles = new Map<number, Set<number>>(); // employerIndex → roleIndexes
+    const deleteRoles = new Map<number, Set<number>>();
     const deleteEducation = new Set<number>();
     const deleteSystems = new Set<number>();
     const deleteReferences = new Set<number>();
@@ -304,8 +288,6 @@ export default function ResumeBuilder() {
       }
     }
 
-    // Compact deletions by original index: in one pass drop deleted employers and
-    // deleted roles, discarding any employer left with no roles; then the flat sections.
     const nextExperience: ResumeData["experience"] = [];
     for (const [i, emp] of draft.experience.entries()) {
       if (deleteEmployers.has(i)) continue;
@@ -330,7 +312,6 @@ export default function ResumeBuilder() {
   const formPane = (
     <div className="px-4 py-5">
       <FieldGroup className="gap-6">
-        {/* ── Heading ─────────────────────────────────────────────── */}
         <Section title="Heading">
           <form.Field name="name">
             {(f) => <TextField field={f} label="Full name" placeholder="Jane Doe" />}
@@ -348,12 +329,10 @@ export default function ResumeBuilder() {
           </form.Field>
         </Section>
 
-        {/* ── Summary ─────────────────────────────────────────────── */}
         <Section title="Professional Summary">
           <form.Field name="summary">{(f) => <TextAreaField field={f} rows={6} />}</form.Field>
         </Section>
 
-        {/* ── Core Competencies ───────────────────────────────────── */}
         <Section title="Core Competencies">
           <form.Field mode="array" name="competencies">
             {(arr) => (
@@ -372,7 +351,6 @@ export default function ResumeBuilder() {
           </form.Field>
         </Section>
 
-        {/* ── Work Experience ─────────────────────────────────────── */}
         <Section title="Work Experience">
           <form.Field mode="array" name="experience">
             {(exp) => (
@@ -471,7 +449,6 @@ export default function ResumeBuilder() {
           </form.Field>
         </Section>
 
-        {/* ── Education ───────────────────────────────────────────── */}
         <Section title="Education">
           <form.Field mode="array" name="education">
             {(edu) => (
@@ -508,7 +485,6 @@ export default function ResumeBuilder() {
           </form.Field>
         </Section>
 
-        {/* ── Systems & Technical Proficiency ─────────────────────── */}
         <Section title="Systems & Technical Proficiency">
           <form.Field mode="array" name="systems">
             {(sys) => (
@@ -537,7 +513,6 @@ export default function ResumeBuilder() {
           </form.Field>
         </Section>
 
-        {/* ── References ──────────────────────────────────────────── */}
         <Section title="References">
           <form.Field mode="array" name="references">
             {(refs) => (
@@ -579,8 +554,6 @@ export default function ResumeBuilder() {
     </div>
   );
 
-  // Subscribing to values only around the preview keeps typing from re-rendering
-  // the whole form; each form.Field manages its own input.
   const previewPane = (
     <form.Subscribe selector={(s) => s.values}>
       {(values) => <TypstPreview source={generateTypst(values as ResumeData)} />}
@@ -643,9 +616,6 @@ export default function ResumeBuilder() {
       {isDesktop ? (
         <div className="flex">
           <div className="w-2/5 min-w-85 max-w-xl border-foreground/10 border-r">{formPane}</div>
-          {/* Preview owns the muted panel background so it fills the column and its
-              bottom-right corner rounds cleanly. The inner wrapper sticks (below the
-              sticky top-nav) so the live preview stays in view while scrolling the form. */}
           <div className="min-w-0 flex-1 rounded-br-lg bg-muted/50">
             <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-auto">
               {previewPane}

@@ -13,7 +13,6 @@ const AboutMeSection = () => {
       </div>
 
       <div className="flex w-full flex-col justify-between gap-12 md:flex-row">
-        {/* Image */}
         <div className="flex justify-center md:order-first md:justify-end">
           <div className="relative h-95 w-[320px] md:h-115 md:w-95 lg:h-130 lg:w-110">
             <AssetImage
@@ -27,7 +26,6 @@ const AboutMeSection = () => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex max-w-xl flex-col gap-6">
           <Typography variant="h3">Get to know me 😀</Typography>
           <Typography className="text-foreground">

@@ -5,6 +5,11 @@
 /.pnp
 .pnp.js
 
+# this project uses bun; a stray npm/yarn install must not commit a rival lockfile
+/package-lock.json
+/yarn.lock
+/pnpm-lock.yaml
+
 # testing
 /coverage
 
@@ -40,3 +45,5 @@ next-env.d.ts
 
 # copied from node_modules by `bun run sync:typst` (the fonts are committed)
 /public/typst/*.wasm
+
+/dev-docs

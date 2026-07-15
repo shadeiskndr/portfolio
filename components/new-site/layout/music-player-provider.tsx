@@ -14,8 +14,6 @@ function colorCoverUri(color: string) {
 
 const FALLBACK_COVER = colorCoverUri("hsl(0 0% 30%)");
 
-// Stable identity so the context value is not invalidated while the query
-// is still loading.
 const EMPTY_PLAYLIST: Track[] = [];
 
 export type MusicPlayerApi = {
@@ -49,16 +47,6 @@ export function useMusicPlayer() {
   return ctx;
 }
 
-/**
- * Owns the single `<audio>` element and all playback state.
- *
- * The desktop top-bar popover and the mobile sheet are two separate triggers
- * for one player. Previously each rendered its own `MusicPlayerPopover` with
- * its own `<audio preload="auto">`, so the track was fetched twice and
- * playback started on one breakpoint did not survive crossing `lg`. Hoisting
- * the element here also means it outlives the nav drawer, which unmounts its
- * children on close.
- */
 export function MusicPlayerProvider({ children }: { children: React.ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -108,8 +96,6 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     [duration]
   );
 
-  // `wasPlayingRef` carries "resume once the new source is ready" across the
-  // load, since a track swap resets the element.
   const changeTrack = useCallback(
     (index: number) => {
       if (index === trackIndex) return;
@@ -131,8 +117,6 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     [changeTrack, trackIndex, playlist.length]
   );
 
-  // Scrub handlers pause during the drag and resume on commit; kept beside the
-  // audio ref so playback state stays in one place.
   const scrub = useCallback(
     (pct: number) => {
       if (!duration) return;

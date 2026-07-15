@@ -7,21 +7,14 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 export interface MusicPlayerProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** The source URL of the audio file or YouTube video */
   src?: string;
-  /** The URL of the album cover image */
   coverArt: string;
-  /** Whether to auto-play the audio when loaded */
   autoPlay?: boolean;
-  /** Controlled play state. When provided, audio/iframe is disabled and click does not toggle. */
   isPlaying?: boolean;
-  /** Override the default disc dimensions (defaults to h-64 w-64 md:h-80 md:w-80). */
   discClassName?: string;
-  /** Hide the tonearm — useful at very small disc sizes where the fixed-size tonearm looks oversized. */
   hideTonearm?: boolean;
 }
 
-// Extract YouTube ID if it's a YouTube URL
 const getYoutubeId = (url: string) => {
   const match = url.match(
     /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
@@ -100,11 +93,6 @@ export function MusicPlayer({
               autoPlay ? 1 : 0
             }&controls=0`}
             allow="autoplay"
-            // YouTube's JS-API player needs both allow-scripts (to run) and
-            // allow-same-origin (to operate under youtube.com for postMessage +
-            // storage). The rule warns that this pair lets a frame drop its own
-            // sandbox — true only for a SAME-origin frame; this src is cross-
-            // origin, so Same-Origin Policy isolates it from this page either way.
             // react-doctor-disable-next-line react-doctor/iframe-missing-sandbox
             sandbox="allow-scripts allow-same-origin allow-presentation"
           />
@@ -138,7 +126,6 @@ export function MusicPlayer({
         tabIndex={isControlled ? undefined : 0}
         title={isControlled ? undefined : isPlaying ? "Pause" : "Play"}
       >
-        {/* Tonearm */}
         {!hideTonearm && (
           <motion.div
             className="pointer-events-none absolute top-[-2%] right-[-4%] z-20 h-[15%] w-[60%] origin-top-right"
@@ -146,17 +133,13 @@ export function MusicPlayer({
             animate={{ rotate: isPlaying ? -20 : 10 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
-            {/* Tonearm base */}
             <div className="absolute top-0 right-0 z-10 h-[85%] w-[21%] translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-200 bg-zinc-400 shadow-md dark:border-zinc-800 dark:bg-zinc-600" />
-            {/* Tonearm stick & Needle */}
             <div className="absolute top-0 right-[7%] flex h-[25%] w-[70%] origin-right -rotate-12 items-center justify-start rounded-full bg-zinc-400 shadow-sm dark:bg-zinc-500">
-              {/* Needle */}
               <div className="aspect-square h-[180%] -translate-x-1/2 transform rounded-full bg-zinc-800 shadow-md dark:bg-zinc-300" />
             </div>
           </motion.div>
         )}
 
-        {/* Record Disc */}
         <div
           className={cn(
             "relative h-full w-full animate-spin overflow-hidden rounded-full border-4 border-black/10 bg-black shadow-black/30 shadow-xl sm:border-8 dark:border-white/10"
@@ -166,13 +149,11 @@ export function MusicPlayer({
             animationPlayState: isSpinning ? "running" : "paused",
           }}
         >
-          {/* Album Cover Background */}
           <div
             className="absolute inset-0 bg-center bg-cover opacity-90 transition-opacity"
             style={{ backgroundImage: `url(${coverArt})` }}
           />
 
-          {/* Grooves Overlay (Multiple dark gradient rings) */}
           <div
             className="absolute inset-0 rounded-full border border-black/20"
             style={{
@@ -181,7 +162,6 @@ export function MusicPlayer({
             }}
           />
 
-          {/* Glare effect */}
           <div
             className="pointer-events-none absolute inset-0 rounded-full"
             style={{

@@ -8,10 +8,6 @@ import NavStrip from "./nav-strip";
 import { useSidebarCollapse } from "./sidebar-collapse-provider";
 import ThemeControls from "./theme-controls";
 
-/**
- * Desktop chrome. Below `lg` navigation lives in the bottom dock instead, so
- * this is hidden rather than reflowed.
- */
 export default function TopNav() {
   const scrolled = useScroll(40);
   const { collapsed, toggle } = useSidebarCollapse();

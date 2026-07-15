@@ -7,23 +7,10 @@ import type { ResumeData } from "../lib/resume/schema";
 import { internal } from "./_generated/api";
 import { type ActionCtx, action } from "./_generated/server";
 
-// Conversational résumé assistant. A multi-step tool-calling turn (AI SDK
-// generate/streamText + tools) reusing the same Bedrock provider/registry as
-// /chat. The tools don't mutate anything server-side — they record structured
-// EDITS the client applies to the TanStack form (résumé stays client-owned, the
-// preview updates live). The agent has full CRUD over the résumé: rewrite PROSE
-// (summary, competencies, role bullets), EDIT existing items (contact, employers,
-// roles, education, systems, references), ADD new structural items, and DELETE
-// items — but only from what the user provides, never inventing. No fabrication.
-//
-// Two entry points share the helpers below: the streaming HTTP route in
-// `http.ts` (POST /resume-chat, SSE) and the non-streaming `chat` action here.
-
 export type ResumeEdit =
   | { type: "summary"; text: string }
   | { type: "competencies"; items: string[] }
   | { type: "bullets"; employerIndex: number; roleIndex: number; bullets: string[] }
-  // Structural additions (append a new item).
   | { type: "add_role"; employerIndex: number; title: string; period: string; bullets: string[] }
   | {
       type: "add_employer";
@@ -34,7 +21,6 @@ export type ResumeEdit =
   | { type: "add_education"; degree: string; institution: string; period: string; location: string }
   | { type: "add_system"; label: string; value: string }
   | { type: "add_reference"; name: string; role: string; phone: string; email: string }
-  // Edits to an EXISTING item (addressed by index; only the provided fields change).
   | { type: "contact"; name?: string; email?: string; phone?: string; location?: string }
   | { type: "update_employer"; employerIndex: number; firm?: string; location?: string }
   | {
@@ -61,19 +47,16 @@ export type ResumeEdit =
       phone?: string;
       email?: string;
     }
-  // Deletions (addressed by index).
   | { type: "delete_role"; employerIndex: number; roleIndex: number }
   | { type: "delete_employer"; employerIndex: number }
   | { type: "delete_education"; index: number }
   | { type: "delete_system"; index: number }
   | { type: "delete_reference"; index: number };
 
-/** Strip a leading list marker (models sometimes format bullets/skills as "- item"). */
 function stripMarker(s: string): string {
   return s.replace(/^\s*[-*•◦·]\s+/, "").trim();
 }
 
-/** Trim, strip list markers, and drop empties from a list of items. */
 function cleanList(items: string[]): string[] {
   return items.flatMap((s) => {
     const c = stripMarker(s);
@@ -81,11 +64,6 @@ function cleanList(items: string[]): string[] {
   });
 }
 
-/** Render the FULL résumé for the model to read. Every section is included — the
- * assistant can only EDIT some of them (see the system prompt), but it must be able
- * to READ all of them to answer questions, or it will invent the missing ones.
- * Empty sections are marked "(none)" so the model reports absence instead of guessing.
- * Experience keeps its employerIndex/roleIndex labels — the edit tools address roles by them. */
 function resumeContext(r: ResumeData): string {
   const experience = r.experience.length
     ? r.experience
@@ -184,10 +162,6 @@ export const RESUME_SYSTEM = (r: ResumeData): string =>
   "question or for advice, answer conversationally without calling any tool.\n\n" +
   resumeContext(r);
 
-// ── Import review (streamed after an import) ────────────────────────────────
-// After a résumé is imported into the builder, the assistant streams a short,
-// honest review of what came through, so importing feels conversational instead
-// of a silent form-fill (see the /resume-import SSE route in http.ts).
 export const RESUME_IMPORT_REVIEW_SYSTEM =
   "You are a résumé assistant. The user just imported a résumé and it is now loaded into the builder's " +
   "form. In 2–4 short sentences, warmly confirm the import and give a quick, honest review. Use the " +
@@ -227,10 +201,6 @@ export function importReviewPrompt(r: ResumeData, method: "deterministic" | "ai"
   ].join("\n");
 }
 
-// ── Tailor explanation (streamed after a tailor-to-job) ─────────────────────
-// After the résumé is tailored (summary rewritten + competencies reordered to the
-// SAME set), the assistant streams a short explanation, so tailoring feels like a
-// chat turn (see the /resume-tailor SSE route in http.ts).
 export const RESUME_TAILOR_EXPLAIN_SYSTEM =
   "You are a résumé assistant. The user asked to tailor their résumé to a job, and you have just " +
   "rewritten their professional summary and reordered their core competencies to match the posting. In " +
@@ -253,7 +223,6 @@ export function tailorExplainPrompt(
   ].join("\n");
 }
 
-/** Build the edit + structural-add tools, pushing structured edits into `edits` as they run. */
 export function buildResumeTools(edits: ResumeEdit[]) {
   return {
     update_summary: tool({
@@ -399,7 +368,6 @@ export function buildResumeTools(edits: ResumeEdit[]) {
         return "Reference added.";
       },
     }),
-    // ── Edits to existing items (partial; only the fields passed are changed) ──
     update_contact: tool({
       description:
         "Correct the heading/contact fields. Pass ONLY the fields the user wants changed, with the " +
@@ -559,7 +527,6 @@ export function buildResumeTools(edits: ResumeEdit[]) {
         return "Reference updated.";
       },
     }),
-    // ── Deletions (only when the user clearly asks; undoable in the form) ──────
     delete_role: tool({
       description:
         "Delete an EXISTING role by employerIndex + roleIndex. If it is the employer's only role, the " +
@@ -611,7 +578,6 @@ export function buildResumeTools(edits: ResumeEdit[]) {
   };
 }
 
-// Return type annotated to break the TS inference cycle from ctx.runQuery(internal…).
 export async function resolveResumeModel(
   ctx: ActionCtx,
   modelId?: string
@@ -624,7 +590,6 @@ export async function resolveResumeModel(
   );
 }
 
-/** Non-streaming turn (kept as a fallback; the panel uses the streaming HTTP route). */
 export const chat = action({
   args: {
     messages: v.array(

@@ -253,7 +253,6 @@ const variants = ["obsidian", "mana", "opal", "halo", "glint", "command"] as con
 
 const states: PersonaState[] = ["idle", "listening", "thinking", "speaking", "asleep"];
 
-/** Demo component for preview */
 export default function PersonaDemo() {
   const [state, setState] = useState<PersonaState>("thinking");
   const [variant, setVariant] = useState<(typeof variants)[number]>("glint");

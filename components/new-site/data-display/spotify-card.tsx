@@ -38,7 +38,6 @@ export default function SpotifyCard() {
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
     >
-      {/* Always-visible marquee card */}
       <div className="overflow-hidden rounded-lg border bg-muted/30">
         <div className="flex items-center gap-3 px-3 py-2.5">
           <SpotifyIcon
@@ -57,7 +56,6 @@ export default function SpotifyCard() {
         </div>
       </div>
 
-      {/* Popover with vinyl + track info */}
       <AnimatePresence>
         {expanded && (
           <m.div

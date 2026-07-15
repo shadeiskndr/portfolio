@@ -1,13 +1,3 @@
-/**
- * Renders a section displaying a list of projects.
- *
- * The section includes a title, a description, and a list of project details components.
- * The project details are fetched from the `PROJECTS` data source and are displayed
- * in an alternating layout (default or reverse).
- *
- * @returns {JSX.Element} The rendered work section component.
- */
-
 import ProjectDetails from "@/components/old-portfolio/data-display/project-details";
 import Tag from "@/components/old-portfolio/data-display/tag";
 import Typography from "@/components/old-portfolio/general/typography";

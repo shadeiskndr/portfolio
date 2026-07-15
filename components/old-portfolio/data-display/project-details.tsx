@@ -21,7 +21,6 @@ const ProjectDetails = ({
 }: ProjectDetailsProps) => {
   return (
     <Card className="mx-auto flex w-full max-w-6xl flex-col md:flex-row">
-      {/* Image */}
       <div
         className={cn(
           "flex items-center justify-center border bg-card p-8 max-md:rounded-t-xl md:w-1/2 lg:p-12",
@@ -40,7 +39,6 @@ const ProjectDetails = ({
         </Link>
       </div>
 
-      {/* Content */}
       <div
         className={cn(
           "flex flex-col gap-6 border p-8 max-md:rounded-b-xl max-md:border max-md:border-t-0 md:w-1/2 lg:p-12",

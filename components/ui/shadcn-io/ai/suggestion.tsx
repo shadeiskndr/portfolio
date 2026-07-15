@@ -53,7 +53,6 @@ const suggestions = [
   "Best practices for React development",
 ];
 
-/** Demo component for preview */
 export default function SuggestionDemo() {
   return (
     <div className="p-6">

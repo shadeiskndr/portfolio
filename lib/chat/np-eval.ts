@@ -1,14 +1,6 @@
 import * as np from "numpy-ts/core";
 import type { CalcResult, CalcValue } from "./calculator";
 
-/**
- * Safe evaluator for numpy-ts expressions. Instead of `new Function`/`eval`
- * (which the Convex runtime forbids anyway), we parse the expression into a
- * tiny AST and interpret it, dispatching identifiers **only** against the
- * numpy-ts namespace. No global (fetch, process, timers, constructor chains…)
- * is ever reachable, so a hostile string can at worst call numpy functions.
- */
-
 const NP = np as unknown as Record<string, unknown>;
 const ALLOWED_NAMES = new Set(Object.keys(np));
 const CONSTANTS: Record<string, number> = {
@@ -17,9 +9,6 @@ const CONSTANTS: Record<string, number> = {
   inf: Number.POSITIVE_INFINITY,
   nan: Number.NaN,
 };
-// Property names that could climb out of the numpy sandbox (to Function, the
-// shared module namespace, etc.). Method access to legitimate NDArray methods
-// (.mean, .reshape, .tolist…) is still allowed.
 const BLOCKED_PROPS = new Set([
   "constructor",
   "__proto__",
@@ -48,7 +37,6 @@ function tokenize(input: string): Token[] {
       i++;
       continue;
     }
-    // Number: digits with optional fraction and exponent.
     if ((ch >= "0" && ch <= "9") || (ch === "." && /[0-9]/.test(input[i + 1] ?? ""))) {
       const match = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/.exec(input.slice(i));
       if (!match) throw new Error(`Malformed number at position ${i}.`);
@@ -56,7 +44,6 @@ function tokenize(input: string): Token[] {
       i += match[0].length;
       continue;
     }
-    // Identifier.
     if (/[A-Za-z_$]/.test(ch)) {
       const match = /^[A-Za-z_$][\w$]*/.exec(input.slice(i));
       const name = match?.[0] ?? "";
@@ -64,7 +51,6 @@ function tokenize(input: string): Token[] {
       i += name.length;
       continue;
     }
-    // Punctuation / operators (two-char first).
     const two = input.slice(i, i + 2);
     if (two === "**") {
       tokens.push({ type: "punc", value: "**" });
@@ -91,7 +77,6 @@ type Node =
   | { kind: "index"; obj: Node; index: Node }
   | { kind: "call"; callee: Node; args: Node[] };
 
-// Binary precedence; ** is right-associative.
 const BIN_PREC: Record<string, number> = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2, "**": 3 };
 
 class Parser {
@@ -235,7 +220,6 @@ function evalNode(node: Node): unknown {
     case "unary": {
       const arg = evalNode(node.arg);
       if (isNumber(arg)) return node.op === "-" ? -arg : arg;
-      // Negating an array → numpy's `negative`.
       if (node.op === "-") return (NP.negative as (a: unknown) => unknown)(arg);
       return arg;
     }
@@ -258,7 +242,6 @@ function evalNode(node: Node): unknown {
             return left ** right;
         }
       }
-      // Array operand(s) → dispatch to the corresponding numpy ufunc.
       const fn = NP[BINARY_UFUNC[node.op]] as (a: unknown, b: unknown) => unknown;
       return fn(left, right);
     }
@@ -297,7 +280,6 @@ function evalNode(node: Node): unknown {
   }
 }
 
-/** Convert numpy return values (NDArray, Complex, nested) to plain JSON. */
 export function toSerializable(x: unknown): CalcValue {
   if (x === null || x === undefined) return null;
   const t = typeof x;
@@ -326,7 +308,6 @@ function formatValue(v: CalcValue): string {
   return JSON.stringify(v);
 }
 
-/** Parse and evaluate a numpy-ts expression, returning a serialized result. */
 export function evaluateExpression(expression: string): CalcResult {
   const expr = expression.trim();
   if (!expr) throw new Error("`expression` must be a non-empty numpy-ts expression.");

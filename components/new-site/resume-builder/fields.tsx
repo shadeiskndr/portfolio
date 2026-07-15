@@ -8,10 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-// Presentational field wrappers. They take the loose `AnyFieldApi` from a
-// `form.Field` render prop so no form generics have to cross a component
-// boundary — the typed `form` stays in the builder that owns it.
-
 const LABEL = "font-medium text-muted-foreground text-xs";
 
 export function TextField({
@@ -77,7 +73,6 @@ export function TextAreaField({
   );
 }
 
-/** A titled card wrapping one array item, with reorder + remove controls. */
 export function ItemCard({
   title,
   onRemove,

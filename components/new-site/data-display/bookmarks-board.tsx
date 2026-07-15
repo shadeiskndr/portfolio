@@ -18,8 +18,6 @@ const TAB_META: { value: Section; label: string }[] = [
   { value: "resource", label: "Resources" },
 ];
 
-// Hoisted to module scope with an explicit locale + timeZone so the server and
-// browser render identical text (no hydration mismatch from ambient settings).
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",

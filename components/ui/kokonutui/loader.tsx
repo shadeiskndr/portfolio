@@ -47,7 +47,6 @@ export default function Loader({
       className={cn("flex flex-col items-center justify-center gap-8 p-8", className)}
       {...props}
     >
-      {/* Enhanced Monochrome Loader */}
       <motion.div
         animate={{
           scale: [1, 1.02, 1],
@@ -59,7 +58,6 @@ export default function Loader({
           ease: [0.4, 0, 0.6, 1],
         }}
       >
-        {/* Outer elegant ring with shimmer */}
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -80,7 +78,6 @@ export default function Loader({
           }}
         />
 
-        {/* Primary animated ring with gradient */}
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -101,7 +98,6 @@ export default function Loader({
           }}
         />
 
-        {/* Secondary elegant ring - counter rotation */}
         <motion.div
           animate={{
             rotate: [0, -360],
@@ -122,7 +118,6 @@ export default function Loader({
           }}
         />
 
-        {/* Accent particles */}
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -143,7 +138,6 @@ export default function Loader({
           }}
         />
 
-        {/* Dark mode variants */}
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -225,7 +219,6 @@ export default function Loader({
         />
       </motion.div>
 
-      {/* Enhanced Typography with Breathing Animation */}
       <motion.div
         animate={{
           opacity: 1,
@@ -239,7 +232,6 @@ export default function Loader({
           ease: [0.4, 0, 0.2, 1],
         }}
       >
-        {/* Clean title with subtle animation */}
         <motion.h1
           animate={{
             opacity: 1,
@@ -270,7 +262,6 @@ export default function Loader({
           </motion.span>
         </motion.h1>
 
-        {/* Clean subtitle with subtle animation */}
         <motion.p
           animate={{
             opacity: 1,

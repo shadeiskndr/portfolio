@@ -440,9 +440,6 @@ function MarqueeContent(props: DivProps) {
   );
 
   React.useEffect(() => {
-    // Capture the nodes once so the cleanup unobserves the exact elements that
-    // were observed, instead of re-reading .current (which may have changed or
-    // been nulled by unmount time).
     const rootElement = context.rootRef.current;
     const contentElement = context.contentRef.current;
     if (rootElement && contentElement) {

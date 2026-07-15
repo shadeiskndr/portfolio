@@ -17,8 +17,6 @@ export type ResolvedBookmark = {
   faviconUrl: string | null;
 };
 
-// Readings surface newest-article-first; resources keep the curated order the
-// ingest script assigned. Missing publish dates sort to the bottom.
 function sortForSection(section: "reading" | "resource", rows: Doc<"bookmarks">[]) {
   const sorted = [...rows];
   if (section === "reading") {
@@ -53,10 +51,6 @@ export const list = query({
   },
 });
 
-// Upsert keyed on `url` so the ingest script is safely re-runnable: metadata is
-// refreshed in place, and a freshly-uploaded preview replaces (and deletes) the
-// previous blob. Omitting `previewId` on a re-run keeps the existing screenshot,
-// so a failed snapshot doesn't wipe a good one.
 export const upsertBookmark = internalMutation({
   args: {
     section: sectionValidator,
@@ -93,11 +87,6 @@ export const upsertBookmark = internalMutation({
   },
 });
 
-// Storage is shared across the whole deployment, so an "orphan" is a blob no
-// table references — not just one missing from `bookmarks`. Gather every
-// storageId still in use across the tables that hold blobs, then diff against
-// `_storage`. Deleting a document row (e.g. in the dashboard) never frees its
-// blob, so previews of hand-deleted bookmarks show up here.
 async function collectReferencedStorageIds(ctx: QueryCtx): Promise<Set<string>> {
   const referenced = new Set<string>();
   const add = (id: Id<"_storage"> | undefined | null) => {
@@ -137,8 +126,6 @@ export const findOrphanBlobs = internalQuery({
   },
 });
 
-// Deletes every unreferenced blob (recomputed here, so it can only ever remove
-// truly orphaned files). Destructive — run only after reviewing findOrphanBlobs.
 export const deleteOrphanBlobs = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -155,7 +142,6 @@ export const deleteOrphanBlobs = internalMutation({
   },
 });
 
-// Wipe a section (and its preview blobs) before a clean re-ingest.
 export const clearSection = internalMutation({
   args: { section: sectionValidator },
   handler: async (ctx, { section }) => {

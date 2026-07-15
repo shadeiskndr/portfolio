@@ -101,7 +101,6 @@ export const EXPERIENCES: ExperienceDetails[] = [
     position: "Logistics Associate",
     startDate: new Date(2020, 1),
     endDate: new Date(2020, 5),
-    //currentlyWorkHere: true,
     summary: [
       "Coordinated with the store manager to restock inventory as needed, performed regular stock checks and reported any issues to the store manager immediately.",
       "Organized the store area for ease of access and optimal space utilization.",

@@ -87,9 +87,6 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api || !setApi) return;
-    // Intentional: `setApi` is the component's public escape hatch for handing the
-    // embla API up to the parent (used by shadcn-io/ai/inline-citation.tsx); the
-    // canonical fixes would change the exported prop contract.
     // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent, react-doctor/no-pass-live-state-to-parent, react-doctor/no-prop-callback-in-effect
     setApi(api);
   }, [api, setApi]);

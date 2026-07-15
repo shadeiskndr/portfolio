@@ -4,7 +4,6 @@ import { useState } from "react";
 
 const TONES = [95, 90, 80, 70, 60, 50, 40, 30, 20, 10];
 
-// One constant threshold picks the text color on every swatch of both ramps.
 const textForTone = (tone: number) => (tone >= 60 ? "#111827" : "#ffffff");
 
 function Ramp({
@@ -35,10 +34,6 @@ function Ramp({
   );
 }
 
-/**
- * Illustrates tone-as-contrast-axis with CSS OKLCH lightness (the same
- * principle HCT's tone gives you) against naive HSL lightness.
- */
 export function ToneRampDemo() {
   const [hue, setHue] = useState(90);
   const [chroma, setChroma] = useState(0.12);

@@ -17,9 +17,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `${PDFJS_BASE}/build/pdf.worker.min.mjs`;
 
 interface ResumeViewerProps {
   fileUrl: string;
-  /** Noun used in the loading text and download label. @default "document" */
   label?: string;
-  /** Upper bound for the rendered page width in px. @default 900 */
   maxPageWidth?: number;
 }
 

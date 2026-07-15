@@ -1,18 +1,11 @@
 import { parseInline } from "./inline";
 import type { ResumeData } from "./schema";
 
-// Word (.docx) export. Unlike the PDF (Typst), this maps the model straight to
-// Office Open XML via the `docx` library — real paragraphs, headings, and bullet
-// lists, so it stays fully editable and ATS-parsable. It won't be pixel-identical
-// to the Typst PDF, but it mirrors the structure and reading order. The library
-// is dynamically imported so it only loads when the user exports Word.
-
-// A4 in twips (1 inch = 1440), with margins matching the Typst layout.
 const PAGE_W = 11906;
 const MARGIN = { top: 652, bottom: 624, left: 737, right: 737 };
 const TEXT_WIDTH = PAGE_W - MARGIN.left - MARGIN.right;
 
-const FONT = "Georgia"; // universally available serif close to the PDF's Charter
+const FONT = "Georgia";
 
 export async function generateDocx(data: ResumeData): Promise<Blob> {
   const {
@@ -28,14 +21,12 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     WidthType,
   } = await import("docx");
 
-  // text runs honoring the *bold* convention (shared with the Typst generator)
   const inlineRuns = (text: string, opts: { size?: number; italics?: boolean } = {}) =>
     parseInline(text).map(
       (seg) =>
         new TextRun({ text: seg.text, bold: seg.bold, italics: opts.italics, size: opts.size })
     );
 
-  // right-aligned second field on the same line, via a right tab stop
   const twoCol = (
     left: { text: string; bold?: boolean; italics?: boolean },
     right: { text: string; italics?: boolean; size?: number },
@@ -71,7 +62,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
 
   const body: InstanceType<typeof Paragraph>[] = [];
 
-  // ── Heading ── (name is larger, so build this line directly)
   body.push(
     new Paragraph({
       tabStops: [{ type: TabStopType.RIGHT, position: TEXT_WIDTH }],
@@ -84,7 +74,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
   );
   body.push(twoCol({ text: data.location }, { text: data.phone }));
 
-  // ── Summary ──
   if (data.summary.trim()) {
     body.push(sectionHeading("Professional Summary"));
     body.push(
@@ -92,7 +81,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     );
   }
 
-  // ── Core Competencies ──
   if (data.competencies.length > 0) {
     body.push(sectionHeading("Core Competencies"));
     body.push(
@@ -103,7 +91,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     );
   }
 
-  // ── Work Experience ──
   if (data.experience.length > 0) {
     body.push(sectionHeading("Work Experience"));
     for (const e of data.experience) {
@@ -140,7 +127,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     }
   }
 
-  // ── Education ──
   if (data.education.length > 0) {
     body.push(sectionHeading("Education"));
     for (const ed of data.education) {
@@ -157,7 +143,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     }
   }
 
-  // ── Systems & Technical Proficiency ──
   if (data.systems.length > 0) {
     body.push(sectionHeading("Systems & Technical Proficiency"));
     for (const s of data.systems) {
@@ -174,7 +159,6 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     }
   }
 
-  // ── References (two-column borderless table) ──
   const sectionChildren: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [
     ...body,
   ];

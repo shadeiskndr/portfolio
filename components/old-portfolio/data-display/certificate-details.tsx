@@ -30,7 +30,6 @@ const CertificateDetails = ({
           {certificateSource}
         </Typography>
       </div>
-      {/*<Typography>&quot;{certificateDescription}&quot;</Typography>*/}
     </Card>
   );
 };

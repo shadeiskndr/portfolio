@@ -5,10 +5,6 @@ import { Button } from "@/components/ui/button";
 
 type Origin = "chart" | "grid";
 
-/**
- * One value edited from two surfaces. The chart carries local view state (zoom)
- * that a rebuild would clobber — so it must skip the echo of its own write.
- */
 export function EchoGuardDemo() {
   const [value, setValue] = useState(50);
   const [zoom, setZoom] = useState(1.6);
@@ -16,8 +12,6 @@ export function EchoGuardDemo() {
   const [skipped, setSkipped] = useState(0);
   const [clobbers, setClobbers] = useState(0);
 
-  // The mechanism from the post: a monotonic generation counter, and a record
-  // of which origin produced which generation.
   const generation = useRef(0);
   const producedBy = useRef(new Map<Origin, number>());
 
@@ -26,14 +20,12 @@ export function EchoGuardDemo() {
     producedBy.current.set(origin, generation.current);
     setValue(next);
 
-    // The store notifies every surface; the chart rebuilds unless this emission
-    // is the echo of its own write.
     if (origin === "chart") {
       const isOwnEcho = producedBy.current.get("chart") === generation.current;
       if (guard && isOwnEcho) {
-        setSkipped((n) => n + 1); // skip → live zoom is preserved
+        setSkipped((n) => n + 1);
       } else {
-        setZoom(1); // rebuild resets the view — the clobber
+        setZoom(1);
         setClobbers((n) => n + 1);
       }
     }
@@ -67,7 +59,6 @@ export function EchoGuardDemo() {
         </span>
       </div>
 
-      {/* Chart surface — a bar whose view is scaled by a local zoom. */}
       <div className="rounded-lg border p-3">
         <p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
           Chart surface (holds live zoom)
@@ -110,7 +101,6 @@ export function EchoGuardDemo() {
         </label>
       </div>
 
-      {/* Grid surface — edits the same value, no protected view state. */}
       <div className="mt-3 rounded-lg border p-3">
         <p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
           Grid surface
@@ -122,8 +112,6 @@ export function EchoGuardDemo() {
           value={value}
           onChange={(e) => {
             const raw = e.target.value;
-            // Guard the parse: a cleared field keeps the current value and
-            // partial input (NaN) is ignored, rather than storing 0/NaN.
             const next = raw === "" ? value : Number(raw);
             if (Number.isNaN(next)) return;
             commit(next, "grid");

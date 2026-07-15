@@ -1,11 +1,6 @@
 import { parseInline } from "./inline";
 import type { Education, Experience, Reference, ResumeData, SystemGroup } from "./schema";
 
-// ── escaping ────────────────────────────────────────────────────────────────
-// A Typst *string literal* built from arbitrary text. Rendering a string inside
-// content shows it verbatim — no markup is parsed — so neutralising #, $, *, _,
-// @, [], `, etc. reduces to escaping just backslash and double-quote. This is
-// what makes it safe to interpolate untrusted form input into the template.
 function S(text: string): string {
   return `"${text
     .replace(/\\/g, "\\\\")
@@ -13,24 +8,19 @@ function S(text: string): string {
     .replace(/[\r\n]+/g, " ")}"`;
 }
 
-/** Content block that renders a string verbatim: `[#("…")]`. */
 function C(text: string): string {
   return `[#(${S(text)})]`;
 }
 
-/** Inline markup honoring the *bold* convention, for a markup context. */
 function inlineMarkup(text: string): string {
   return parseInline(text)
     .map((seg) => (seg.bold ? `#strong(${S(seg.text)})` : `#(${S(seg.text)})`))
     .join("");
 }
 
-/** Same, wrapped as a content block `[…]` (list items, text bodies). */
 function inlineContent(text: string): string {
   return `[${inlineMarkup(text)}]`;
 }
-
-// ── sections ────────────────────────────────────────────────────────────────
 
 function heading(d: ResumeData): string {
   return `#hrow(
@@ -48,8 +38,6 @@ function bulletsCall(items: string[]): string {
 }
 
 function experienceBlock(e: Experience): string {
-  // Single role: date sits on the firm line, location on the role line.
-  // Multiple roles: location sits on the firm line, each role carries its date.
   if (e.roles.length === 1) {
     const r = e.roles[0];
     return `#block(above: 7pt, below: 7pt)[
@@ -91,8 +79,6 @@ function referenceCell(r: Reference): string {
     #(${S(r.phone)}) · #link(${S(`mailto:${r.email}`)})[#(${S(r.email)})]]`;
 }
 
-// ── document ────────────────────────────────────────────────────────────────
-
 const PREAMBLE = (
   d: ResumeData
 ) => `#set document(title: ${S(`${d.name} — Résumé`)}, author: ${S(d.name)})
@@ -117,14 +103,7 @@ const PREAMBLE = (
 #let firmline(firm, right) = hrow([• #strong(firm)], dt(right))
 #let roleline(role, right) = hrow([#h(1.1em)#emph(role)], emph(right))`;
 
-/**
- * Turn résumé data into a self-contained Typst document. Ported from the
- * browser-verified `nina-web.typ`; the fixed section titles are structural
- * (not user-editable), everything else flows from `data`.
- */
 export function generateTypst(data: ResumeData): string {
-  // Each section is emitted only when it has content — an imported or partial
-  // résumé may lack, say, references, and an empty grid/section is invalid Typst.
   const parts: string[] = [PREAMBLE(data), "", heading(data), ""];
 
   if (data.summary.trim()) {

@@ -198,10 +198,8 @@ export const TreeNode = ({
   const nodeId = providedNodeId ?? generatedId;
 
   const contextValue = useMemo(() => {
-    // Build the parent path - mark positions where the parent was the last child
     const currentPath = level === 0 ? [] : [...parentPath];
     if (level > 0 && parentPath.length < level - 1) {
-      // Fill in missing levels with false (not last)
       while (currentPath.length < level - 1) {
         currentPath.push(false);
       }
@@ -272,7 +270,6 @@ export const TreeLines = () => {
 
   return (
     <div className="pointer-events-none absolute top-0 bottom-0 left-0">
-      {/* Render vertical lines for all parent levels */}
       {Array.from({ length: level }, (_, index) => {
         const shouldHideLine = parentPath[index] === true;
         if (shouldHideLine && index === level - 1) {
@@ -291,7 +288,6 @@ export const TreeLines = () => {
         );
       })}
 
-      {/* Horizontal connector line */}
       <div
         className="absolute top-1/2 border-border/40 border-t"
         style={{
@@ -301,7 +297,6 @@ export const TreeLines = () => {
         }}
       />
 
-      {/* Vertical line to midpoint for last items */}
       {isLast && (
         <div
           className="absolute top-0 border-border/40 border-l"

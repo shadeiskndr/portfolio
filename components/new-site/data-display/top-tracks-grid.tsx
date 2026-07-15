@@ -43,7 +43,6 @@ export default function TopTracksGrid() {
         ))}
       </Tabs>
 
-      {/* The Developer Terms require Spotify content to be attributed. */}
       <a
         className="mt-10 inline-flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-foreground"
         href="https://spotify.com"
@@ -77,8 +76,6 @@ function TrackDisc({ track }: { track: Track }) {
           coverArt={track.albumArtUrl ?? ""}
           discClassName={DISC_SIZE}
           hideTonearm
-          // Controlled: the disc mirrors real embed playback rather than a
-          // local guess, so it stops spinning when Spotify actually pauses.
           isPlaying={isPlaying}
         />
         <span className="absolute -top-1 -left-1 z-10 flex h-6 w-6 items-center justify-center rounded-full border bg-background font-medium text-[11px] text-muted-foreground tabular-nums shadow-sm">
@@ -126,8 +123,6 @@ function TrackGrid({ timeRange }: { timeRange: TimeRange }) {
   }
 
   if (tracks.length === 0) {
-    // Deliberately vague: this renders publicly. The actionable diagnosis (403
-    // scope vs 429 quota) is in the `refreshTopTracks` error and Convex logs.
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
         <p className="text-muted-foreground text-sm">
@@ -138,8 +133,6 @@ function TrackGrid({ timeRange }: { timeRange: TimeRange }) {
   }
 
   return (
-    // The disc component hardcodes `animate-spin`, so opt the whole grid out of
-    // motion in one place rather than per-disc.
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 motion-reduce:[&_*]:animate-none">
       {tracks.map((track) => (
         <TrackDisc key={track._id} track={track} />

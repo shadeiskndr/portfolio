@@ -1,21 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Ingest the portfolio knowledge base for the /chat RAG assistant.
- *
- * Serializes the portfolio (experiences, projects, certificates, education) from
- * `lib/new-site/data.ts` and the TIL posts (`content/til/*.mdx`) into text
- * chunks, embeds them with Amazon Nova via the `rag:embedAndStore` Convex
- * action, and upserts the `portfolioChunks` vector table. Ingestion runs in
- * batches (the full corpus exceeds the CLI argument-length limit); a final
- * `rag:pruneTextChunks` drops any refKey no longer in the corpus.
- *
- * Always run the FULL script (not a partial subset) so the prune's keep-list
- * reflects the whole corpus. Testimonials are excluded on purpose.
- *
- * Run AFTER the schema is pushed (the vector index must exist):
- *   bunx convex deploy   # or `bunx convex dev` running
- *   bun run scripts/ingest-rag.ts
- */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { $ } from "bun";
@@ -38,7 +21,6 @@ import {
   USES_SHARED,
 } from "../lib/new-site/data";
 
-/** Read published TIL posts (frontmatter + raw MDX body) for RAG serialization. */
 async function loadTilPosts(): Promise<TilPostInput[]> {
   const dir = path.join(process.cwd(), "content", "til");
   const files = (await readdir(dir)).filter((file) => file.endsWith(".mdx"));
@@ -79,7 +61,6 @@ for (const chunk of chunks) {
   console.log(`  • [${chunk.source}] ${chunk.refKey}`);
 }
 
-// Ingest in batches — the full chunk set exceeds the CLI argument-length limit.
 const BATCH_SIZE = 8;
 console.log(`\nEmbedding + storing via rag:embedAndStore (batches of ${BATCH_SIZE}) ...`);
 for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
@@ -93,7 +74,6 @@ for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
   console.log(`  batch ${Math.floor(i / BATCH_SIZE) + 1}: ${res.stdout.toString().trim()}`);
 }
 
-// Prune stale rows once, passing only refKeys (small enough for one arg).
 console.log("\nPruning stale chunks via rag:pruneTextChunks ...");
 const keepRefKeys = chunks.map((chunk) => chunk.refKey);
 const prune =

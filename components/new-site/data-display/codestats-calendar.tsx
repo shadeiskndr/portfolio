@@ -10,10 +10,6 @@ import {
 } from "@/lib/new-site/codestats";
 import { cn } from "@/lib/utils";
 
-/**
- * Sequential single-hue ramp, light -> dark, mixed against the surface so it
- * tracks whichever runtime theme is active instead of hard-coding a green.
- */
 const LEVEL_FILL = [
   "color-mix(in oklab, var(--color-muted) 55%, transparent)",
   "color-mix(in oklab, var(--color-chart-1) 25%, var(--color-muted))",
@@ -22,7 +18,6 @@ const LEVEL_FILL = [
   "var(--color-chart-1)",
 ];
 
-/** Weekday rail — only alternating rows are labelled, as on GitHub. */
 const WEEKDAY_ROWS = [
   { day: "sun", label: "" },
   { day: "mon", label: "Mon" },
@@ -34,9 +29,6 @@ const WEEKDAY_ROWS = [
 ];
 
 export default function CodestatsCalendar({ calendar }: { calendar: Calendar }) {
-  // A month label sits above the first week of each month, plus the leading
-  // column so the grid never opens unlabelled. Labels closer than two columns
-  // would collide, so the later one is dropped.
   const monthLabels: (string | null)[] = [];
   let lastLabelled = Number.NEGATIVE_INFINITY;
   for (const [index, week] of calendar.weeks.entries()) {
@@ -79,8 +71,6 @@ export default function CodestatsCalendar({ calendar }: { calendar: Calendar }) 
                       <TooltipTrigger
                         render={
                           <div
-                            // The 3px flex gap already separates cells; no border
-                            // is drawn on filled marks.
                             className={cn(
                               "size-3 rounded-[3px]",
                               cell.level === 0 && "ring-1 ring-border/60 ring-inset"

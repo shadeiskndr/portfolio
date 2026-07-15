@@ -17,13 +17,9 @@ import { chatAgent, defineChatModel } from "./agent";
 import { listModels, resolveModelRow, toChatModel } from "./models";
 import { retrievePortfolioContext } from "./rag";
 
-// Gemma 4 E2B has a 128K-token context window. When a turn's prompt exceeds
-// COMPACT_AT_TOKENS (~73% of it), older turns are summarized so the next run
-// stays within the window. KEEP_RECENT_MESSAGES are kept verbatim.
 const COMPACT_AT_TOKENS = 96_000;
 const KEEP_RECENT_MESSAGES = 6;
 
-/** Resolve a session row, scoped to the owning browser (null if not created yet). */
 async function findSession(ctx: QueryCtx | MutationCtx, sessionId: string, clientId: string) {
   const session = await ctx.db
     .query("chatSessions")
@@ -33,12 +29,10 @@ async function findSession(ctx: QueryCtx | MutationCtx, sessionId: string, clien
   return session;
 }
 
-/** USD cost for a token count at a per-million-token rate. */
 function tokenCostUSD(tokens: number, per1M: number): number {
   return (tokens * per1M) / 1_000_000;
 }
 
-/** Derive a short session title from the first user message. */
 function titleFromMessage(message: {
   text?: string;
   message?: { content?: Array<{ type: string; text?: string }> };
@@ -66,12 +60,6 @@ export const list = query({
   },
 });
 
-/**
- * Latest completed turn's token usage, priced and sized on the server so the
- * client just displays it. Context window and per-token prices come from the
- * model that actually ran the turn (`session.lastModelId`), not whatever model
- * is selected now — the two can differ if the visitor switched mid-session.
- */
 export const usage = query({
   args: { sessionId: v.string(), clientId: v.string() },
   handler: async (ctx, { sessionId, clientId }) => {
@@ -90,11 +78,8 @@ export const usage = query({
     const pricing = row?.pricing ?? DEFAULT_MODEL.pricing;
     const inputTokens = u.inputTokens ?? 0;
     const outputTokens = u.outputTokens ?? 0;
-    // `usedTokens` = last prompt size — the same signal the compaction gate uses.
     const usedTokens = inputTokens;
     const maxTokens = contextTokens;
-    // Our registry prices input and output only (no separate cache/reasoning
-    // rate), so total = input + output; reasoning/cache show tokens without cost.
     const inputCost = tokenCostUSD(inputTokens, pricing.inputPer1M);
     const outputCost = tokenCostUSD(outputTokens, pricing.outputPer1M);
 
@@ -125,13 +110,6 @@ export const usage = query({
   },
 });
 
-/**
- * The chat model registry, served from the backend so the composer's model
- * dropdown — and the usage gauge's per-model context window + pricing — render
- * from the server's source of truth. Adding, removing, or repricing a model
- * here updates every client without a frontend change. `send` independently
- * whitelists whatever id the client returns, so this list is display-only.
- */
 export const models = query({
   args: {},
   handler: async (ctx) => {
@@ -157,20 +135,15 @@ export const send = mutation({
     metadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    // The composer sends its selected model and reasoning effort in `body`.
-    // Whitelist both here (public endpoint) so an unknown value can't reach
-    // Bedrock; each falls back to the registry default.
     const body = args.body as { modelId?: string; reasoning?: boolean } | undefined;
     const row = await resolveModelRow(ctx, body?.modelId);
     const modelId = row?.modelId ?? DEFAULT_MODEL.id;
-    // Binary reasoning toggle; defaults on. Capability is enforced in `execute`.
     const reasoning = body?.reasoning ?? DEFAULT_REASONING;
 
     const session = await findSession(ctx, args.sessionId, args.clientId);
     let threadId: string;
     if (session) {
       threadId = session.threadId;
-      // Record the model this turn runs on so the usage gauge prices it correctly.
       if (session.lastModelId !== modelId) {
         await ctx.db.patch(session._id, { lastModelId: modelId });
       }
@@ -192,9 +165,6 @@ export const send = mutation({
       threadId,
       userId: args.clientId,
       message: args.message,
-      // Idempotency key must be unique per user turn. `message.clientKey` is the
-      // AI SDK message id (set by fromVercelMessage) — unique per message. Using
-      // `chatId` here collides on the 2nd message in a session (conflictingRunKey).
       key: args.message.clientKey ?? args.messageId ?? args.chatId,
     });
     await ctx.scheduler.runAfter(0, internal.chat.execute, {
@@ -237,11 +207,6 @@ function messageRole(m: { message?: { author?: { type?: string } } }): string {
   return type ?? "system";
 }
 
-/**
- * If the last turn's prompt exceeded COMPACT_AT_TOKENS, summarize every message
- * older than the KEEP_RECENT_MESSAGES window into a single brief. Returns null
- * when compaction isn't needed (so the run uses the default context window).
- */
 async function summarizeOlderTurns(
   ctx: ActionCtx,
   threadId: string,
@@ -284,7 +249,6 @@ async function summarizeOlderTurns(
   return summary || null;
 }
 
-/** The current user turn's prompt text, for RAG retrieval (empty if none). */
 async function latestUserQuery(ctx: ActionCtx, threadId: string): Promise<string> {
   const page = await chatAgent.messages.list(ctx, {
     threadId,
@@ -305,9 +269,6 @@ export const execute = internalAction({
     reasoning: v.optional(v.boolean()),
   },
   handler: async (ctx, { runId, modelId, reasoning }) => {
-    // Actions can't read the DB directly; resolve the run's model (id, serving
-    // API, reasoning capability) through an internal query, falling back to the
-    // bootstrap default. Reasoning only applies when the model supports it.
     const resolved = await ctx.runQuery(internal.models.resolveForRun, { modelId });
     const id = resolved?.id ?? DEFAULT_MODEL.id;
     const surface = resolved?.surface ?? DEFAULT_MODEL.surface;
@@ -323,11 +284,6 @@ export const execute = internalAction({
 
     const contextBlocks: ContextBlock[] = [];
 
-    // Prompt-based RAG: always retrieve portfolio facts relevant to the current
-    // question and inject them as context (see convex/rag.ts). Gemma is small,
-    // so we retrieve unconditionally rather than relying on a search tool call.
-    // Cross-modal: retrieval returns text facts AND relevant image URLs (gallery
-    // photos / project screenshots), ranked together from one vector space.
     const query = await latestUserQuery(ctx, run.threadId);
     const retrieved = query ? await retrievePortfolioContext(ctx, query) : { text: "", images: [] };
     if (retrieved.text) {
@@ -355,8 +311,6 @@ export const execute = internalAction({
       });
     }
 
-    // Token-based compaction: when the last prompt neared the window, summarize
-    // older turns and keep only the recent window verbatim.
     const summary = await summarizeOlderTurns(ctx, run.threadId, id, surface, api);
     if (summary) {
       contextBlocks.push({

@@ -55,7 +55,6 @@ const ShimmerComponent = ({
 
 export const Shimmer = memo(ShimmerComponent);
 
-/** Demo component for preview */
 export default function ShimmerDemo() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-8">

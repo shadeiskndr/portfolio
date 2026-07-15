@@ -17,7 +17,6 @@ interface GithubCalendarProps {
   colorSchema?: "green" | "blue" | "purple" | "orange" | "gray";
 }
 
-// Color schemas for custom styling
 const colorSchemas = {
   gray: {
     level0: "bg-muted/60",
@@ -79,7 +78,7 @@ function getShapeClass(shape: string) {
     case "square":
       return "rounded-none";
     case "squircle":
-      return "rounded-sm"; // Approximation
+      return "rounded-sm";
     default:
       return "rounded-[2px]";
   }
@@ -147,8 +146,6 @@ export function GithubCalendar({
   return (
     <TooltipProvider delay={50}>
       <div className={cn("flex w-max max-w-full flex-col gap-4", className)}>
-        {/* The header stacks on a phone: side by side, the contribution count
-            wrapped to two lines and sat misaligned against the username. */}
         {showTotal && (
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
@@ -198,9 +195,6 @@ export function GithubCalendar({
                     <TooltipTrigger
                       render={
                         <motion.div
-                          // Tiny (~14px) decorative contribution cell: the staggered
-                          // grow-from-a-point pop is the intended effect, not a
-                          // vanishing UI element the eye needs to track.
                           // react-doctor-disable-next-line react-doctor/no-scale-from-zero
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}

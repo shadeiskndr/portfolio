@@ -7,8 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DailyPoint } from "@/lib/new-site/codestats";
 import { formatDayLong, formatFullXp } from "@/lib/new-site/codestats";
 
-// recharts is ~100kB of the bundle and only this card and the language card
-// need it, so it loads on demand behind a same-height skeleton (no layout jump).
 const XpActivityChart = dynamic(
   () => import("./codestats-charts").then((mod) => mod.XpActivityChart),
   { ssr: false, loading: () => <Skeleton className="h-56 w-full rounded-lg" /> }
@@ -54,12 +52,9 @@ export default function CodestatsActivity({
   );
 }
 
-/** The WCAG-clean twin of the chart — every plotted value is readable as text. */
 function ActivityTable({ points }: { points: DailyPoint[] }) {
   const rows = points.slice().reverse();
 
-  // No `hide-scrollbar` here: 90 rows scroll, so the scrollbar is the only cue
-  // that there is more below. The global `*` rule already styles it thin.
   return (
     <div className="max-h-56 overflow-y-auto pr-1">
       <table className="w-full text-sm">

@@ -14,8 +14,6 @@ const SEEDS: { label: string; hue: number }[] = [
 
 type Roles = Record<string, string>;
 
-// A seed is not a theme: one hue generates a whole coordinated role set. Move
-// the hue and every role moves together — the point of the post.
 function scheme(h: number, c: number, dark: boolean): Roles {
   const ok = (l: number, ch: number) => `oklch(${l} ${ch} ${h})`;
   return dark
@@ -51,7 +49,6 @@ const ROLE_SWATCHES = [
   "outline",
 ] as const;
 
-/** Pick a seed hue and watch a full Material-style role set regenerate live. */
 export function RuntimeThemeDemo() {
   const [hue, setHue] = useState(292);
   const [chroma, setChroma] = useState(0.15);
@@ -107,7 +104,6 @@ export function RuntimeThemeDemo() {
         </label>
       </div>
 
-      {/* Preview surface — every element reads a different generated role. */}
       <div
         className="rounded-xl border p-4"
         style={{ backgroundColor: r.surface, borderColor: r.outline, color: r.onSurface }}

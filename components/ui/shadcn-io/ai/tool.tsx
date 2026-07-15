@@ -135,7 +135,6 @@ export const ToolOutput = ({ className, output, errorText, ...props }: ToolOutpu
   );
 };
 
-/** Demo component for preview */
 export default function ToolDemo() {
   return (
     <div className="w-full max-w-2xl p-6">

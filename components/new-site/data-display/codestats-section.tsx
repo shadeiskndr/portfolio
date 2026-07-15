@@ -1,6 +1,5 @@
 "use client";
 
-/** Shared card chrome for the /stats sections. */
 export default function StatsSection({
   title,
   description,

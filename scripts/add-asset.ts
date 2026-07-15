@@ -39,8 +39,6 @@ if (!(await file.exists())) {
 }
 
 const isSvg = /\.svg$/i.test(filePath) || (file.type || "") === "image/svg+xml";
-// Only raster images go through the WebP transcoder. SVGs (vector) and other
-// files (PDFs) are stored as-is so they stay crisp / uncorrupted.
 const isRaster =
   !isSvg &&
   ((file.type || "").startsWith("image/") || /\.(png|jpe?g|webp|gif|avif)$/i.test(filePath));
@@ -51,7 +49,6 @@ let width: number | undefined;
 let height: number | undefined;
 
 if (isRaster) {
-  // Compress + transcode raster images to WebP, capturing dimensions for next/image.
   const inputBytes = new Uint8Array(await file.arrayBuffer());
   const pipeline = new Bun.Image(inputBytes)
     .resize(MAX_WIDTH, MAX_WIDTH, { fit: "inside", withoutEnlargement: true })
@@ -63,7 +60,6 @@ if (isRaster) {
     `Compressed ${(file.size / 1024).toFixed(0)}KB → ${(blob.size / 1024).toFixed(0)}KB  (${width}×${height})`
   );
 } else {
-  // SVGs and PDFs are stored as-is — no transcoding, no dimensions.
   blob = file;
   contentType = isSvg ? "image/svg+xml" : file.type || "application/octet-stream";
   console.log(`Uploading ${(blob.size / 1024).toFixed(0)}KB raw  (${contentType})`);

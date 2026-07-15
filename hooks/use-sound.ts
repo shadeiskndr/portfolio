@@ -100,9 +100,7 @@ export function playClick(variant: SoundVariant = "mouse") {
   try {
     audio.currentTime = 0;
     void audio.play();
-  } catch {
-    // Autoplay restrictions — ignore.
-  }
+  } catch {}
 }
 
 export function useSound() {

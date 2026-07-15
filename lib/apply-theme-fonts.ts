@@ -31,8 +31,6 @@ const GENERIC_FAMILIES = new Set([
 function parseFontFamily(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
-  // Skip anything that starts with a CSS var() reference — those are local
-  // fonts already loaded via next/font.
   if (trimmed.startsWith("var(")) return null;
 
   const match = trimmed.match(/^["']?([^,"']+)/);

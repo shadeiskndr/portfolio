@@ -27,9 +27,6 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
     );
   }, [posts]);
 
-  // Build each post's tags into a Set once (per posts change) so the tag
-  // filter does O(1) membership checks instead of rescanning the array on
-  // every keystroke / tag click.
   const tagSetByPost = useMemo(
     () => new Map(posts.map((p) => [p, new Set(p.tags ?? [])])),
     [posts]
@@ -52,8 +49,6 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
   const safePage = Math.min(page, pageCount);
   const pagePosts = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  // Any filter change resets to the first page — done in the handlers, so no
-  // effect is needed to keep `page` in range.
   const onSearch = (value: string) => {
     setSearch(value);
     setPage(1);
@@ -63,8 +58,6 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
     setPage(1);
   };
 
-  // Keep the chip row calm by default: show the most-used tags, collapse the
-  // long tail behind a toggle. The active tag is always kept visible.
   const moreCount = Math.max(0, facets.length - VISIBLE_TAGS);
   const visibleFacets = useMemo(() => {
     if (showAllTags || facets.length <= VISIBLE_TAGS) return facets;
@@ -174,8 +167,6 @@ function TagChip({
 
 type PageItem = { kind: "page"; value: number } | { kind: "gap"; id: string };
 
-// Compact page list: everything up to 7 pages, otherwise first/last, the
-// current page, and its neighbors, with gaps collapsed to an ellipsis.
 function pageItems(current: number, total: number): PageItem[] {
   const nums =
     total <= 7

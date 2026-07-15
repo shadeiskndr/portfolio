@@ -12,8 +12,6 @@ export interface AnimatedTabsProps {
   onChange?: (tabId: string) => void;
   tabs: { id: string; label: string; icon?: ReactNode }[];
   variant?: "underline" | "pill" | "segment";
-  /** Tailwind rounding class for the `pill` variant's container, tabs, and
-   * indicator (e.g. `rounded-xl`, `rounded-2xl`). Defaults to `rounded-full`. */
   radius?: string;
 }
 

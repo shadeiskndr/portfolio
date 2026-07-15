@@ -43,12 +43,11 @@ export interface SiriOrbProps {
 
 const defaultColors = {
   bg: "oklch(95% 0.02 264.695)",
-  c1: "oklch(75% 0.15 350)", // Pastel pink
-  c2: "oklch(80% 0.12 200)", // Pastel blue
-  c3: "oklch(78% 0.14 280)", // Pastel purple/lavender
+  c1: "oklch(75% 0.15 350)",
+  c2: "oklch(80% 0.12 200)",
+  c3: "oklch(78% 0.14 280)",
 };
 
-// Adjust mask radius based on size to reduce black center in small sizes
 const getMaskRadius = (value: number) => {
   if (value < SIZE_THRESHOLD_TINY) {
     return MASK_RADIUS_TINY;
@@ -70,39 +69,36 @@ const SiriOrb: React.FC<SiriOrbProps> = ({
 }) => {
   const finalColors = { ...defaultColors, ...colors };
 
-  // Extract numeric value from size for calculations
   const sizeValue = Number.parseInt(size.replace("px", ""), 10);
 
-  // Responsive calculations based on size
   const blurAmount =
     sizeValue < SIZE_THRESHOLD_SMALL
-      ? Math.max(sizeValue * BLUR_MULTIPLIER_SMALL, BLUR_MIN_SMALL) // Reduced blur for small sizes
+      ? Math.max(sizeValue * BLUR_MULTIPLIER_SMALL, BLUR_MIN_SMALL)
       : Math.max(sizeValue * BLUR_MULTIPLIER_LARGE, BLUR_MIN_LARGE);
 
   const contrastAmount =
     sizeValue < SIZE_THRESHOLD_SMALL
-      ? Math.max(sizeValue * CONTRAST_MULTIPLIER_SMALL, CONTRAST_MIN_SMALL) // Reduced contrast for small sizes
+      ? Math.max(sizeValue * CONTRAST_MULTIPLIER_SMALL, CONTRAST_MIN_SMALL)
       : Math.max(sizeValue * CONTRAST_MULTIPLIER_LARGE, CONTRAST_MIN_LARGE);
 
   const dotSize =
     sizeValue < SIZE_THRESHOLD_SMALL
-      ? Math.max(sizeValue * DOT_SIZE_MULTIPLIER_SMALL, DOT_SIZE_MIN_SMALL) // Smaller dots for small sizes
+      ? Math.max(sizeValue * DOT_SIZE_MULTIPLIER_SMALL, DOT_SIZE_MIN_SMALL)
       : Math.max(sizeValue * DOT_SIZE_MULTIPLIER_LARGE, DOT_SIZE_MIN_LARGE);
 
   const shadowSpread =
     sizeValue < SIZE_THRESHOLD_SMALL
-      ? Math.max(sizeValue * SHADOW_MULTIPLIER_SMALL, SHADOW_MIN_SMALL) // Reduced shadow for small sizes
+      ? Math.max(sizeValue * SHADOW_MULTIPLIER_SMALL, SHADOW_MIN_SMALL)
       : Math.max(sizeValue * SHADOW_MULTIPLIER_LARGE, SHADOW_MIN_LARGE);
 
   const maskRadius = getMaskRadius(sizeValue);
 
-  // Use more subtle contrast for very small sizes
   const getFinalContrast = (value: number) => {
     if (value < SIZE_THRESHOLD_TINY) {
-      return CONTRAST_TINY; // Very subtle contrast for tiny sizes
+      return CONTRAST_TINY;
     }
     if (value < SIZE_THRESHOLD_SMALL) {
-      return Math.max(contrastAmount * CONTRAST_MULTIPLIER_FINAL, CONTRAST_MIN_FINAL); // Reduced contrast for small sizes
+      return Math.max(contrastAmount * CONTRAST_MULTIPLIER_FINAL, CONTRAST_MIN_FINAL);
     }
     return contrastAmount;
   };

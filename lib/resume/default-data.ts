@@ -1,10 +1,5 @@
 import { resumeSchema } from "./schema";
 
-// Sample seed for the builder — a fictional person so the public route ships no
-// real personal data. Fills every section (incl. a multi-role employer) so the
-// preview and all form branches are exercised. Emails use example.com and phone
-// numbers use the 555-01xx fiction range. To load a real résumé, use the
-// "Import .tex" action in the builder rather than editing this file.
 const RAW_RESUME = {
   name: "Alex Rivera",
   email: "alex.rivera@example.com",
@@ -128,7 +123,4 @@ const RAW_RESUME = {
   ],
 };
 
-// Validate the seed against the schema at load — a cheap guard that the seed
-// stays in sync with the model, and the same entry point the .tex importer and a
-// future "import résumé JSON" feature reuse.
 export const DEFAULT_RESUME = resumeSchema.parse(RAW_RESUME);

@@ -100,8 +100,6 @@ export const SOCIAL_LINKS: SocialLink[] = [
   },
   { label: "Email", icon: Mail, url: "mailto:shahathiriskandar43@gmail.com" },
   { label: "WhatsApp", icon: WhatsappIcon, url: "https://wa.me/601153787564" },
-  // `url` is unused: SocialRow renders this entry as a <ResumeDialog> trigger
-  // (the PDF is resolved from the assets table via the "resume" key).
   { label: "Resume", icon: FileText, url: "#" },
 ];
 
@@ -175,8 +173,6 @@ export const EXPERIENCES: ExperienceEntry[] = [
   },
 ];
 
-// Consolidated tools & skills (union of the old-site categorized skills and the
-// previous CDN-backed tools list). Logos are local; resolved to Convex keys later.
 export const TOOLS: Tool[] = [
   { label: "TypeScript", logoKey: "tool-typescript" },
   { label: "JavaScript", logoKey: "tool-javascript" },
@@ -356,17 +352,11 @@ export type Certificate = {
   name: string;
   issuer: string;
   description: string;
-  /** Asset key for a brand/badge logo for the list + card header. Falls back to `imageKey`. */
   logoKey?: string;
-  /** Asset key for the full certificate image shown in the expanded card, if available. */
   imageKey?: string;
-  /** Verification / credential URL, if available. */
   url?: string;
 };
 
-// Combined from the resume (source of truth for names + descriptions) and the
-// old site (which contributes the Coursera certificate images + verify links).
-// `image`/`url` are present only where an asset or credential link exists.
 export const CERTIFICATES: Certificate[] = [
   {
     name: "AWS Certified Solutions Architect – Associate",
@@ -422,7 +412,6 @@ export const CERTIFICATES: Certificate[] = [
   {
     name: "Google IT Support",
     issuer: "Coursera",
-    // TODO(shahathir): confirm wording — rewritten from the old site's placeholder text.
     description:
       "Covered IT support fundamentals — troubleshooting, customer service, networking, operating systems, system administration, and security.",
     logoKey: "cert-logo-google-support",
@@ -432,7 +421,6 @@ export const CERTIFICATES: Certificate[] = [
   {
     name: "Google Cybersecurity",
     issuer: "Coursera",
-    // TODO(shahathir): confirm wording — rewritten from the old site's placeholder text.
     description:
       "Covered cybersecurity fundamentals — security frameworks, network security, Linux, SQL, Python, and threat detection and response.",
     logoKey: "cert-logo-google-cyber",
@@ -447,7 +435,6 @@ export type Recognition = {
   meta?: string;
 };
 
-// Academic highlights pulled from the resume.
 export const RECOGNITIONS: Recognition[] = [
   {
     title: "Bachelor of Information Technology (Hons.) — Software Engineering",
@@ -475,7 +462,6 @@ export type UsesEntry = { label: string; value: string };
 export type UsesRig = { id: string; label: string; rows: UsesEntry[] };
 export type UsesSectionData = { title: string; rows: UsesEntry[] };
 
-// "Uses" page — hardware rigs (tab-switched) plus shared peripherals/software.
 export const USES_RIGS: UsesRig[] = [
   {
     id: "laptop",
@@ -532,10 +518,7 @@ export type Testimonial = {
   name: string;
   role: string;
   quote: string;
-  /** Public path to an avatar image, if available. */
   avatar?: string;
 };
 
-// Intentionally empty: the old site's testimonials were placeholder template
-// data. Real quotes from Shahathir go here; the section hides itself when empty.
 export const TESTIMONIALS: Testimonial[] = [];

@@ -16,15 +16,6 @@ import {
   formatXp,
 } from "@/lib/new-site/codestats";
 
-/**
- * The recharts leaf. Both charts plot a single measure, so they use one hue
- * (chart-1) rather than a categorical palette — length already encodes the
- * value, and a per-bar ramp would double-encode it.
- *
- * Loaded through next/dynamic from its call sites so recharts stays out of the
- * initial bundle.
- */
-
 const ACTIVITY_CONFIG = {
   xp: { label: "XP", color: "var(--color-chart-1)" },
   cumulative: { label: "Total XP", color: "var(--color-chart-1)" },
@@ -39,8 +30,6 @@ export function XpActivityChart({
 }) {
   const dataKey = mode === "daily" ? "xp" : "cumulative";
 
-  // One format for the whole axis: mixing "7,500" and "15K" on the same scale
-  // reads as two different units. Compact only once the scale calls for it.
   let peak = 0;
   for (const point of points) {
     if (point[dataKey] > peak) peak = point[dataKey];
@@ -49,8 +38,6 @@ export function XpActivityChart({
 
   return (
     <ChartContainer config={ACTIVITY_CONFIG} className="aspect-auto h-56 w-full">
-      {/* No negative left margin: it pulls the plot over the y-axis band and
-          clips the widest tick label. */}
       <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <defs>
           <linearGradient id="codestats-xp-fill" x1="0" y1="0" x2="0" y2="1">
@@ -136,7 +123,6 @@ export function LanguagesChart({ rows }: { rows: { name: string; xp: number }[] 
           barSize={12}
           isAnimationActive={false}
         >
-          {/* Outside the bar end, in muted ink — never clipped by a short bar. */}
           <LabelList
             dataKey="xp"
             position="right"

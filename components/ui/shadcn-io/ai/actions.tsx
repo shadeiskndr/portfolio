@@ -58,7 +58,6 @@ export const Action = ({
   return button;
 };
 
-/** Demo component for preview */
 export default function ActionsDemo() {
   return (
     <div className="flex w-full flex-col gap-4 p-6">

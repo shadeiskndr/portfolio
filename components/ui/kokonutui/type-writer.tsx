@@ -62,9 +62,6 @@ export default function TypewriterTitle({
   const isDeletingRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Keep ref in sync with latest sequences so the timer loop reads fresh values
-  // without restarting on every array reference change. Written in an effect,
-  // not during render, since React may replay or discard render work.
   const sequencesRef = useRef(sequences);
   useEffect(() => {
     sequencesRef.current = sequences;
@@ -76,20 +73,16 @@ export default function TypewriterTitle({
         return typingSpeed;
       }
 
-      // More natural human typing pattern
       const random = Math.random();
 
-      // 10% chance of a longer pause (thinking/hesitation)
       if (random < 0.1) {
         return typingSpeed * 2;
       }
 
-      // 10% chance of a burst (fast typing)
       if (random > 0.9) {
         return typingSpeed * 0.5;
       }
 
-      // Standard variance (+/- 40%)
       const variance = 0.4;
       const min = typingSpeed * (1 - variance);
       const max = typingSpeed * (1 + variance);
@@ -120,7 +113,7 @@ export default function TypewriterTitle({
             timeoutRef.current = setTimeout(() => {
               sequenceIndexRef.current += 1;
               runTypewriter();
-            }, 100); // Quick transition to next word
+            }, 100);
           }
         }
       } else if (charIndexRef.current < currentSequence.text.length) {
@@ -157,7 +150,6 @@ export default function TypewriterTitle({
       }
     };
 
-    // Start the loop
     timeoutRef.current = setTimeout(runTypewriter, startDelay);
 
     return () => {

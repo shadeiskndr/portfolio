@@ -5,8 +5,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// The same tagged union from the post: the `kind` literal selects exactly one
-// schema, so a bad block yields ONE targeted error, not "no variant matched".
 const Heading = z.strictObject({
   kind: z.literal("heading"),
   text: z.string().min(1),
@@ -68,7 +66,6 @@ function validate(source: string): Result {
   return { status: "invalid", issues, tag };
 }
 
-/** Edit a block and watch the discriminated union pick one schema and report against it. */
 export function DiscriminatedUnionDemo() {
   const [source, setSource] = useState(EXAMPLES[1].json);
   const result = useMemo(() => validate(source), [source]);

@@ -58,9 +58,6 @@ export const Reasoning = memo(
     children,
     ...props
   }: ReasoningProps) => {
-    // Open at mount only while actively streaming. Historical reasoning (e.g.
-    // after switching sessions) must start collapsed — otherwise it opens for a
-    // moment and then auto-closes, which reads as a jarring flash.
     const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen && isStreaming);
     const isOpen = open ?? uncontrolledOpen;
     const setIsOpen = useCallback(
@@ -76,17 +73,9 @@ export const Reasoning = memo(
     const duration = durationProp ?? measuredDuration;
 
     const [hasAutoClosed, setHasAutoClosed] = useState(false);
-    // Refs, not state: neither value is ever rendered. hasStreamed records
-    // whether this block streamed during its lifetime — historical blocks
-    // (opened after the fact) never stream, so they must never auto-close.
-    // startTime anchors the thinking-duration measurement.
     const hasStreamedRef = useRef(isStreaming);
     const startTimeRef = useRef<number | null>(null);
 
-    // Runs at most once per stream (from the timer below): close the panel and
-    // consume the one-shot auto-close. Reads the latest state at fire time, so
-    // a panel the user already closed isn't "re-closed" (no spurious
-    // onOpenChange), and a later manual open sticks.
     const autoClose = useEffectEvent(() => {
       if (isOpen) {
         setIsOpen(false);
@@ -94,8 +83,6 @@ export const Reasoning = memo(
       setHasAutoClosed(true);
     });
 
-    // Stream start: anchor the duration measurement and auto-open — covers a
-    // block that mounts before its stream begins.
     const handleStreamStart = useEffectEvent(() => {
       if (startTimeRef.current === null) {
         startTimeRef.current = Date.now();
@@ -105,9 +92,6 @@ export const Reasoning = memo(
       }
     });
 
-    // Stream end: record the measured duration, then auto-close after a small
-    // delay (once only) so the user can see the content. Returns the timer
-    // cleanup so a re-started stream or unmount cancels the pending close.
     const handleStreamEnd = useEffectEvent((): (() => void) | undefined => {
       if (startTimeRef.current !== null) {
         setDuration(Math.ceil((Date.now() - startTimeRef.current) / MS_IN_S));
@@ -120,9 +104,6 @@ export const Reasoning = memo(
       return undefined;
     });
 
-    // Subscribe to isStreaming transitions only. The effect events above read
-    // the latest props/state without being dependencies, so a parent re-render
-    // (e.g. a recreated onOpenChange) can't re-arm the auto-close timer.
     useEffect(() => {
       if (isStreaming) {
         hasStreamedRef.current = true;
@@ -223,8 +204,6 @@ export const ReasoningContent = memo(
           <motion.div
             animate={{ height: "auto", opacity: 1 }}
             className="overflow-hidden"
-            // Height snaps to `auto` after the tween, so streaming content that
-            // grows while the panel is open keeps expanding without clipping.
             exit={{ height: 0, opacity: 0 }}
             initial={{ height: 0, opacity: 0 }}
             key="reasoning-content"
@@ -253,7 +232,6 @@ Reasoning.displayName = "Reasoning";
 ReasoningTrigger.displayName = "ReasoningTrigger";
 ReasoningContent.displayName = "ReasoningContent";
 
-/** Demo component for preview */
 export default function ReasoningDemo() {
   return (
     <div className="w-full max-w-2xl p-6">

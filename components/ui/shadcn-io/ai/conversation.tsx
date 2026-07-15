@@ -102,7 +102,6 @@ const messages = [
   },
 ];
 
-/** Demo component for preview */
 export default function ConversationDemo() {
   return (
     <Conversation className="relative size-full p-4">

@@ -3,9 +3,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** Resolve a `borderRadius` prop to a CSS value, or `undefined` to defer to the
- * card's `rounded-*` class. Lets every variant accept Tailwind rounding while
- * keeping an explicit numeric/string override. */
 function resolveRadius(borderRadius?: number | string): string | undefined {
   if (borderRadius === undefined) {
     return undefined;
@@ -15,15 +12,10 @@ function resolveRadius(borderRadius?: number | string): string | undefined {
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  /** Base accent color. Defaults to the theme's `--primary` token; the
-   * spotlight, gradient border, and hover glow are all derived from it. */
   accentColor?: string;
   spotlightColor?: string;
   borderColor?: string;
   borderWidth?: number;
-  /** Explicit radius override (number → px, or any CSS value). When omitted, the
-   * radius comes from the card's `rounded-*` class (default `rounded-2xl`) and
-   * the inner border/glow layers inherit it. */
   borderRadius?: number | string;
   glowIntensity?: number;
 }
@@ -64,8 +56,6 @@ function SpotlightCard({
     setOpacity(0);
   }, []);
 
-  // An explicit borderRadius wins; otherwise the root is rounded by its
-  // `rounded-*` class and the inner layers inherit that computed radius.
   const radius = resolveRadius(borderRadius);
   const layerRadius = radius ?? "inherit";
   const spotlight = spotlightColor ?? `color-mix(in oklch, ${accentColor} 30%, transparent)`;
@@ -97,7 +87,6 @@ function SpotlightCard({
       }}
       {...props}
     >
-      {/* Gradient border */}
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
@@ -108,13 +97,10 @@ function SpotlightCard({
           maskComposite: "exclude",
           WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           WebkitMaskComposite: "xor",
-          // A custom solid borderColor renders as a steady, full-strength
-          // border; the default conic gradient keeps its spotlight dimming.
           opacity: borderColor ? 1 : isHovered ? 1 : 0.5,
         }}
       />
 
-      {/* Spotlight effect */}
       <div
         className="pointer-events-none absolute transition-opacity duration-300"
         style={{
@@ -128,7 +114,6 @@ function SpotlightCard({
         }}
       />
 
-      {/* Border glow on hover */}
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
@@ -138,7 +123,6 @@ function SpotlightCard({
         }}
       />
 
-      {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
   );
@@ -203,7 +187,6 @@ function SpotlightCardDescription({
   );
 }
 
-// A more advanced variant with multiple spotlight sources
 interface MultiSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   colors?: string[];
@@ -253,7 +236,6 @@ function MultiSpotlightCard({
       style={{ borderRadius: radius }}
       {...props}
     >
-      {/* Multiple spotlight layers */}
       {colors.map((color, index) => (
         <div
           key={index}
@@ -271,13 +253,11 @@ function MultiSpotlightCard({
         />
       ))}
 
-      {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
   );
 }
 
-// Beam spotlight effect - creates a beam of light that follows cursor
 interface BeamSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   beamColor?: string;
@@ -325,7 +305,6 @@ function BeamSpotlightCard({
       style={{ borderRadius: radius }}
       {...props}
     >
-      {/* Vertical beam */}
       <div
         className="pointer-events-none absolute transition-[left,opacity] duration-150"
         style={{
@@ -339,7 +318,6 @@ function BeamSpotlightCard({
         }}
       />
 
-      {/* Horizontal beam */}
       <div
         className="pointer-events-none absolute transition-[top,opacity] duration-150"
         style={{
@@ -353,7 +331,6 @@ function BeamSpotlightCard({
         }}
       />
 
-      {/* Intersection glow */}
       <div
         className="pointer-events-none absolute transition-[left,top,opacity] duration-150"
         style={{
@@ -367,13 +344,11 @@ function BeamSpotlightCard({
         }}
       />
 
-      {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
   );
 }
 
-// Gradient follow card - the background gradient follows the cursor
 interface GradientFollowCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   gradientColors?: [string, string, string];
@@ -416,7 +391,6 @@ function GradientFollowCard({
       style={{ borderRadius: radius }}
       {...props}
     >
-      {/* Animated gradient background */}
       <div
         className="absolute inset-0 transition-opacity duration-500"
         style={{
@@ -441,10 +415,8 @@ function GradientFollowCard({
         }}
       />
 
-      {/* Base background */}
       <div className="absolute inset-0 bg-card/90" style={{ borderRadius: layerRadius }} />
 
-      {/* Border */}
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
@@ -456,13 +428,11 @@ function GradientFollowCard({
         }}
       />
 
-      {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
   );
 }
 
-// Tilt card with 3D perspective
 interface TiltSpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   maxTilt?: number;
@@ -554,7 +524,6 @@ function TiltSpotlightCard({
       }}
       {...props}
     >
-      {/* Glare effect */}
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-300"
         style={{
@@ -569,7 +538,6 @@ function TiltSpotlightCard({
         }}
       />
 
-      {/* Spotlight effect */}
       <div
         className="pointer-events-none absolute transition-opacity duration-300"
         style={{
@@ -584,7 +552,6 @@ function TiltSpotlightCard({
         }}
       />
 
-      {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
   );

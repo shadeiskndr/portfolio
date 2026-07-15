@@ -18,7 +18,6 @@ type StreamEvent =
   | { type: "resume"; resume: ResumeData; method: "deterministic" | "ai" }
   | { type: "error"; error: string };
 
-/** Imperative handle so the Import/Tailor dialogs can start a turn in the chat. */
 export interface ResumeAssistantHandle {
   startImport: (source: string, format: "tex" | "docx" | "text", label: string) => void;
   startTailor: (jobDescription: string) => void;
@@ -26,23 +25,16 @@ export interface ResumeAssistantHandle {
 
 export interface ResumeAssistantProps {
   getResume: () => ResumeData;
-  /** Apply the agent's edits to the form; returns how many were applied. */
   applyEdits: (edits: ResumeEdit[]) => number;
-  /** Load a full imported résumé into the form (with its own Undo). */
   applyResume: (resume: ResumeData, method: "deterministic" | "ai") => void;
   ref?: Ref<ResumeAssistantHandle>;
 }
 
-// The streaming SSE endpoints live on the Convex HTTP (`.site`) domain.
 const base = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
 const CHAT_URL = base ? `${base}/resume-chat` : null;
 const IMPORT_URL = base ? `${base}/resume-import` : null;
 const TAILOR_URL = base ? `${base}/resume-tailor` : null;
 
-// Conversation state + the SSE streaming machinery for the résumé assistant.
-// Kept out of the component so the panel stays presentation-only. Three entry
-// points share `runStream`: free-form chat (send) and the Import/Tailor dialog
-// handoffs (startImport/startTailor), exposed to those dialogs via the ref.
 export function useResumeAssistant({
   getResume,
   applyEdits,
@@ -55,11 +47,8 @@ export function useResumeAssistant({
   const [pending, setPending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const nextId = useRef(0);
-  // Synchronous "a stream is in flight" flag for the guards below — the dialog
-  // handle is frozen to the first render, so it can't read the live `pending` state.
   const busyRef = useRef(false);
 
-  // Keep the transcript pinned to the newest message (DOM sync on new content).
   useEffect(() => {
     if (messages.length === 0 && !pending) return;
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -68,9 +57,6 @@ export function useResumeAssistant({
   const patch = (id: number, fields: Partial<Message>) =>
     setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, ...fields } : msg)));
 
-  // Read an SSE stream of {text | edits | resume | error} frames into the reply
-  // message, applying edits / a full imported résumé to the form as they arrive.
-  // Returns the accumulated assistant text.
   async function runStream(url: string, payload: unknown, replyId: number): Promise<string> {
     const res = await fetch(url, {
       method: "POST",
@@ -126,8 +112,6 @@ export function useResumeAssistant({
     setInput("");
     busyRef.current = true;
     setPending(true);
-    // The reply id is computed OUTSIDE any updater (React may replay updaters,
-    // which would duplicate a ref bump).
     const replyId = nextId.current++;
     setMessages((m) => [...m, { id: replyId, role: "assistant", content: "" }]);
 
@@ -151,9 +135,6 @@ export function useResumeAssistant({
     }
   }
 
-  // Run a dialog-initiated turn (import / tailor): open the panel, post a user
-  // message + an empty reply, then stream the endpoint into that reply. The
-  // endpoint applies edits/résumé to the form via runStream as frames arrive.
   async function runDialogTurn(
     userContent: string,
     url: string | null,
@@ -185,7 +166,6 @@ export function useResumeAssistant({
     }
   }
 
-  // Entry point for the Import dialog — extracted résumé loads in, review streams.
   function startImport(source: string, format: "tex" | "docx" | "text", label: string) {
     void runDialogTurn(
       `Import my résumé from “${label}”.`,
@@ -195,8 +175,6 @@ export function useResumeAssistant({
     );
   }
 
-  // Entry point for the Tailor dialog — the summary is rewritten and competencies
-  // reordered (reconciled to the same set server-side), then an explanation streams.
   function startTailor(jobDescription: string) {
     const jd = jobDescription.trim();
     const preview = jd.slice(0, 220);
@@ -208,9 +186,6 @@ export function useResumeAssistant({
     );
   }
 
-  // Clear the transcript for a fresh conversation. No-op while a stream is in
-  // flight — the in-flight patch()es address messages by id, so wiping them (and
-  // rewinding nextId) mid-stream would let a new turn collide with a stale reply.
   function reset() {
     if (busyRef.current) return;
     setMessages([]);
@@ -218,10 +193,6 @@ export function useResumeAssistant({
     nextId.current = 0;
   }
 
-  // Stable handle, created once. startImport/startTailor are frozen to the first
-  // render, but every value they touch is a stable reference that reads live state
-  // (setMessages, and the form via applyEdits/applyResume/getResume), so the
-  // closures never go stale (the one primitive, `pending`, is handled by busyRef).
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally frozen (see above); a fresh closure would just recreate the handle every render for no benefit.
   useImperativeHandle(ref, () => ({ startImport, startTailor }), []);
 

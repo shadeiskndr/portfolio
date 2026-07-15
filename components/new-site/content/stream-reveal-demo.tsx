@@ -5,8 +5,6 @@ import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 
-// Double-quoted lines so backticks and ${} inside the fenced code stay literal
-// — no template-literal escaping. The sample deliberately ends mid-construct.
 const SAMPLE = [
   "## Streaming markdown, mid-flight",
   "",
@@ -29,7 +27,6 @@ const SAMPLE = [
 const STEP = 2;
 const INTERVAL = 28;
 
-/** Scrub or play a half-streamed markdown buffer; the rendered pane never breaks. */
 export function StreamRevealDemo() {
   const max = SAMPLE.length;
   const [count, setCount] = useState(max);
@@ -72,7 +69,6 @@ export function StreamRevealDemo() {
     setBoth(n);
   };
 
-  // The lone external system here is the timer; tear it down on unmount.
   useMountEffect(() => () => clear());
 
   const revealed = SAMPLE.slice(0, count);

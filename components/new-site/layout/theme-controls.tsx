@@ -10,15 +10,6 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useSound } from "@/hooks/use-sound";
 import { useTheme } from "@/lib/light-dark-providers";
 
-/**
- * Three placements, split so each surface gets controls sized and packaged for
- * it — and so the popover/sheet choice is decided by where the control lives
- * rather than by a media query, which would mismatch on hydration.
- *
- * - `bar`    desktop top nav: all four, popovers, 32px
- * - `dock`   mobile bottom dock: dark mode only, 40px
- * - `drawer` mobile nav drawer: music + sound + colour theme, sheets, 40px
- */
 export default function ThemeControls({
   variant = "bar",
 }: {
@@ -92,9 +83,6 @@ export default function ThemeControls({
   if (variant === "drawer") {
     return (
       <div className="flex items-center gap-1">
-        {/* Safe to sit inside the drawer now that the `<audio>` lives in
-            MusicPlayerProvider — closing the drawer no longer stops playback,
-            so this behaves like the colour sheet and leaves the drawer up. */}
         <MusicPlayerPopover variant="sheet" />
         {soundToggle}
         <ColorThemePicker variant="sheet" />
@@ -102,7 +90,6 @@ export default function ThemeControls({
     );
   }
 
-  // Music moved to the nav drawer, leaving the dock as nav plus one toggle.
   if (variant === "dock") {
     return darkToggle;
   }

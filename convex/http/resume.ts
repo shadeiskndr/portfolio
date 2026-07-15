@@ -15,14 +15,7 @@ import {
 } from "../resumeChat";
 import { badRequest, readJson, sseResponse, sseRoute } from "./sse";
 
-// The résumé builder's assistant panel drives all three of these endpoints and
-// reads the shared SSE frame protocol documented in ./sse. Behaviour lives in
-// resumeChat.ts (prompts/tools) and the resumeImport/resume actions; these routes
-// only wire an HTTP request to a stream.
 export function registerResumeRoutes(http: HttpRouter) {
-  // ── Free-form chat ─────────────────────────────────────────────────────────
-  // Streams the assistant reply, then a single `edits` frame (tools have run by
-  // then, so `edits` is complete) for the form to apply.
   sseRoute(
     http,
     "/resume-chat",
@@ -56,11 +49,6 @@ export function registerResumeRoutes(http: HttpRouter) {
     })
   );
 
-  // ── Import ─────────────────────────────────────────────────────────────────
-  // The Import dialog hands its source text here. A `resume` frame is emitted
-  // first (so the form + preview fill in immediately), then a streamed review of
-  // what was imported. Extraction reuses the deterministic-first import action
-  // (parse the known LaTeX template exactly, else AI-extract).
   sseRoute(
     http,
     "/resume-import",
@@ -95,11 +83,6 @@ export function registerResumeRoutes(http: HttpRouter) {
     })
   );
 
-  // ── Tailor to a job ──────────────────────────────────────────────────────────
-  // The Tailor dialog hands a job description here. An `edits` frame (rewritten
-  // summary + reordered competencies — the set is reconciled server-side in
-  // resume.tailorToJob, so no skill is added or dropped) is emitted first, then a
-  // streamed explanation of what changed and why.
   sseRoute(
     http,
     "/resume-tailor",

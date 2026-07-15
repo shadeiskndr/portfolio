@@ -102,7 +102,6 @@ export default function CardFlip({
           </div>
         </div>
 
-        {/* Back of card */}
         <div
           className={cn(
             "absolute inset-0 h-full w-full",

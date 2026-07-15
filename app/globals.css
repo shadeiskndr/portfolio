@@ -53,7 +53,6 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Computed Shadow Variants */
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);
@@ -145,28 +144,7 @@
     @apply font-sans;
     scrollbar-gutter: stable;
 
-    /*
-     * Height the fixed mobile dock occupies: control row (40px) + its padding
-     * and border, the 12px gap it floats above the edge, plus a little air.
-     * Pages reserve this so nothing sits underneath the dock.
-     */
-    /*
-     * Space reserved for the fixed dock: its 3.375rem pill, the gap it floats
-     * above the screen edge, and 0.75rem so content never butts against it.
-     *
-     * This is close to the floor. It cannot shrink toward `main`'s 2rem top
-     * padding without the dock covering the last line on pages too short to
-     * scroll, where the dock is always visible.
-     */
     --dock-clearance: calc(3.375rem + max(0.75rem, env(safe-area-inset-bottom)) + 0.75rem);
-
-    /*
-     * How far bottom-anchored UI (the chat composer, the résumé assistant
-     * launcher) may drop once the dock tucks away, reclaiming its space.
-     * Applied as a transform, never as layout: changing page height while
-     * scrolling would shift scrollTop, read as an upward scroll, re-show the
-     * dock, and oscillate.
-     */
     --dock-shift: 0px;
   }
 
@@ -178,8 +156,6 @@
     html {
       --dock-clearance: 3.5rem;
     }
-    /* No dock above `lg`, so nothing to yield to. Matches the attribute
-       selector's specificity so it still wins here. */
     html[data-dock-hidden="true"] {
       --dock-shift: 0px;
     }
@@ -215,13 +191,6 @@
     display: none;
   }
 
-  /*
-   * Horizontal nav strip. Fades whichever edge still has content behind it so
-   * the bar signals "there is more here" without spending width on arrow
-   * buttons — those are a pointer affordance and are hidden on touch, where
-   * the strip is only ~220px wide. Both custom properties default to 0px,
-   * which collapses the gradient into a no-op hard edge.
-   */
   .nav-scroller {
     --nav-fade-start: 0px;
     --nav-fade-end: 0px;
@@ -235,50 +204,17 @@
   }
 }
 
-/*
- * vaul ships `[data-vaul-drawer]{touch-action:none}` so it can own the drag
- * gesture, which also kills native touch scrolling inside the drawer — the
- * content scrolls with a scrollbar but not with a finger. touch-action is
- * intersected down the ancestor chain, so re-enabling panning on an inner
- * scroller does nothing; it has to be relaxed on the drawer itself.
- *
- * These rules are deliberately unlayered. vaul injects its stylesheet at
- * runtime with no `@layer`, and unlayered styles outrank every layer — so the
- * same rules inside `@layer base` silently lose. Unlayered they win on
- * specificity instead: [attr][attr] (0,2,0) beats vaul's [attr] (0,1,0).
- */
-
-/*
- * Opening a drawer/dialog locks body scroll, and react-remove-scroll-bar
- * compensates for the scrollbar it removes with
- * `body[data-scroll-locked]{margin-right:<scrollbar>px!important}`.
- *
- * `scrollbar-gutter: stable` on <html> already holds that space open — the
- * html box measures the same width locked or not — so the compensation is
- * counted twice and the page visibly narrows by the scrollbar's width for as
- * long as the drawer is open. Only shows up where the scrollbar is classic
- * rather than an overlay, i.e. a narrow desktop window, not a real phone.
- *
- * Unlayered and one specificity step up (0,1,2 vs 0,1,1) so it wins the
- * !important match against that runtime-injected rule.
- */
 html body[data-scroll-locked] {
   /* biome-ignore lint/complexity/noImportantStyles: the rule being undone is
      itself !important, so specificity alone can never win against it */
   margin-right: 0 !important;
 }
 
-/* Left/right drawers drag horizontally, so handing vertical panning back to
-   the browser costs nothing — vaul still receives the horizontal gesture. */
 [data-vaul-drawer][data-vaul-drawer-direction="left"],
 [data-vaul-drawer][data-vaul-drawer-direction="right"] {
   touch-action: pan-y;
 }
 
-/* Bottom sheets drag along the same axis they scroll, so they can only give
-   panning back when dragging is confined to the handle (`handleOnly`). The
-   handle re-narrows to `none` so its own drag still reaches vaul — narrowing
-   is always allowed, widening is not. */
 [data-vaul-drawer][data-scroll-sheet] {
   touch-action: pan-y;
 }
@@ -286,11 +222,6 @@ html body[data-scroll-locked] {
   touch-action: none;
 }
 
-/*
- * Shiki dual-theme syntax highlighting (via rehype-pretty-code) inside MDX prose.
- * Each token span carries --shiki-light / --shiki-dark CSS vars; swap which one
- * wins on the .dark class so highlighted code tracks the active theme.
- */
 .prose-content code[data-theme],
 .prose-content code[data-theme] span {
   color: var(--shiki-light);

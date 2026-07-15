@@ -277,7 +277,6 @@ const citation = {
   ],
 };
 
-/** Demo component for preview */
 export default function InlineCitationDemo() {
   return (
     <p className="text-sm leading-relaxed">

@@ -6,15 +6,7 @@ import { resumeSchema } from "../lib/resume/schema";
 import { action } from "./_generated/server";
 import { resolveResumeModel } from "./resumeChat";
 
-// Import a résumé from a document. Deterministic-first: for LaTeX from the known
-// template, the exact `parseTex` parser is the primary "tool" (fast, lossless, no
-// LLM). For .docx, plain text, or LaTeX it can't parse, an AI pass extracts the
-// structured résumé. The hard rule for the AI path: extract ONLY what's in the
-// document — never invent a name, employer, date, bullet, or skill.
-
 const MAX_SOURCE = 60_000;
-// Structured extraction benefits from a stronger model; fall back to the registry
-// default if this id isn't in the table.
 const EXTRACT_MODEL = "openai.gpt-oss-120b";
 
 const EXTRACT_RULES =
@@ -29,12 +21,10 @@ const EXTRACT_RULES =
   "same content in both `competencies` and `systems`. Leave a field empty ('' or []) when the " +
   "document does not contain it. Do not add commentary.";
 
-/** Does a deterministic parse look substantive enough to trust over an AI pass? */
 function looksComplete(r: ResumeData): boolean {
   return r.name.trim().length > 0 && r.experience.length > 0;
 }
 
-// Labels that mean "these are competencies, not a technical-proficiency group".
 const SKILL_LABELS = new Set([
   "skills",
   "skill",
@@ -44,7 +34,6 @@ const SKILL_LABELS = new Set([
   "technical skills",
 ]);
 
-/** Split a systems value like "TypeScript, Go · SQL" into individual items. */
 function splitItems(value: string): string[] {
   return value
     .split(/[,·;|]/)
@@ -52,12 +41,6 @@ function splitItems(value: string): string[] {
     .filter(Boolean);
 }
 
-// Guardrail for the AI path: the extractor sometimes mislabels a plain skills
-// list as a "Systems & Technical Proficiency" group AND also (or instead) puts it
-// in competencies. The template rule is that a "Skills" section IS competencies,
-// so fold any such group's items into competencies (case-insensitive dedupe,
-// existing order first) and drop the group from systems — no data lost, no
-// duplication across the two sections.
 function dedupeSkillGroups(r: ResumeData): ResumeData {
   const isSkillGroup = (g: SystemGroup) =>
     SKILL_LABELS.has(
@@ -93,17 +76,13 @@ export const extractResume = action({
     const source = args.source.slice(0, MAX_SOURCE).trim();
     if (!source) throw new Error("There's nothing to import.");
 
-    // 1) Deterministic tool — the nina-template LaTeX parser.
     if (args.format === "tex") {
       try {
         const parsed = parseTex(source);
         if (looksComplete(parsed)) return { resume: parsed, method: "deterministic" };
-      } catch {
-        // not the known template — fall through to the AI pass
-      }
+      } catch {}
     }
 
-    // 2) AI structured extraction (.docx / plain text / non-template LaTeX).
     const model = await resolveResumeModel(ctx, args.modelId ?? EXTRACT_MODEL);
     const { object } = await generateObject({
       model,

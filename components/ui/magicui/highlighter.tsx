@@ -20,31 +20,17 @@ type AnnotationAction =
 interface HighlighterProps {
   children: React.ReactNode;
   action?: AnnotationAction;
-  /**
-   * Any CSS color expression — including `var(...)` and `color-mix(...)`. It is
-   * resolved against the live theme before being handed to rough-notation, which
-   * only accepts a concrete color on the SVG stroke attribute.
-   */
   color?: string;
   strokeWidth?: number;
   animationDuration?: number;
   iterations?: number;
   padding?: number;
   multiline?: boolean;
-  /** Only draw once the element has scrolled into view. */
   isView?: boolean;
-  /**
-   * Gate drawing on an external signal (e.g. an entrance animation finishing).
-   * rough-notation measures the element's box when it draws, so drawing while a
-   * parent is still translating/blurring/fading produces a misplaced, muddy mark.
-   */
   enabled?: boolean;
   className?: string;
 }
 
-// Resolve a CSS color expression (var(), color-mix(), oklch(), keywords) to the
-// concrete value rough-notation can set on an SVG stroke attribute. Evaluated in
-// the element's own cascade so theme variables resolve to the active palette.
 function resolveColor(value: string, context: HTMLElement): string {
   const probe = document.createElement("span");
   probe.style.color = value;
@@ -67,10 +53,6 @@ type AnnotationProps = {
   animate: boolean;
 };
 
-// Renders nothing — it imperatively syncs a rough-notation annotation onto the
-// target span for as long as it is mounted. The parent mounts it only once the
-// annotation should be visible, and remounts it (via `key`) when the config
-// changes, so all the "when do we (re)draw" logic lives in mount/unmount.
 function Annotation({
   targetRef,
   action,
@@ -99,7 +81,6 @@ function Annotation({
         iterations,
         padding,
         multiline,
-        // Animate only the initial reveal; theme-change redraws snap into place.
         animate: firstDraw && animate,
       });
       annotation.show();
@@ -108,9 +89,6 @@ function Annotation({
 
     draw();
 
-    // Re-resolve the color and redraw when the palette (data-theme) or light/dark
-    // mode (class) changes on the document root. rough-notation already handles
-    // resize/reflow via its own observers, so we only watch for theme swaps here.
     const observer = new MutationObserver(draw);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -143,11 +121,9 @@ export function Highlighter({
   const isInView = useInView(elementRef, { once: true, margin: "-10%" });
   const reduceMotion = useReducedMotion();
 
-  // If isView is false, draw as soon as enabled; otherwise also wait for inView.
   const shouldShow = enabled && (!isView || isInView);
   const animate = !reduceMotion;
 
-  // Plain inline span so wrapped phrases can break across lines (multiline).
   return (
     <span ref={elementRef} className={cn("bg-transparent", className)}>
       {children}

@@ -7,12 +7,6 @@ import { playClick } from "@/hooks/use-sound";
 import { NAV_LINKS } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
 
-/**
- * The drawer is the primary way to navigate below `lg` — the top-bar strip only
- * has room for two or three links on a phone. Two columns fit all 13 routes on
- * one screen above the profile card, so the whole site map is visible in a
- * single tap instead of a swipe hunt.
- */
 export default function DrawerNav({
   onNavigate,
   onOpenProfile,

@@ -11,15 +11,8 @@ import { cn } from "@/lib/utils";
 export default function PortfolioShell({ children }: { children: React.ReactNode }) {
   const { collapsed, animate } = useSidebarCollapse();
 
-  // Single feature bundle for every `m.*` component in the shell + page tree.
-  // domMax (not domAnimation) because the persistent chrome uses layout
-  // features — top-nav's LayoutGroup/layoutId active indicator and the music
-  // popover's `layout` prop — which domAnimation omits. No drag anywhere, but
-  // domMax is the only public bundle that ships layout projection.
   return (
     <LazyMotion features={domMax}>
-      {/* Wraps the whole shell so the single <audio> outlives route changes and
-          serves both the desktop popover and the mobile sheet. */}
       <MusicPlayerProvider>
         <div
           className={cn(
@@ -41,8 +34,6 @@ export default function PortfolioShell({ children }: { children: React.ReactNode
           </div>
           <div className="flex min-h-screen min-w-0 flex-col">
             <TopNav />
-            {/* Bottom padding clears the fixed dock; there is no top bar below
-              `lg`, so content can start higher than it used to. */}
             <main className="flex flex-1 flex-col px-5 pt-8 pb-(--dock-clearance) *:w-full sm:px-6 sm:pt-9 lg:px-12 lg:py-14">
               {children}
             </main>

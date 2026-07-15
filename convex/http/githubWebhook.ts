@@ -14,7 +14,6 @@ type GitHubPushPayload = {
   commits?: GitHubPushCommit[];
 };
 
-/** Verify a GitHub `X-Hub-Signature-256` HMAC in constant time. */
 async function verifySignature(
   secret: string,
   rawBody: string,
@@ -43,8 +42,6 @@ async function verifySignature(
   return diff === 0;
 }
 
-// GitHub push webhook: verifies the signature, filters to the tracked branch, and
-// ingests the pushed commits into the `commits` table (powers the activity feed).
 export function registerGithubWebhook(http: HttpRouter) {
   http.route({
     path: "/github/webhook",

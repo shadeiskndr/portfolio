@@ -3,17 +3,6 @@ import { v } from "convex/values";
 import { type CalcResult, runCalculation } from "../lib/chat/calculator";
 import { evaluateExpression } from "../lib/chat/np-eval";
 
-/**
- * Numeric calculator backed by numpy-ts, with two input modes:
- *
- * 1. A curated `operation` over one or two number lists (validated, common cases).
- * 2. A free-form `expression` evaluated against the full numpy-ts namespace via a
- *    small safe interpreter (`lib/chat/np-eval.ts`) — no `eval`/`new Function`,
- *    only numpy-ts functions are reachable.
- */
-// No code-execution capability: free-form expressions run through the safe
-// np-eval interpreter (no eval / new Function; only numpy-ts functions are
-// reachable) and all inputs are validated by the Convex validators below.
 // react-doctor-disable-next-line react-doctor/agent-tool-capability-risk
 export const calculate = defineTool({
   description:
@@ -64,14 +53,6 @@ export const calculate = defineTool({
     result: v.any(),
   }),
   execute: async (input): Promise<CalcResult> => {
-    // A tool `execute` that THROWS is fatal to the whole run in the agent's V2
-    // runs executor: `handleToolCall` doesn't catch it, so the throw propagates
-    // to `runs.execute` → `runs.fail`, which patches the run's stream doc and
-    // races the just-recorded tool events on the same doc — surfacing as the
-    // "streams table ... appendEvents" OCC write conflict. The model calls
-    // `calculate` with empty/malformed input often enough that this aborts turns
-    // constantly. So never throw: return the reason as a normal tool result the
-    // model can read and retry from (bounded by the executor's step cap).
     try {
       if (typeof input.expression === "string" && input.expression.trim()) {
         return evaluateExpression(input.expression);

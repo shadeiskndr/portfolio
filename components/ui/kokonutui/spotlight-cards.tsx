@@ -16,13 +16,9 @@ import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-// ─── Constants ──────────────────────────────────────────────────────────────────
-
 const TILT_MAX = 9;
 const TILT_SPRING = { stiffness: 300, damping: 28 } as const;
 const GLOW_SPRING = { stiffness: 180, damping: 22 } as const;
-
-// ─── Data ────────────────────────────────────────────────────────────────────────
 
 export interface SpotlightItem {
   icon: LucideIcon;
@@ -69,8 +65,6 @@ const DEFAULT_ITEMS: SpotlightItem[] = [
     color: "#f472b6",
   },
 ];
-
-// ─── Card ────────────────────────────────────────────────────────────────────────
 
 interface CardProps {
   item: SpotlightItem;
@@ -123,9 +117,7 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
       }}
       className={cn(
         "group relative flex flex-col gap-5 overflow-hidden rounded-2xl border p-6",
-        // Light
         "border-zinc-200 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
-        // Dark
         "dark:border-white/6 dark:bg-white/3 dark:shadow-none",
         "transition-[border-color] duration-300",
         "hover:border-zinc-300 dark:hover:border-white/14"
@@ -141,7 +133,6 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
       }}
       transition={{ duration: 0.18, ease: "easeOut" }}
     >
-      {/* Static accent tint — always visible */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-2xl"
@@ -150,7 +141,6 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
         }}
       />
 
-      {/* Hover glow layer */}
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-2xl"
@@ -160,13 +150,11 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
         }}
       />
 
-      {/* Shimmer sweep */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 left-0 w-[55%] -translate-x-full -skew-x-12 bg-linear-to-r from-transparent via-white/4.5 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[280%]"
       />
 
-      {/* Icon badge */}
       <div
         className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl"
         style={{
@@ -177,7 +165,6 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
         <Icon size={17} strokeWidth={1.9} style={{ color: item.color }} />
       </div>
 
-      {/* Text */}
       <div className="relative z-10 flex flex-col gap-2">
         <h3 className="font-semibold text-[14px] text-zinc-900 tracking-tight dark:text-white">
           {item.title}
@@ -187,7 +174,6 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
         </p>
       </div>
 
-      {/* Accent bottom line */}
       <div
         aria-hidden="true"
         className="absolute bottom-0 left-0 h-0.5 w-0 rounded-full transition-[width] duration-500 group-hover:w-full"
@@ -200,8 +186,6 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
 }
 
 Card.displayName = "Card";
-
-// ─── Main export ──────────────────────────────────────────────────────────────────
 
 export interface SpotlightCardsProps {
   items?: SpotlightItem[];
@@ -226,7 +210,6 @@ export default function SpotlightCards({
         className
       )}
     >
-      {/* Dot grid — light mode only */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 dark:hidden"
@@ -236,7 +219,6 @@ export default function SpotlightCards({
         }}
       />
 
-      {/* Header */}
       <div className="relative mb-8 flex flex-col gap-1.5">
         <p className="font-semibold text-[10px] text-indigo-600 uppercase tracking-[0.22em] dark:text-indigo-400/80">
           {eyebrow}
@@ -246,7 +228,6 @@ export default function SpotlightCards({
         </h2>
       </div>
 
-      {/* Card grid */}
       <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3">
         {items.map((item) => (
           <Card

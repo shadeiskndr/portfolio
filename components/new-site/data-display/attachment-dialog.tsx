@@ -21,13 +21,10 @@ const PdfViewer = dynamic(() => import("./resume-viewer"), {
 });
 
 interface AttachmentDialogProps {
-  /** Assets-table key for the document to view. */
   fileKey: string;
   title: string;
   description?: string;
-  /** Noun used in the viewer's loading text and download label. @default "document" */
   label?: string;
-  /** The dialog trigger (e.g. a button). */
   children: React.ReactNode;
 }
 

@@ -1,23 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Mint a new SPOTIFY_REFRESH_TOKEN with the scopes this site needs and write it
- * straight to the Convex deployment.
- *
- * The original token only carried `user-read-currently-playing` and
- * `user-read-recently-played`, so `/v1/me/top/tracks` (which powers /songs)
- * 403s. Scopes are fixed at authorization time — the only way to add one is to
- * walk the user through the consent screen again, which is what this does.
- *
- * One-time setup in https://developer.spotify.com/dashboard → your app →
- * Settings → Redirect URIs: add exactly
- *
- *     http://127.0.0.1:8888/callback
- *
- * Spotify rejects `http://localhost` these days; the loopback IP literal is
- * required for plain-HTTP redirects.
- *
- * Usage: bun run scripts/spotify-auth.ts
- */
 import { parseArgs } from "node:util";
 import { $ } from "bun";
 
@@ -60,8 +41,6 @@ const authUrl = `https://accounts.spotify.com/authorize?${new URLSearchParams({
   scope: scopes,
   redirect_uri: REDIRECT_URI,
   state,
-  // Force the consent screen even though this account already authorized the
-  // app — otherwise Spotify silently reissues a token with the OLD scope set.
   show_dialog: "true",
 })}`;
 

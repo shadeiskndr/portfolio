@@ -76,9 +76,6 @@ export const ingestCommits = internalMutation({
   },
   handler: async (ctx, { commits }) => {
     let inserted = 0;
-    // Sequential on purpose: each iteration dedups against rows an earlier
-    // iteration in this same batch may have just inserted, and accumulates the
-    // per-type `commitCounts` — parallel reads would race that running counter.
     for (const c of commits) {
       // react-doctor-disable-next-line react-doctor/async-await-in-loop
       const existing = await ctx.db

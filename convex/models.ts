@@ -8,7 +8,6 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 
-/** Map a stored `chatModels` row to the registry/client `ChatModel` shape. */
 export function toChatModel(row: Doc<"chatModels">): ChatModel {
   return {
     id: row.modelId,
@@ -16,24 +15,16 @@ export function toChatModel(row: Doc<"chatModels">): ChatModel {
     provider: row.provider,
     contextTokens: row.contextTokens,
     pricing: row.pricing,
-    // Rows predating these columns read as Mantle / reasoning-capable (all the
-    // originally-seeded models are).
     surface: row.surface ?? "mantle",
     api: row.api,
     supportsReasoning: row.supportsReasoning ?? true,
   };
 }
 
-/** All models in display order. */
 export async function listModels(ctx: QueryCtx | MutationCtx): Promise<Doc<"chatModels">[]> {
   return await ctx.db.query("chatModels").withIndex("by_order").collect();
 }
 
-/**
- * The default row: the one flagged `isDefault`, else the first by order. Null
- * only when the table is empty (before `models:seed`), in which case callers
- * fall back to the code-level bootstrap default.
- */
 export async function defaultModelRow(
   ctx: QueryCtx | MutationCtx
 ): Promise<Doc<"chatModels"> | null> {
@@ -41,7 +32,6 @@ export async function defaultModelRow(
   return rows.find((r) => r.isDefault) ?? rows[0] ?? null;
 }
 
-/** Resolve an (untrusted) model id to a stored row, falling back to the default. */
 export async function resolveModelRow(
   ctx: QueryCtx | MutationCtx,
   id: string | undefined | null
@@ -56,10 +46,6 @@ export async function resolveModelRow(
   return await defaultModelRow(ctx);
 }
 
-/**
- * Minimal model info for building a run's model. Actions can't read the DB
- * directly, so `chat.execute` resolves through this internal query.
- */
 export const resolveForRun = internalQuery({
   args: { modelId: v.optional(v.string()) },
   handler: async (ctx, { modelId }) => {
@@ -75,18 +61,10 @@ export const resolveForRun = internalQuery({
   },
 });
 
-/**
- * Backfill the `chatModels` table from the CHAT_MODELS seed. Idempotent: inserts
- * only models not already present (never patches, so runtime edits survive),
- * then ensures a default exists. Run once after deploy: `convex run models:seed`.
- */
 export const seed = internalMutation({
   args: {},
   handler: async (ctx) => {
     let inserted = 0;
-    // One-time idempotent seed over a static ~dozen-entry array (`order: i`
-    // depends on iteration index); parallelizing this CLI-run backfill would
-    // add complexity for no perf that matters.
     for (let i = 0; i < CHAT_MODELS.length; i++) {
       const model = CHAT_MODELS[i];
       // react-doctor-disable-next-line react-doctor/async-await-in-loop
@@ -95,8 +73,6 @@ export const seed = internalMutation({
         .withIndex("by_modelId", (q) => q.eq("modelId", model.id))
         .unique();
       if (existing) {
-        // Backfill columns added after the row was seeded, without touching any
-        // other (possibly owner-edited) fields.
         const backfill: { supportsReasoning?: boolean; surface?: "mantle" | "converse" } = {};
         if (existing.supportsReasoning === undefined) {
           backfill.supportsReasoning = model.supportsReasoning;

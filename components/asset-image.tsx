@@ -9,15 +9,10 @@ type AssetImageProps = {
   className?: string;
   sizes?: string;
   priority?: boolean;
-  /** Fill the nearest positioned ancestor instead of using intrinsic dimensions. */
   fill?: boolean;
-  /** Override the asset's intrinsic width (e.g. for a fixed-size badge). */
   width?: number;
-  /** Override the asset's intrinsic height. */
   height?: number;
-  /** Skip the Next image optimizer (use for tiny vector/SVG icons). */
   unoptimized?: boolean;
-  /** Hide from the a11y tree (e.g. a decorative dark-mode logo variant). */
   "aria-hidden"?: boolean;
   style?: React.CSSProperties;
 };

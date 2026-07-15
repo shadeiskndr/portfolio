@@ -217,7 +217,6 @@ const exampleImage = {
   uint8Array: new Uint8Array([]),
 };
 
-/** Demo component for preview */
 export default function ChainOfThoughtDemo() {
   return (
     <ChainOfThought defaultOpen>

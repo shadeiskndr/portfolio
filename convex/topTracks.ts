@@ -12,20 +12,10 @@ const timeRangeValidator = v.union(
   v.literal("long_term")
 );
 
-/** Spotify caps `/me/top/tracks` at 50; 24 fills the disc grid evenly. */
 const LIMIT = 24;
 
-/** Backoff-table key for `/v1/me/top/tracks`. */
 const TOP_TRACKS_ENDPOINT = "top-tracks";
 
-/**
- * Subset of `PagingArtistOrTrackObject` → `TrackObject` we actually read, named
- * against the published OpenAPI schema rather than guessed.
- *
- * Fields the schema marks `deprecated: true` are deliberately absent:
- * `preview_url` (so there is no 30-second clip to play), `popularity`,
- * `available_markets`, `linked_from`.
- */
 type TopTracksResponse = {
   items: {
     id: string;
@@ -36,7 +26,6 @@ type TopTracksResponse = {
     album: {
       name: string;
       release_date?: string;
-      /** AlbumBase.images — documented as "various sizes, widest first". */
       images: { url: string; width: number | null }[];
     };
   }[];
@@ -53,20 +42,10 @@ const trackFields = {
   releaseDate: v.optional(v.string()),
 };
 
-/**
- * Cache the user's top tracks for each of Spotify's three listening windows.
- *
- * Needs the `user-top-read` scope. The original SPOTIFY_REFRESH_TOKEN was
- * minted with only `user-read-currently-playing user-read-recently-played`, so
- * a 403 here almost always means the token predates this feature — re-mint it
- * with `bun run scripts/spotify-auth.ts`.
- */
 export const refreshTopTracks = internalAction({
   args: {},
   handler: async (ctx) => {
     if (await isRateLimited(ctx, TOP_TRACKS_ENDPOINT)) {
-      // Spotify already told us when to come back; spending a request now would
-      // only extend the block.
       return { skipped: "rate-limited" as const, total: 0 };
     }
 
@@ -75,10 +54,6 @@ export const refreshTopTracks = internalAction({
     const accessToken = await getAccessToken(ctx);
     const headers = { Authorization: `Bearer ${accessToken}` };
 
-    // Sequential on purpose. These three requests are independent, but firing
-    // them together triples the instantaneous rate against an endpoint family
-    // that has already handed this app a 16-hour 429; serial requests also mean
-    // a rate limit stops the run instead of burning all three attempts on it.
     for (const timeRange of TIME_RANGES) {
       // react-doctor-disable-next-line react-doctor/async-await-in-loop
       const res = await fetch(
@@ -93,8 +68,6 @@ export const refreshTopTracks = internalAction({
         );
       }
       if (res.status === 429 || res.status >= 500) {
-        // Park the endpoint for exactly as long as Spotify asked. Cached rows
-        // stay put rather than blanking the page.
         const waitMs = await recordRateLimit(
           ctx,
           TOP_TRACKS_ENDPOINT,
@@ -117,7 +90,6 @@ export const refreshTopTracks = internalAction({
         song: item.name,
         artist: item.artists.map((a) => a.name).join(", "),
         album: item.album.name,
-        // AlbumBase.images is documented widest-first, so [0] is the 640px art.
         albumArtUrl: item.album.images[0]?.url,
         url: item.external_urls?.spotify ?? `https://open.spotify.com/track/${item.id}`,
         durationMs: item.duration_ms,

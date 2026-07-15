@@ -11,7 +11,6 @@ export default async function OpengraphImage() {
   const publicDir = path.join(process.cwd(), "public");
   const [lastoria, liberation] = await Promise.all([
     readFile(path.join(publicDir, "LastoriaBoldRegular.otf")),
-    // Synced from pdfjs-dist by the prebuild sync:pdfjs script.
     readFile(path.join(publicDir, "pdfjs", "standard_fonts", "LiberationSans-Regular.ttf")),
   ]);
 

@@ -1,18 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Seed / refresh the /bookmarks page.
- *
- * For every curated URL (plus the ones parsed out of a browser bookmarks
- * export) this script:
- *   1. fetches the page and scrapes title / description / publish date / favicon
- *   2. snapshots the site above the fold with headless Chrome (1280×800)
- *   3. transcodes the PNG to WebP and uploads it to Convex storage
- *   4. upserts a `bookmarks` row via `bookmarks:upsertBookmark`
- *
- * Idempotent: re-running refreshes metadata in place and only swaps the preview
- * when a new screenshot succeeds. Usage:
- *   bun run scripts/ingest-bookmarks.ts [--clear] [--no-shots] [--only reading|resource]
- */
 import { parseArgs } from "node:util";
 import { $ } from "bun";
 
@@ -33,13 +19,10 @@ type Seed = {
   url: string;
   section: Section;
   tags: string[];
-  /** Fallback title if scraping yields nothing useful. */
   title?: string;
-  /** Fallback added-at (ms epoch). */
   addedAt?: number;
 };
 
-// ── Curated readings — blogs & articles. Sorted by publish date on the page. ──
 const READINGS: Omit<Seed, "section">[] = [
   { url: "https://opencomputer.dev/blog/where-should-the-agent-live", tags: ["ai", "agents"] },
   { url: "https://notes.mtb.xyz/p/your-data-model-is-your-destiny", tags: ["engineering", "data"] },
@@ -90,7 +73,6 @@ const READINGS: Omit<Seed, "section">[] = [
   },
 ];
 
-// ── Curated resources — sites worth revisiting. Sorted by list order. ──
 const RESOURCES: Omit<Seed, "section">[] = [
   { url: "https://strandsagents.com/", tags: ["ai", "agents"] },
   { url: "https://gofastmcp.com/getting-started/welcome", tags: ["ai", "mcp"] },
@@ -119,8 +101,6 @@ const runConvex = async <T>(fn: string, args?: object): Promise<T> => {
   const stdout = cmd.stdout.toString().trim();
   return stdout ? (JSON.parse(stdout) as T) : (undefined as T);
 };
-
-// ── HTML helpers ──────────────────────────────────────────────────────────
 
 function decodeEntities(s: string): string {
   return s
@@ -175,7 +155,7 @@ function titleFromUrl(url: string): string {
     if (!seg) return domainOf(url);
     const cleaned = decodeURIComponent(seg)
       .replace(/\.[a-z]+$/i, "")
-      .replace(/-[0-9a-f]{6,}$/i, "") // trailing hash id (medium etc.)
+      .replace(/-[0-9a-f]{6,}$/i, "")
       .replace(/[-_]+/g, " ")
       .trim();
     if (!cleaned) return hostname.replace(/^www\./, "");
@@ -276,8 +256,6 @@ async function scrapeMeta(url: string, wantDate: boolean): Promise<Meta> {
   return { title: title?.trim() || undefined, description, publishedAt, faviconUrl };
 }
 
-// ── Screenshot ──────────────────────────────────────────────────────────────
-
 async function screenshot(url: string, slug: string): Promise<Uint8Array | null> {
   const outPng = `${SHOT_DIR}/${slug}.png`;
   const profile = `${SHOT_DIR}/profile-${slug}`;
@@ -328,8 +306,6 @@ async function uploadPreview(png: Uint8Array): Promise<string | undefined> {
   return storageId;
 }
 
-// ── Browser export parsing ────────────────────────────────────────────────
-
 function slugify(url: string): string {
   return url
     .replace(/[^a-z0-9]+/gi, "-")
@@ -378,8 +354,6 @@ function iconFromExport(html: string): Map<string, string> {
   }
   return map;
 }
-
-// ── Main ────────────────────────────────────────────────────────────────────
 
 async function processSeed(seed: Seed, order: number, exportIcons: Map<string, string>) {
   const isReading = seed.section === "reading";

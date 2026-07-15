@@ -3,8 +3,6 @@ import { AskUserDemo } from "@/components/new-site/content/ask-user-demo";
 import { DiscriminatedUnionDemo } from "@/components/new-site/content/discriminated-union-demo";
 import { EchoGuardDemo } from "@/components/new-site/content/echo-guard-demo";
 import { GraphOrphanEdgesDemo } from "@/components/new-site/content/graph-orphan-edges-demo";
-// CodeMirrorDemo + SyncedChartsDemo are dynamically imported (ssr: false) so
-// their heavy bundles stay out of the shared MDX chunk — see lazy-demos.tsx.
 import { CodeMirrorDemo, SyncedChartsDemo } from "@/components/new-site/content/lazy-demos";
 import { Mermaid } from "@/components/new-site/content/mermaid";
 import { NestedFormDemo } from "@/components/new-site/content/nested-form-demo";
@@ -19,8 +17,6 @@ import Link from "@/components/new-site/link";
 import { cn } from "@/lib/utils";
 
 export const mdxComponents: MDXComponents = {
-  // Draw the hand-drawn mark as it scrolls into view, since prose has no
-  // entrance animation to gate on.
   Highlight: (props) => <RevealHighlight isView {...props} />,
   AskUserDemo,
   CodeMirrorDemo,
@@ -81,10 +77,6 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   code: ({ className, ...props }) => {
-    // Fenced blocks arrive either with a `language-*` class (plain markdown) or a
-    // `data-language` attr (after rehype-pretty-code highlights them). Those live
-    // inside <pre>, so skip the inline "pill" styling and let the block/token
-    // colors show through. Only real inline code gets the muted pill.
     const isBlock =
       "data-language" in props ||
       (typeof className === "string" && className.includes("language-"));

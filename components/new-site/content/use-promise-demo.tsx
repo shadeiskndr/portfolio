@@ -14,15 +14,13 @@ const PEOPLE: Profile[] = [
 
 let seq = 0;
 
-// Created OUTSIDE the consuming component (in the click handler), so it's a
-// stable promise — not a new one on every render that never resolves.
 function loadProfile(): Promise<Profile> {
   const person = PEOPLE[seq++ % PEOPLE.length];
   return new Promise((resolve) => setTimeout(() => resolve(person), 1200));
 }
 
 function ProfileCard({ profile }: { profile: Promise<Profile> }) {
-  const data = use(profile); // unwraps the promise; suspends until it resolves
+  const data = use(profile);
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="font-semibold text-sm">{data.name}</p>
@@ -41,7 +39,6 @@ function Spinner() {
   );
 }
 
-/** `use(promise)` unwrapped inside render, with Suspense handling the loading state. */
 export function UsePromiseDemo() {
   const [profile, setProfile] = useState<Promise<Profile> | null>(null);
 

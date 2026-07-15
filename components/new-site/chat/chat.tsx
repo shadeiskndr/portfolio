@@ -88,11 +88,8 @@ const SESSION_ID_KEY = "portfolio-chat-session-id";
 const MODEL_ID_KEY = "portfolio-chat-model-id";
 const REASONING_KEY = "portfolio-chat-reasoning";
 
-// Stable reference for useLocalStorage's options arg so the hook's internal
-// callbacks (which depend on `options`) don't rebuild every render.
 const EMPTY_STORAGE_OPTIONS = {};
 
-// Empty-state hero: cycles a few friendly greetings under the "Hi there" line.
 const HERO_SEQUENCES = [
   { text: "Where should we start?", deleteAfter: true },
   { text: "What's on your mind?", deleteAfter: true },
@@ -100,8 +97,6 @@ const HERO_SEQUENCES = [
   { text: "Ask me anything.", deleteAfter: true },
 ];
 
-// The theme's --shadow-* scale is intentionally faint, so use an explicit
-// elevated shadow (arbitrary value) that reads clearly on the near-white card.
 const COMPOSER_CARD =
   "border-radius border-border/60 bg-background p-1 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_28px_-8px_rgba(0,0,0,0.22)] transition-shadow focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_20px_44px_-10px_rgba(0,0,0,0.30)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_20px_44px_-10px_rgba(0,0,0,0.30)] has-[[data-slot=input-group-control]:focus-visible]:border-border/60 has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-disabled:bg-background has-disabled:opacity-100 dark:bg-background dark:has-disabled:bg-background dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_12px_28px_-8px_rgba(0,0,0,0.6)]";
 
@@ -116,10 +111,6 @@ type MergedToolCall = {
   errorText?: string;
 };
 
-// Higher = further along. A tool call's input and output stream in as one
-// evolving part live, but reload from history as two parts sharing a
-// toolCallId; merging on the highest-ranked state renders each call once, fully
-// resolved.
 const TOOL_STATE_RANK: Record<ToolUIPart["state"], number> = {
   "input-streaming": 0,
   "input-available": 1,
@@ -152,8 +143,6 @@ function ModelSelector({
   onChange,
 }: {
   models: readonly ChatModel[];
-  // base-ui Select renders the selected value's label from this map, so the
-  // trigger stays compact (just the name) while the dropdown items are richer.
   labels: Record<string, string>;
   value: string;
   onChange: (id: string) => void;
@@ -185,8 +174,6 @@ function ModelSelector({
   );
 }
 
-// Reasoning is binary for these models (off / on=high), so a switch rather than
-// an effort menu. Rendered only when the selected model supports reasoning.
 function ReasoningToggle({ on, onChange }: { on: boolean; onChange: (on: boolean) => void }) {
   const id = useId();
   return (
@@ -202,40 +189,24 @@ function ReasoningToggle({ on, onChange }: { on: boolean; onChange: (on: boolean
 }
 
 export default function Chat() {
-  // Stable per-browser id scoping the visitor's sessions; and the currently
-  // open session, persisted so a reload resumes the last conversation.
   const clientId = usePersistentId(CLIENT_ID_KEY);
   const [activeSessionId, setActiveSessionId] = useLocalStorage<string>(
     SESSION_ID_KEY,
     () => uuidv7(),
     EMPTY_STORAGE_OPTIONS
   );
-  // Model choice is a per-browser preference, applied to the next message. Seed
-  // as null = "no explicit pick" so the client holds no default of its own; an
-  // un-chosen visitor defers to the backend's current default (from the registry
-  // query below), and the server coerces anything unknown to it regardless.
-  // `initializeWithValue: false` skips reading localStorage during the server /
-  // first-client render.
   const [modelId, setModelId] = useLocalStorage<string | null>(MODEL_ID_KEY, null, {
     initializeWithValue: false,
   });
-  // Reasoning on/off is also a persisted per-browser preference, applied to the
-  // next message. Same deferred-hydration treatment as the model choice.
   const [reasoning, setReasoning] = useLocalStorage<boolean>(REASONING_KEY, DEFAULT_REASONING, {
     initializeWithValue: false,
   });
-  // The model registry lives on the backend now; the dropdown, the usage gauge
-  // (per-model context window + pricing), and the default all render from this
-  // query. Undefined until it loads — the toolbar shows a placeholder until then.
   const modelData = useQuery(api.chat.models, {});
   const models = modelData?.models;
   const modelLabels = useMemo(
     () => Object.fromEntries((models ?? []).map((model) => [model.id, model.name])),
     [models]
   );
-  // Resolve the stored choice against the served list: an explicit, still-valid
-  // pick wins; otherwise fall back to the backend's default. A stale/removed id —
-  // or no pick yet — lands on the default. Undefined only until the list loads.
   const activeModel =
     models?.find((model) => model.id === modelId) ??
     models?.find((model) => model.id === modelData?.defaultId);
@@ -391,8 +362,6 @@ function ChatSession({
 }: {
   clientId: string;
   sessionId: string;
-  // Undefined only in the brief window before the model registry query loads;
-  // an empty modelId in the request body makes the server use its default.
   modelId: string | undefined;
   reasoning: boolean;
   onSent: () => void;
@@ -416,8 +385,6 @@ function ChatSession({
 
   const { scrollToBottom, showScrollButton } = useWindowStickToBottom();
 
-  // Collapse each tool call's parts (input, then output) into one entry keyed by
-  // toolCallId so the transcript shows a single card per call. See TOOL_STATE_RANK.
   const toolCalls = useMemo(() => {
     const byId = new Map<string, MergedToolCall>();
     for (const message of messages) {
@@ -437,8 +404,6 @@ function ChatSession({
   function handleSubmit(message: PromptInputMessage) {
     const text = message.text?.trim();
     if (!text || isBusy || !clientId) return;
-    // The selected model and reasoning toggle ride along in the request body;
-    // the `send` mutation reads and whitelists both before scheduling the run.
     sendMessage({ text }, { body: { modelId, reasoning } });
     onSent();
     setHasText(false);
@@ -490,8 +455,6 @@ function ChatSession({
     );
   }
 
-  // Tool calls can appear as multiple parts (and across messages); render each
-  // toolCallId once, at its first occurrence.
   const renderedToolCallIds = new Set<string>();
 
   return (
@@ -568,15 +531,7 @@ function ChatSession({
         })}
       </div>
 
-      {/* Stays flush to the viewport bottom so the blurred band covers the
-          messages scrolling behind it, and pads its own content up clear of
-          the mobile dock. The page cancels `main`'s dock clearance so this
-          padding is the only reservation — otherwise the two stack up once
-          the containing block clamps the sticky element at the page end. */}
       <div className="sticky bottom-0 z-20 bg-background/80 pb-(--dock-clearance) backdrop-blur-xl supports-backdrop-filter:bg-background/60 lg:pb-4">
-        {/* The band above keeps its height so it always covers to the screen
-            edge; only the controls slide down into the space the dock frees,
-            which buys the transcript ~64px while scrolling. */}
         <div className="translate-y-(--dock-shift) transition-transform duration-300 ease-out">
           {showScrollButton ? (
             <Button
@@ -597,10 +552,6 @@ function ChatSession({
   );
 }
 
-// Auto-follow the conversation using the *window* scroll (so the scrollbar lives
-// on the page edge and messages pass behind the sticky nav) instead of a boxed
-// inner scroll container. Sticks to the bottom while streaming unless the reader
-// has scrolled up. useMountEffect is the sanctioned escape hatch for DOM sync.
 function useWindowStickToBottom() {
   const shouldStick = useRef(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -617,8 +568,6 @@ function useWindowStickToBottom() {
       setShowScrollButton(!atBottom);
     };
 
-    // Observe the document body (always present) so growth is tracked across the
-    // empty-hero → conversation transition without wiring a ref to the list.
     const observer = new ResizeObserver(() => {
       if (shouldStick.current) {
         window.scrollTo({ top: doc.scrollHeight });
@@ -628,7 +577,6 @@ function useWindowStickToBottom() {
 
     window.addEventListener("scroll", syncFromScroll, { passive: true });
     observer.observe(document.body);
-    // Reveal the latest messages when resuming a session on load.
     window.scrollTo({ top: doc.scrollHeight });
 
     return () => {

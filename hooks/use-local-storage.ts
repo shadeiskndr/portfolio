@@ -43,7 +43,6 @@ export function useLocalStorage<T>(
       if (options.deserializer) {
         return options.deserializer(value);
       }
-      // Support 'undefined' as a value
       if (value === "undefined") {
         return undefined as unknown as T;
       }
@@ -55,7 +54,7 @@ export function useLocalStorage<T>(
         parsed = JSON.parse(value);
       } catch (error) {
         console.error("Error parsing JSON:", error);
-        return defaultValue; // Return initialValue if parsing fails
+        return defaultValue;
       }
 
       return parsed as T;
@@ -63,12 +62,9 @@ export function useLocalStorage<T>(
     [options, initialValue]
   );
 
-  // Get from local storage then
-  // parse stored json or return initialValue
   const readValue = useCallback((): T => {
     const initialValueToUse = initialValue instanceof Function ? initialValue() : initialValue;
 
-    // Prevent build error "window is undefined" but keep working
     if (IS_SERVER) {
       return initialValueToUse;
     }
@@ -90,10 +86,7 @@ export function useLocalStorage<T>(
     return initialValue instanceof Function ? initialValue() : initialValue;
   });
 
-  // Return a wrapped version of useState's setter function that ...
-  // ... persists the new value to localStorage.
   const setValue: Dispatch<SetStateAction<T>> = useEventCallback((value) => {
-    // Prevent build error "window is undefined" but keeps working
     if (IS_SERVER) {
       console.warn(
         `Tried setting localStorage key "${key}" even though environment is not a client`
@@ -101,16 +94,12 @@ export function useLocalStorage<T>(
     }
 
     try {
-      // Allow value to be a function so we have the same API as useState
       const newValue = value instanceof Function ? value(readValue()) : value;
 
-      // Save to local storage
       window.localStorage.setItem(key, serializer(newValue));
 
-      // Save state
       setStoredValue(newValue);
 
-      // We dispatch a custom event so every similar useLocalStorage hook is notified
       window.dispatchEvent(new StorageEvent("local-storage", { key }));
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
@@ -118,7 +107,6 @@ export function useLocalStorage<T>(
   });
 
   const removeValue = useEventCallback(() => {
-    // Prevent build error "window is undefined" but keeps working
     if (IS_SERVER) {
       console.warn(
         `Tried removing localStorage key "${key}" even though environment is not a client`
@@ -127,20 +115,13 @@ export function useLocalStorage<T>(
 
     const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
 
-    // Remove the key from local storage
     window.localStorage.removeItem(key);
 
-    // Save state with default value
     setStoredValue(defaultValue);
 
-    // We dispatch a custom event so every similar useLocalStorage hook is notified
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
   });
 
-  // Re-read from storage when `key` changes (and, when initializeWithValue is
-  // false, for the first client read after hydration). This is the hook's own
-  // state, not a parent callback; the alternative — tracking the previous key —
-  // is exactly what the rule warns against, so keep this verbatim-usehooks-ts.
   useEffect(() => {
     // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent
     setStoredValue(readValue());
@@ -157,11 +138,8 @@ export function useLocalStorage<T>(
     [key, readValue]
   );
 
-  // this only works for other documents, not the current one
   useEventListener("storage", handleStorageChange);
 
-  // this is a custom event, triggered in writeValueToLocalStorage
-  // See: useLocalStorage()
   useEventListener("local-storage", handleStorageChange);
 
   return [storedValue, setValue, removeValue];

@@ -158,9 +158,6 @@ function ImageModal({
           role="dialog"
           tabIndex={-1}
         >
-          {/* Click-outside-to-close is a mouse affordance; keyboard users close
-              via Escape (handled above) or the visible Close button, so this
-              button stays out of the tab order (tabIndex={-1}). */}
           <m.button
             animate={{ opacity: 1 }}
             aria-label="Close"
@@ -209,9 +206,6 @@ function ImageModal({
             <ChevronRight className="h-5 w-5" />
           </m.button>
 
-          {/* pointer-events-none lets clicks in the empty area around the image
-              fall through to the backdrop (which closes); the image re-enables
-              pointer events so clicking the photo itself doesn't close. */}
           <div className="pointer-events-none relative flex min-h-0 flex-1 items-center justify-center px-16 pt-12 pb-2">
             {activePhoto ? (
               <m.div

@@ -58,7 +58,6 @@ const sources = [
   { href: "https://docs.aws.amazon.com/sdk-for-javascript/", title: "AWS SDK for JavaScript" },
 ];
 
-/** Demo component for preview */
 export default function SourcesDemo() {
   return (
     <div className="p-6" style={{ height: "150px" }}>

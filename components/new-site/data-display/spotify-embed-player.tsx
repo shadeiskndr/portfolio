@@ -10,20 +10,6 @@ import {
   useState,
 } from "react";
 
-/**
- * Click-to-play for the /songs disc grid, built on the Spotify IFrame API
- * (https://developer.spotify.com/documentation/embeds/references/iframe-api).
- *
- * Not the Web Playback SDK: that one needs the `streaming` scope, which Spotify
- * grants only to Premium accounts, and it plays for *the logged-in visitor*
- * rather than the site owner — so every guest would have to OAuth into this
- * portfolio with their own Premium account before hearing anything. The embed
- * needs no visitor auth at all.
- *
- * The controller is created lazily on the first play, so a visitor who never
- * clicks a disc never loads Spotify's iframe.
- */
-
 type PlaybackUpdate = {
   playingURI: string;
   isPaused: boolean;
@@ -61,8 +47,6 @@ declare global {
 
 const IFRAME_API_SRC = "https://open.spotify.com/embed/iframe-api/v1";
 
-// `onSpotifyIframeApiReady` is a one-shot global — it never fires again once the
-// script has loaded. Cache the promise at module scope so remounts reuse it.
 let apiPromise: Promise<IFrameApi> | null = null;
 
 function loadIFrameApi(): Promise<IFrameApi> {
@@ -80,7 +64,6 @@ function loadIFrameApi(): Promise<IFrameApi> {
 const trackUri = (trackId: string) => `spotify:track:${trackId}`;
 
 type EmbedContextValue = {
-  /** Track id currently loaded into the embed, playing or paused. */
   activeTrackId: string | null;
   isPaused: boolean;
   toggle: (trackId: string) => void;
@@ -97,16 +80,13 @@ export const useSpotifyEmbed = () => useContext(EmbedContext);
 export function SpotifyEmbedProvider({ children }: { children: React.ReactNode }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<EmbedController | null>(null);
-  // Guards against a second click racing the first controller creation.
   const creatingRef = useRef(false);
 
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(true);
-  // Mirrors activeTrackId so `toggle` can stay referentially stable.
   const activeTrackIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only tears down; creation is driven by the first toggle().
     return () => {
       controllerRef.current?.destroy();
       controllerRef.current = null;
@@ -140,8 +120,6 @@ export function SpotifyEmbedProvider({ children }: { children: React.ReactNode }
         controllerRef.current = controller;
         creatingRef.current = false;
         controller.addListener("playback_update", (e) => {
-          // `playingURI` is empty until playback actually starts; keep the
-          // optimistic id in that window so the disc doesn't flicker.
           const uri = e.data.playingURI;
           if (uri) {
             const nextId = uri.split(":").pop() ?? null;
@@ -170,7 +148,6 @@ export function SpotifyEmbedProvider({ children }: { children: React.ReactNode }
             : "hidden"
         }
       >
-        {/* Replaced in place by Spotify's iframe once the controller is built. */}
         <div ref={hostRef} />
       </div>
     </EmbedContext.Provider>

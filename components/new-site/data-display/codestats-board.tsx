@@ -26,12 +26,6 @@ import {
 
 const WINDOW_DAYS = 90;
 
-// `fetchedAt` is a real instant, so it needs an explicit locale *and* timeZone:
-// without them the server and the browser format it differently. Pinned to the
-// profile's zone (and labelled with it) so the reading matches the day buckets
-// the rest of the page is built on.
-// Spelled out as individual components rather than dateStyle/timeStyle, which
-// throw a TypeError when combined with timeZoneName.
 const syncedFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   month: "short",

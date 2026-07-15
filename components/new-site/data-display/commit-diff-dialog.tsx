@@ -6,10 +6,6 @@ import type { Doc } from "@/convex/_generated/dataModel";
 
 type Commit = Doc<"commits">;
 
-// The body pulls in the full CodeMirror merge stack (editor, themes, language
-// data) — heavy and only ever needed once a commit is opened. Keep the dialog
-// shell static so open/close still animates, and defer the body to a lazy chunk
-// that loads on first open. ssr: false because CodeMirror touches `window`.
 const CommitDiffBody = dynamic(() => import("./commit-diff-body").then((m) => m.CommitDiffBody), {
   ssr: false,
   loading: () => (

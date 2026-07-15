@@ -19,11 +19,6 @@ function FieldError({ errors, isTouched }: { errors: unknown[]; isTouched: boole
   return <p className="mt-1 text-red-600 text-xs dark:text-red-400">{String(errors[0])}</p>;
 }
 
-/**
- * The flat "model is the form" shape, built with TanStack Form as the React
- * stand-in for @angular/forms/signals. Value, validity, errors, dirty and
- * touched are all read off one form store; Save is gated on `valid && dirty`.
- */
 export function ProfileFormDemo() {
   const [savedCount, setSavedCount] = useState(0);
 
@@ -140,7 +135,6 @@ export function ProfileFormDemo() {
           )}
         </form.Field>
 
-        {/* canSave = valid && dirty — the exact `canSave` line from the post. */}
         <form.Subscribe
           selector={(s) => ({
             isValid: s.isValid,

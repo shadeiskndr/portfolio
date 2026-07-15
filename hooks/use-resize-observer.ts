@@ -37,8 +37,6 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
   const isMounted = useIsMounted();
   const previousSize = React.useRef<Size>({ ...initialSize });
   const onResize = React.useRef<((size: Size) => void) | undefined>(undefined);
-  // Ref writes belong in an effect, not render: React may replay/discard render
-  // work, so a mutation there can leak from UI that never commits.
   React.useEffect(() => {
     onResize.current = options.onResize;
   });

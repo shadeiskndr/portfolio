@@ -268,7 +268,6 @@ const variants: SpinnerProps["variant"][] = [
   "infinite",
 ];
 
-// Demo
 export function Demo() {
   return (
     <div className="grid grid-cols-4 gap-8 p-8">

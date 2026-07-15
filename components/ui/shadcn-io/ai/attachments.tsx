@@ -15,10 +15,6 @@ import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface AttachmentData {
   id: string;
   type: "file" | "source-document";
@@ -37,10 +33,6 @@ export type AttachmentMediaCategory =
   | "unknown";
 
 export type AttachmentVariant = "grid" | "inline" | "list";
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 export const getMediaCategory = (data: AttachmentData): AttachmentMediaCategory => {
   if (data.type === "source-document") {
@@ -74,10 +66,6 @@ export const getAttachmentLabel = (data: AttachmentData): string => {
   return data.filename || (category === "image" ? "Image" : "Attachment");
 };
 
-// ============================================================================
-// Contexts
-// ============================================================================
-
 interface AttachmentsContextValue {
   variant: AttachmentVariant;
 }
@@ -93,10 +81,6 @@ interface AttachmentContextValue {
 
 const AttachmentContext = createContext<AttachmentContextValue | null>(null);
 
-// ============================================================================
-// Hooks
-// ============================================================================
-
 export const useAttachmentsContext = () =>
   useContext(AttachmentsContext) ?? { variant: "grid" as const };
 
@@ -107,10 +91,6 @@ export const useAttachmentContext = () => {
   }
   return ctx;
 };
-
-// ============================================================================
-// Attachments - Container
-// ============================================================================
 
 export type AttachmentsProps = HTMLAttributes<HTMLDivElement> & {
   variant?: AttachmentVariant;
@@ -140,10 +120,6 @@ export const Attachments = ({
     </AttachmentsContext.Provider>
   );
 };
-
-// ============================================================================
-// Attachment - Item
-// ============================================================================
 
 export type AttachmentProps = HTMLAttributes<HTMLDivElement> & {
   data: AttachmentData;
@@ -185,18 +161,12 @@ export const Attachment = ({ data, onRemove, className, children, ...props }: At
   );
 };
 
-// ============================================================================
-// AttachmentPreview - Media preview
-// ============================================================================
-
 export type AttachmentPreviewProps = HTMLAttributes<HTMLDivElement> & {
   fallbackIcon?: ReactNode;
 };
 
 const renderImage = (url: string, filename: string | undefined, isGrid: boolean) =>
   isGrid ? (
-    // Attachment previews render blob:/data: URLs from local file uploads
-    // (see prompt-input.tsx URL.createObjectURL), which next/image cannot optimize.
     // react-doctor-disable-next-line react-doctor/nextjs-no-img-element
     <img
       alt={filename || "Image"}
@@ -206,7 +176,6 @@ const renderImage = (url: string, filename: string | undefined, isGrid: boolean)
       width={96}
     />
   ) : (
-    // Same as above: blob:/data: object URLs can't go through next/image.
     // react-doctor-disable-next-line react-doctor/nextjs-no-img-element
     <img
       alt={filename || "Image"}
@@ -268,10 +237,6 @@ export const AttachmentPreview = ({
   );
 };
 
-// ============================================================================
-// AttachmentInfo - Name and type display
-// ============================================================================
-
 export type AttachmentInfoProps = HTMLAttributes<HTMLDivElement> & {
   showMediaType?: boolean;
 };
@@ -297,10 +262,6 @@ export const AttachmentInfo = ({
     </div>
   );
 };
-
-// ============================================================================
-// AttachmentRemove - Remove button
-// ============================================================================
 
 export type AttachmentRemoveProps = ComponentProps<typeof Button> & {
   label?: string;
@@ -351,10 +312,6 @@ export const AttachmentRemove = ({
   );
 };
 
-// ============================================================================
-// AttachmentHoverCard - Hover preview
-// ============================================================================
-
 export type AttachmentHoverCardProps = ComponentProps<typeof HoverCard>;
 
 export const AttachmentHoverCard = (props: AttachmentHoverCardProps) => <HoverCard {...props} />;
@@ -374,10 +331,6 @@ export const AttachmentHoverCardContent = ({
 }: AttachmentHoverCardContentProps) => (
   <HoverCardContent align={align} className={cn("w-auto p-2", className)} {...props} />
 );
-
-// ============================================================================
-// AttachmentEmpty - Empty state
-// ============================================================================
 
 export type AttachmentEmptyProps = HTMLAttributes<HTMLDivElement>;
 
@@ -421,11 +374,9 @@ const mixedAttachments: AttachmentData[] = [
   { id: "7", type: "source-document", title: "API Documentation" },
 ];
 
-/** Demo component for preview */
 export default function AttachmentsDemo() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-8 p-6">
-      {/* Grid Variant - Image Gallery */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm">Grid Variant</h3>
@@ -445,7 +396,6 @@ export default function AttachmentsDemo() {
         </Attachments>
       </div>
 
-      {/* Inline Variant - Compact Tags */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm">Inline Variant</h3>
@@ -466,7 +416,6 @@ export default function AttachmentsDemo() {
         </Attachments>
       </div>
 
-      {/* List Variant - Detailed View */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm">List Variant</h3>

@@ -16,7 +16,6 @@ const ICON_STROKE_WIDTH = 2;
 
 type ModelId = string;
 
-/** Explicit per-million-token prices (USD). Use when tokenlens has no `modelId`. */
 export interface ContextPricing {
   inputPer1M?: number;
   outputPer1M?: number;
@@ -24,12 +23,6 @@ export interface ContextPricing {
   reasoningPer1M?: number;
 }
 
-/**
- * Pre-computed per-category costs (USD). When provided, the component displays
- * these directly and skips all client-side pricing math (`pricing`/`modelId`
- * are then unused). Compute this server-side to price against the model that
- * actually ran, and to keep the pricing table off the client.
- */
 export interface ContextCost {
   total?: number;
   input?: number;
@@ -44,9 +37,7 @@ interface ContextSchema {
   usage?: LanguageModelUsage;
   modelId?: ModelId;
   pricing?: ContextPricing;
-  /** Pre-computed usage fraction (0–1). Falls back to `usedTokens / maxTokens`. */
   usedPercent?: number;
-  /** Pre-computed costs. When set, overrides client-side pricing math. */
   cost?: ContextCost;
 }
 
@@ -64,8 +55,6 @@ const useContextValue = () => {
 
 const MICRO_USD_THRESHOLD = 0.01;
 
-// Hoisted Intl formatters — constructing one is expensive, so build each once
-// at module scope instead of on every call/render.
 const USD_FORMAT = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const PERCENT_FORMAT = new Intl.NumberFormat("en-US", {
   style: "percent",
@@ -73,7 +62,6 @@ const PERCENT_FORMAT = new Intl.NumberFormat("en-US", {
 });
 const COMPACT_FORMAT = new Intl.NumberFormat("en-US", { notation: "compact" });
 
-/** Currency format that keeps sub-cent amounts legible instead of rounding to $0.00. */
 function formatUSD(value: number | undefined): string {
   const v = value ?? 0;
   if (v > 0 && v < MICRO_USD_THRESHOLD) {
@@ -82,7 +70,6 @@ function formatUSD(value: number | undefined): string {
   return USD_FORMAT.format(v);
 }
 
-/** Cost from explicit `pricing`; returns undefined when no matching price is set. */
 function pricingCostUSD(
   tokens: { input?: number; output?: number; cacheReads?: number; reasoningTokens?: number },
   pricing: ContextPricing | undefined
@@ -426,7 +413,6 @@ const TokensWithCost = ({ tokens, costText }: { tokens?: number; costText?: stri
   </span>
 );
 
-/** Demo component for preview */
 export default function ContextDemo() {
   return (
     <div className="flex items-center justify-center p-8">

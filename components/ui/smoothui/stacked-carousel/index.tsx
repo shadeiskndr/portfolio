@@ -13,11 +13,8 @@ import { cn } from "@/lib/utils";
 
 const FRAME_OFFSET = -30;
 const FRAMES_VISIBLE_LENGTH = 3;
-// The wheel listener must be non-passive so it can preventDefault; the cooldown
-// collapses a single trackpad/wheel gesture's burst of events into one step.
 const WHEEL_OPTIONS = { passive: false } as const;
 const WHEEL_COOLDOWN_MS = 450;
-// Stable default so the filteredItems memo isn't invalidated every render.
 const DEFAULT_EXCLUDE_IDS: (string | number)[] = [];
 
 function clamp(val: number, [min, max]: [number, number]): number {
@@ -75,17 +72,9 @@ function StackedCard({ item, index, activeIndex, totalCards }: StackedCardProps)
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
         zIndex: totalCards - index,
         pointerEvents: isActive ? "auto" : "none",
-        // Anchor slightly below center so the upward-growing stack of cards
-        // behind the active one has clearance (e.g. from a tab bar above).
         top: "58%",
       }}
     >
-      {/* SpotlightCard owns the chrome. Its opaque bg-card lets the active card
-          fully cover the ones behind it, so the stack reads through the peeking
-          offset edges + scale + shadow rather than see-through translucency
-          (nesting breaks backdrop-blur, which would otherwise blur the cards
-          behind). The spotlight only reacts on the active card, which alone has
-          pointer-events enabled above. */}
       <SpotlightCard
         borderColor="color-mix(in oklch, var(--foreground) 10%, transparent)"
         className="p-5 shadow-lg sm:p-6"
@@ -159,21 +148,15 @@ export default function StackedCarousel({
   }, [items, excludeIds]);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  // The ref guards synchronously so a wheel gesture's burst collapses to one
-  // step even before React re-renders; the state arms the declarative cooldown.
   const wheelLockRef = useRef(false);
   const [wheelLocked, setWheelLocked] = useState(false);
 
-  // useStep is 1-indexed: step N renders item N-1 as the active card.
   const [
     currentStep,
     { goToNextStep, goToPrevStep, setStep, canGoToNextStep, canGoToPrevStep, reset },
   ] = useStep(filteredItems.length);
   const activeIndex = currentStep - 1;
 
-  // Auto-play. The tick is wrapped in useEventCallback so the mount-once
-  // interval always sees the latest step — useStep's callbacks close over
-  // currentStep and would otherwise go stale.
   const advance = useEventCallback(() => {
     if (canGoToNextStep) {
       goToNextStep();
@@ -189,8 +172,6 @@ export default function StackedCarousel({
     return () => clearInterval(interval);
   });
 
-  // Keyboard navigation (global arrow keys). useEventListener stores the latest
-  // handler, so the step callbacks stay current.
   useEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") {
       goToPrevStep();
@@ -199,10 +180,6 @@ export default function StackedCarousel({
     }
   });
 
-  // Scroll / trackpad navigation over the stack. preventDefault only while the
-  // stack can still move in that direction, so reaching either end releases the
-  // scroll back to the page instead of trapping it. The cooldown throttles a
-  // gesture's burst of wheel events down to a single step.
   useEventListener(
     "wheel",
     (event) => {
@@ -230,9 +207,6 @@ export default function StackedCarousel({
     WHEEL_OPTIONS
   );
 
-  // Release the wheel cooldown declaratively. A null delay keeps the timeout
-  // disarmed while unlocked; it re-arms each time a wheel step locks again, and
-  // is cleared automatically if the carousel unmounts mid-cooldown.
   useTimeout(
     () => {
       wheelLockRef.current = false;
@@ -251,7 +225,6 @@ export default function StackedCarousel({
       ref={containerRef}
       style={{ height }}
     >
-      {/* Stack of cards */}
       <div className="relative h-full w-full py-8">
         <div className="grid h-full w-full place-items-center">
           {filteredItems.map((item, index) => (
@@ -266,7 +239,6 @@ export default function StackedCarousel({
         </div>
       </div>
 
-      {/* Navigation */}
       {(showNavigation || showIndicators) && filteredItems.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2">
           {showNavigation && (

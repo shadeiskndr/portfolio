@@ -74,7 +74,6 @@ function GraphInner({ hide, guard }: { hide: boolean; guard: boolean }) {
   const edges = useMemo(() => {
     if (hide && guard) return BASE_EDGES.filter((e) => !touchesHidden(e));
     if (hide) {
-      // The node is gone but its edges remain — arrows into empty space.
       return BASE_EDGES.map((e) =>
         touchesHidden(e)
           ? { ...e, animated: true, label: "orphaned", style: { stroke: "#ef4444" } }
@@ -112,7 +111,6 @@ function GraphInner({ hide, guard }: { hide: boolean; guard: boolean }) {
   );
 }
 
-/** Toggle a node hidden with and without cascading to its edges. */
 export function GraphOrphanEdgesDemo() {
   const [hide, setHide] = useState(true);
   const [guard, setGuard] = useState(false);

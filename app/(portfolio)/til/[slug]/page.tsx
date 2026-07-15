@@ -102,9 +102,6 @@ export default async function TilPostPage({ params }: { params: Promise<{ slug: 
                   [
                     rehypePrettyCode,
                     {
-                      // Dual themes emit CSS vars (--shiki-light/--shiki-dark) per
-                      // token; globals.css swaps them on the .dark class. Drop
-                      // Shiki's own background so the <pre> bg-muted shows through.
                       theme: { light: "github-light", dark: "github-dark" },
                       keepBackground: false,
                     },
