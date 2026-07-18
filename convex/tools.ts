@@ -1,10 +1,10 @@
-import { defineTool } from "@convex-dev/agent";
-import { v } from "convex/values";
+import { createTool } from "@convex-dev/agent";
+import { z } from "zod";
 import { type CalcResult, runCalculation } from "../lib/chat/calculator";
 import { evaluateExpression } from "../lib/chat/np-eval";
 
 // react-doctor-disable-next-line react-doctor/agent-tool-capability-risk
-export const calculate = defineTool({
+export const calculate = createTool({
   description:
     "Perform an exact numeric calculation with NumPy. Use this instead of doing arithmetic or " +
     "statistics yourself whenever the user asks for a computed number, matrix, or statistic.\n\n" +
@@ -25,34 +25,30 @@ export const calculate = defineTool({
     "`linalg.norm(array([3,4]))` · `matmul(array([[1,2],[3,4]]), array([[5,6],[7,8]]))` · " +
     "`sin(array([0, 1.57]))` · `fft.fft(array([1,2,3,4]))` · `percentile(array([1,2,3,4,5]), 50)` · " +
     "`2 ** 10`.",
-  input: v.object({
-    operation: v.optional(
-      v.union(
-        v.literal("sum"),
-        v.literal("mean"),
-        v.literal("median"),
-        v.literal("std"),
-        v.literal("var"),
-        v.literal("min"),
-        v.literal("max"),
-        v.literal("prod"),
-        v.literal("add"),
-        v.literal("subtract"),
-        v.literal("multiply"),
-        v.literal("divide"),
-        v.literal("power"),
-        v.literal("dot")
-      )
-    ),
-    values: v.optional(v.array(v.number())),
-    operand: v.optional(v.array(v.number())),
-    expression: v.optional(v.string()),
+  inputSchema: z.object({
+    operation: z
+      .enum([
+        "sum",
+        "mean",
+        "median",
+        "std",
+        "var",
+        "min",
+        "max",
+        "prod",
+        "add",
+        "subtract",
+        "multiply",
+        "divide",
+        "power",
+        "dot",
+      ])
+      .optional(),
+    values: z.array(z.number()).optional(),
+    operand: z.array(z.number()).optional(),
+    expression: z.string().optional(),
   }),
-  output: v.object({
-    formatted: v.string(),
-    result: v.any(),
-  }),
-  execute: async (input): Promise<CalcResult> => {
+  execute: async (_ctx, input): Promise<CalcResult> => {
     try {
       if (typeof input.expression === "string" && input.expression.trim()) {
         return evaluateExpression(input.expression);

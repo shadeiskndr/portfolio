@@ -1,12 +1,17 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { useChatTransport } from "@convex-dev/agent/vercel/react";
+import { useUIMessages } from "@convex-dev/agent/react";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { createMathPlugin } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
-import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } from "ai";
+import {
+  type ChatStatus,
+  type DynamicToolUIPart,
+  getToolName,
+  isToolUIPart,
+  type ToolUIPart,
+} from "ai";
 import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 import { useMutation, useQuery } from "convex/react";
@@ -368,20 +373,32 @@ function ChatSession({
   toolbar: ReactNode;
 }) {
   const [hasText, setHasText] = useState(false);
-  const { messages, sendMessage, status, stop } = useChat(
-    useChatTransport(
-      api.chat,
-      { sessionId, clientId },
-      {
-        id: sessionId,
-        cancelOnAbort: true,
-        onError: (error) => {
-          toast.error(error instanceof Error ? error.message : "Chat request failed");
-          return "Something went wrong reaching the model. Please try again.";
-        },
-      }
-    )
+  const [pending, setPending] = useState(false);
+  const threadData = useQuery(api.chat.thread, clientId ? { sessionId, clientId } : "skip");
+  const threadId = threadData?.threadId;
+  const sendMessage = useMutation(api.chat.send);
+  const cancelStream = useMutation(api.chat.cancel);
+  const { results: messages } = useUIMessages(
+    api.chat.listMessages,
+    threadId ? { threadId, clientId } : "skip",
+    { initialNumItems: 50, stream: true }
   );
+
+  const lastMessage = messages.at(-1);
+  const streamingMessage = messages.findLast((m) => m.status === "streaming");
+  const status: ChatStatus = streamingMessage
+    ? "streaming"
+    : pending || lastMessage?.status === "pending"
+      ? "submitted"
+      : lastMessage?.status === "failed"
+        ? "error"
+        : "ready";
+
+  function stop() {
+    if (!lastMessage) return;
+    void cancelStream({ sessionId, clientId, order: lastMessage.order });
+    setPending(false);
+  }
 
   const { scrollToBottom, showScrollButton } = useWindowStickToBottom();
 
@@ -404,7 +421,12 @@ function ChatSession({
   function handleSubmit(message: PromptInputMessage) {
     const text = message.text?.trim();
     if (!text || isBusy || !clientId) return;
-    sendMessage({ text }, { body: { modelId, reasoning } });
+    setPending(true);
+    sendMessage({ sessionId, clientId, text, modelId, reasoning })
+      .catch((error: unknown) => {
+        toast.error(error instanceof Error ? error.message : "Chat request failed");
+      })
+      .finally(() => setPending(false));
     onSent();
     setHasText(false);
     scrollToBottom();

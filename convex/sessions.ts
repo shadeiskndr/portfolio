@@ -43,7 +43,7 @@ export const remove = mutation({
   handler: async (ctx, { sessionId, clientId }) => {
     const session = await findSession(ctx, sessionId, clientId);
     if (!session) return null;
-    await chatAgent.threads.update(ctx, {
+    await chatAgent.updateThreadMetadata(ctx, {
       threadId: session.threadId,
       patch: { status: "archived" },
     });

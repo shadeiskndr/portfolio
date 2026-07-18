@@ -122,7 +122,10 @@ type GitHubCommit = {
 
 export const backfillFromGitHub = internalAction({
   args: { perPage: v.optional(v.number()), maxPages: v.optional(v.number()) },
-  handler: async (ctx, { perPage = 100, maxPages = 20 }) => {
+  handler: async (
+    ctx,
+    { perPage = 100, maxPages = 20 }
+  ): Promise<{ inserted: number; received: number }> => {
     const owner = process.env.GITHUB_OWNER;
     const repo = process.env.GITHUB_REPO;
     if (!(owner && repo)) {

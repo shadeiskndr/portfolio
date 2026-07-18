@@ -1,10 +1,10 @@
-import { vAgentMessageInput } from "@convex-dev/agent/validators";
-import { streamQueryArgsValidator } from "@convex-dev/stream";
+import { abortStream, listUIMessages, vStreamArgs } from "@convex-dev/agent";
 import { streamText } from "ai";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { type ChatModel, DEFAULT_MODEL, DEFAULT_REASONING } from "../lib/chat/models";
 import { getChatModel } from "../lib/chat/provider";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import {
   type ActionCtx,
   internalAction,
@@ -13,7 +13,7 @@ import {
   type QueryCtx,
   query,
 } from "./_generated/server";
-import { chatAgent, defineChatModel } from "./agent";
+import { chatAgent, chatModelArgs } from "./agent";
 import { listModels, resolveModelRow, toChatModel } from "./models";
 import { retrievePortfolioContext } from "./rag";
 
@@ -33,30 +33,43 @@ function tokenCostUSD(tokens: number, per1M: number): number {
   return (tokens * per1M) / 1_000_000;
 }
 
-function titleFromMessage(message: {
-  text?: string;
-  message?: { content?: Array<{ type: string; text?: string }> };
-}): string | undefined {
-  const fromContent = message.message?.content?.find(
-    (part): part is { type: "text"; text: string } =>
-      part.type === "text" && typeof part.text === "string"
-  )?.text;
-  const text = (message.text ?? fromContent)?.trim();
-  if (!text) return undefined;
-  return text.length > 60 ? `${text.slice(0, 60)}…` : text;
+function titleFromText(text: string): string | undefined {
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+  return trimmed.length > 60 ? `${trimmed.slice(0, 60)}…` : trimmed;
 }
 
-export const list = query({
+export const thread = query({
   args: { sessionId: v.string(), clientId: v.string() },
   handler: async (ctx, { sessionId, clientId }) => {
     const session = await findSession(ctx, sessionId, clientId);
-    if (!session) return [];
-    const page = await chatAgent.messages.list(ctx, {
-      threadId: session.threadId,
-      order: "desc",
-      paginationOpts: { cursor: null, numItems: 50 },
-    });
-    return page.page.toReversed();
+    return session ? { threadId: session.threadId } : null;
+  },
+});
+
+export const listMessages = query({
+  args: {
+    threadId: v.string(),
+    clientId: v.string(),
+    paginationOpts: paginationOptsValidator,
+    streamArgs: vStreamArgs,
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db
+      .query("chatSessions")
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .unique();
+    if (!session || session.clientId !== args.clientId) {
+      return { page: [], isDone: true, continueCursor: "", streams: undefined };
+    }
+    const [paginated, streams] = await Promise.all([
+      listUIMessages(ctx, components.agent, args),
+      chatAgent.syncStreams(ctx, {
+        threadId: args.threadId,
+        streamArgs: args.streamArgs,
+      }),
+    ]);
+    return { ...paginated, streams };
   },
 });
 
@@ -65,9 +78,8 @@ export const usage = query({
   handler: async (ctx, { sessionId, clientId }) => {
     const session = await findSession(ctx, sessionId, clientId);
     if (!session) return null;
-    const page = await chatAgent.messages.list(ctx, {
+    const page = await chatAgent.listMessages(ctx, {
       threadId: session.threadId,
-      order: "desc",
       paginationOpts: { cursor: null, numItems: 5 },
     });
     const u = page.page.find((m) => m.usage)?.usage;
@@ -76,8 +88,8 @@ export const usage = query({
     const row = await resolveModelRow(ctx, session.lastModelId);
     const contextTokens = row?.contextTokens ?? DEFAULT_MODEL.contextTokens;
     const pricing = row?.pricing ?? DEFAULT_MODEL.pricing;
-    const inputTokens = u.inputTokens ?? 0;
-    const outputTokens = u.outputTokens ?? 0;
+    const inputTokens = u.promptTokens ?? 0;
+    const outputTokens = u.completionTokens ?? 0;
     const usedTokens = inputTokens;
     const maxTokens = contextTokens;
     const inputCost = tokenCostUSD(inputTokens, pricing.inputPer1M);
@@ -97,13 +109,13 @@ export const usage = query({
         outputTokens,
         totalTokens: u.totalTokens ?? 0,
         inputTokenDetails: {
-          noCacheTokens: u.tokenDetails?.input?.noCacheTokens,
-          cacheReadTokens: u.tokenDetails?.input?.cacheReadTokens,
-          cacheWriteTokens: u.tokenDetails?.input?.cacheWriteTokens,
+          noCacheTokens: u.nonCachedInputTokens,
+          cacheReadTokens: u.cachedInputTokens,
+          cacheWriteTokens: u.cacheWriteInputTokens,
         },
         outputTokenDetails: {
-          textTokens: u.tokenDetails?.output?.textTokens,
-          reasoningTokens: u.tokenDetails?.output?.reasoningTokens,
+          textTokens: u.textOutputTokens,
+          reasoningTokens: u.reasoningTokens,
         },
       },
     };
@@ -126,19 +138,14 @@ export const send = mutation({
   args: {
     sessionId: v.string(),
     clientId: v.string(),
-    chatId: v.string(),
-    trigger: v.union(v.literal("submit-message"), v.literal("regenerate-message")),
-    messageId: v.optional(v.string()),
-    message: vAgentMessageInput,
-    messages: v.array(v.any()),
-    body: v.optional(v.any()),
-    metadata: v.optional(v.any()),
+    text: v.string(),
+    modelId: v.optional(v.string()),
+    reasoning: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const body = args.body as { modelId?: string; reasoning?: boolean } | undefined;
-    const row = await resolveModelRow(ctx, body?.modelId);
+    const row = await resolveModelRow(ctx, args.modelId);
     const modelId = row?.modelId ?? DEFAULT_MODEL.id;
-    const reasoning = body?.reasoning ?? DEFAULT_REASONING;
+    const reasoning = args.reasoning ?? DEFAULT_REASONING;
 
     const session = await findSession(ctx, args.sessionId, args.clientId);
     let threadId: string;
@@ -148,43 +155,34 @@ export const send = mutation({
         await ctx.db.patch(session._id, { lastModelId: modelId });
       }
     } else {
-      const thread = await chatAgent.threads.create(ctx, {
+      const created = await chatAgent.createThread(ctx, {
         userId: args.clientId,
-        title: titleFromMessage(args.message),
+        title: titleFromText(args.text),
       });
-      threadId = thread._id;
+      threadId = created.threadId;
       await ctx.db.insert("chatSessions", {
         sessionId: args.sessionId,
         clientId: args.clientId,
         threadId,
-        title: titleFromMessage(args.message),
+        title: titleFromText(args.text),
         lastModelId: modelId,
       });
     }
-    const run = await chatAgent.runs.start(ctx, {
+
+    const { messageId } = await chatAgent.saveMessage(ctx, {
       threadId,
       userId: args.clientId,
-      message: args.message,
-      key: args.message.clientKey ?? args.messageId ?? args.chatId,
+      prompt: args.text,
+      skipEmbeddings: true,
     });
-    await ctx.scheduler.runAfter(0, internal.chat.execute, {
-      runId: run.runId,
+
+    await ctx.scheduler.runAfter(0, internal.chat.stream, {
+      threadId,
+      promptMessageId: messageId,
       modelId,
       reasoning,
     });
-    return run;
-  },
-});
-
-export const read = query({
-  args: {
-    sessionId: v.string(),
-    clientId: v.string(),
-    runId: v.string(),
-    streamArgs: streamQueryArgsValidator,
-  },
-  handler: async (ctx, args) => {
-    return await chatAgent.events.read(ctx, { runId: args.runId, ...args.streamArgs });
+    return { threadId, messageId };
   },
 });
 
@@ -192,20 +190,19 @@ export const cancel = mutation({
   args: {
     sessionId: v.string(),
     clientId: v.string(),
-    runId: v.string(),
+    order: v.number(),
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await chatAgent.runs.cancel(ctx, { runId: args.runId, reason: args.reason });
+    const session = await findSession(ctx, args.sessionId, args.clientId);
+    if (!session) return false;
+    return await abortStream(ctx, components.agent, {
+      threadId: session.threadId,
+      order: args.order,
+      reason: args.reason ?? "Cancelled by user",
+    });
   },
 });
-
-function messageRole(m: { message?: { author?: { type?: string } } }): string {
-  const type = m.message?.author?.type;
-  if (type === "user") return "User";
-  if (type === "agent") return "Assistant";
-  return type ?? "system";
-}
 
 async function summarizeOlderTurns(
   ctx: ActionCtx,
@@ -214,24 +211,23 @@ async function summarizeOlderTurns(
   surface: ChatModel["surface"],
   api: ChatModel["api"]
 ): Promise<string | null> {
-  const recent = await chatAgent.messages.list(ctx, {
+  const recent = await chatAgent.listMessages(ctx, {
     threadId,
-    order: "desc",
     paginationOpts: { cursor: null, numItems: 5 },
   });
-  const lastInputTokens = recent.page.find((m) => m.usage)?.usage?.inputTokens ?? 0;
+  const lastInputTokens = recent.page.find((m) => m.usage)?.usage?.promptTokens ?? 0;
   if (lastInputTokens <= COMPACT_AT_TOKENS) return null;
 
-  const all = await chatAgent.messages.list(ctx, {
+  const all = await chatAgent.listMessages(ctx, {
     threadId,
-    order: "asc",
     excludeToolMessages: true,
     paginationOpts: { cursor: null, numItems: 200 },
   });
   if (all.page.length <= KEEP_RECENT_MESSAGES) return null;
-  const older = all.page.slice(0, all.page.length - KEEP_RECENT_MESSAGES);
+  const ordered = all.page.toReversed();
+  const older = ordered.slice(0, ordered.length - KEEP_RECENT_MESSAGES);
   const transcript = older
-    .map((m) => `${messageRole(m)}: ${m.text ?? ""}`.trim())
+    .map((m) => `${m.message?.role === "user" ? "User" : "Assistant"}: ${m.text ?? ""}`.trim())
     .filter((line) => line.length > 0)
     .join("\n");
   if (!transcript) return null;
@@ -250,57 +246,49 @@ async function summarizeOlderTurns(
 }
 
 async function latestUserQuery(ctx: ActionCtx, threadId: string): Promise<string> {
-  const page = await chatAgent.messages.list(ctx, {
+  const page = await chatAgent.listMessages(ctx, {
     threadId,
-    order: "desc",
     excludeToolMessages: true,
     paginationOpts: { cursor: null, numItems: 10 },
   });
-  const userMessage = page.page.find((m) => m.message?.author?.type === "user");
-  return userMessage?.text ?? "";
+  return page.page.find((m) => m.message?.role === "user")?.text ?? "";
 }
 
-type ContextBlock = { type: "text"; name: string; text: string };
-
-export const execute = internalAction({
+export const stream = internalAction({
   args: {
-    runId: v.string(),
+    threadId: v.string(),
+    promptMessageId: v.string(),
     modelId: v.optional(v.string()),
     reasoning: v.optional(v.boolean()),
   },
-  handler: async (ctx, { runId, modelId, reasoning }) => {
+  handler: async (ctx, { threadId, promptMessageId, modelId, reasoning }) => {
     const resolved = await ctx.runQuery(internal.models.resolveForRun, { modelId });
     const id = resolved?.id ?? DEFAULT_MODEL.id;
     const surface = resolved?.surface ?? DEFAULT_MODEL.surface;
     const api = resolved?.api ?? DEFAULT_MODEL.api;
     const supportsReasoning = resolved?.supportsReasoning ?? DEFAULT_MODEL.supportsReasoning;
     const reasoningOn = (reasoning ?? DEFAULT_REASONING) && supportsReasoning;
-    const model = defineChatModel(id, surface, api, reasoningOn);
-    const run = await chatAgent.runs.get(ctx, { runId });
-    if (!run) {
-      await chatAgent.runs.execute(ctx, { runId, model });
-      return;
-    }
+    const modelArgs = chatModelArgs(id, surface, api, reasoningOn);
 
-    const contextBlocks: ContextBlock[] = [];
+    const contextMessages: { role: "system"; content: string }[] = [];
 
-    const query = await latestUserQuery(ctx, run.threadId);
-    const retrieved = query ? await retrievePortfolioContext(ctx, query) : { text: "", images: [] };
+    const userQuery = await latestUserQuery(ctx, threadId);
+    const retrieved = userQuery
+      ? await retrievePortfolioContext(ctx, userQuery)
+      : { text: "", images: [] };
     if (retrieved.text) {
-      contextBlocks.push({
-        type: "text",
-        name: "portfolio_facts",
-        text:
+      contextMessages.push({
+        role: "system",
+        content:
           "Relevant facts about Shahathir Iskandar, retrieved for this question. Ground your " +
           `answer in them; if they do not cover it, say you do not know.\n\n${retrieved.text}`,
       });
     }
     if (retrieved.images.length > 0) {
       const list = retrieved.images.map((image) => `- ${image.title}: ${image.url}`).join("\n");
-      contextBlocks.push({
-        type: "text",
-        name: "portfolio_images",
-        text:
+      contextMessages.push({
+        role: "system",
+        content:
           "Relevant images from Shahathir's portfolio (title: URL), matched to this question. " +
           "If the user wants to see them, asks about a photo/screenshot, or an image clearly " +
           "helps, show the relevant ones as markdown images. CRITICAL formatting rule: put each " +
@@ -311,20 +299,27 @@ export const execute = internalAction({
       });
     }
 
-    const summary = await summarizeOlderTurns(ctx, run.threadId, id, surface, api);
+    const summary = await summarizeOlderTurns(ctx, threadId, id, surface, api);
     if (summary) {
-      contextBlocks.push({
-        type: "text",
-        name: "conversation_summary",
-        text: `Summary of earlier conversation:\n${summary}`,
+      contextMessages.push({
+        role: "system",
+        content: `Summary of earlier conversation:\n${summary}`,
       });
     }
 
-    await chatAgent.runs.execute(ctx, {
-      runId,
-      model,
-      ...(summary ? { recentMessages: KEEP_RECENT_MESSAGES } : {}),
-      ...(contextBlocks.length > 0 ? { context: () => Promise.resolve(contextBlocks) } : {}),
-    });
+    const result = await chatAgent.streamText(
+      ctx,
+      { threadId },
+      {
+        promptMessageId,
+        ...modelArgs,
+        ...(contextMessages.length > 0 ? { messages: contextMessages } : {}),
+      },
+      {
+        saveStreamDeltas: true,
+        ...(summary ? { contextOptions: { recentMessages: KEEP_RECENT_MESSAGES } } : {}),
+      }
+    );
+    await result.consumeStream();
   },
 });

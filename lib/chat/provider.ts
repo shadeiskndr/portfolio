@@ -26,6 +26,7 @@ function rewriteSseLine(line: string): string {
     return line;
   }
   if (event.type !== "response.reasoning.delta") return line;
+  if (typeof event.item_id !== "string" || typeof event.delta !== "string") return line;
   return `data: ${JSON.stringify({
     type: "response.reasoning_summary_text.delta",
     item_id: event.item_id,

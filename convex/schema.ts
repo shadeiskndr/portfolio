@@ -147,7 +147,8 @@ export default defineSchema({
     lastModelId: v.optional(v.string()),
   })
     .index("by_session", ["sessionId"])
-    .index("by_client", ["clientId"]),
+    .index("by_client", ["clientId"])
+    .index("by_thread", ["threadId"]),
 
   chatModels: defineTable({
     modelId: v.string(),
