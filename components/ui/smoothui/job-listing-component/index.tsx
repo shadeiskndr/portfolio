@@ -158,7 +158,7 @@ export default function JobListingComponent({
           <div className="group absolute inset-0 z-10 grid place-items-center">
             <motion.div
               className="flex h-fit w-[90%] max-w-2xl cursor-pointer select-none flex-col items-start gap-4 overflow-hidden border bg-background p-4 shadow-xs"
-              layoutId={shouldReduceMotion ? undefined : `workItem-${activeItem.company}`}
+              {...(shouldReduceMotion ? {} : { layoutId: `workItem-${activeItem.company}` })}
               ref={ref}
               style={{
                 borderRadius: 12,
@@ -180,7 +180,9 @@ export default function JobListingComponent({
             >
               <div className="relative flex w-full items-center gap-4">
                 <motion.div
-                  layoutId={shouldReduceMotion ? undefined : `workItemLogo-${activeItem.company}`}
+                  {...(shouldReduceMotion
+                    ? {}
+                    : { layoutId: `workItemLogo-${activeItem.company}` })}
                   style={{
                     willChange: shouldReduceMotion ? "auto" : "transform",
                     flexShrink: 0,
@@ -237,7 +239,7 @@ export default function JobListingComponent({
             <motion.div
               className="group relative flex w-full cursor-pointer select-none flex-row items-center gap-4 overflow-hidden border bg-background p-2 shadow-xs md:p-4"
               key={role.company}
-              layoutId={shouldReduceMotion ? undefined : `workItem-${role.company}`}
+              {...(shouldReduceMotion ? {} : { layoutId: `workItem-${role.company}` })}
               onClick={() => {
                 setActiveItem(role);
                 if (onJobClick) {
@@ -272,10 +274,10 @@ export default function JobListingComponent({
                       },
                     }
               }
-              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.97 } })}
             >
               <motion.div
-                layoutId={shouldReduceMotion ? undefined : `workItemLogo-${role.company}`}
+                {...(shouldReduceMotion ? {} : { layoutId: `workItemLogo-${role.company}` })}
                 style={{
                   willChange: shouldReduceMotion ? "auto" : "transform",
                   flexShrink: 0,

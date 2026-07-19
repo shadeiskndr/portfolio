@@ -41,7 +41,7 @@ function readArgs(src: string, from: number, n: number): { args: string[]; end: 
   const args: string[] = [];
   let i = from;
   for (let k = 0; k < n; k++) {
-    while (i < src.length && /\s/.test(src[i])) i++;
+    while (i < src.length && /\s/.test(src.charAt(i))) i++;
     if (src[i] !== "{") throw new Error(`Expected '{' for argument ${k + 1}`);
     const { content, end } = matchBalanced(src, i);
     args.push(content);
@@ -52,7 +52,7 @@ function readArgs(src: string, from: number, n: number): { args: string[]; end: 
 
 function extractEmail(s: string): string {
   const href = s.match(/\\href\{mailto:([^}]*)\}/);
-  if (href) return href[1].trim();
+  if (href?.[1]) return href[1].trim();
   const plain = s.match(/[\w.+-]+@[\w.-]+\.\w+/);
   return plain ? plain[0] : "";
 }
@@ -102,10 +102,12 @@ function parseExperience(body: string): Experience[] {
     const m = MACRO_RE.exec(body);
     if (!m) break;
     const cmd = m[1];
+    if (!cmd) break;
+    const argCount = ARG_COUNT[cmd] ?? 0;
     let args: string[];
     let end: number;
     try {
-      ({ args, end } = readArgs(body, m.index + m[0].length, ARG_COUNT[cmd]));
+      ({ args, end } = readArgs(body, m.index + m[0].length, argCount));
     } catch {
       i = m.index + m[0].length;
       continue;
@@ -113,21 +115,22 @@ function parseExperience(body: string): Experience[] {
     i = end;
 
     if (cmd === "resumeSubheading") {
-      role = { title: delatex(args[2]), period: delatex(args[1]), bullets: [] };
-      current = { firm: delatex(args[0]), location: delatex(args[3]), roles: [role] };
+      role = { title: delatex(args[2] ?? ""), period: delatex(args[1] ?? ""), bullets: [] };
+      current = { firm: delatex(args[0] ?? ""), location: delatex(args[3] ?? ""), roles: [role] };
       employers.push(current);
     } else if (cmd === "subheadingSingle") {
-      current = { firm: delatex(args[0]), location: delatex(args[1]), roles: [] };
+      current = { firm: delatex(args[0] ?? ""), location: delatex(args[1] ?? ""), roles: [] };
       role = null;
       employers.push(current);
     } else if (cmd === "resumeSubSubheading" || cmd === "resumeSubRole") {
-      role = { title: delatex(args[0]), period: delatex(args[1]), bullets: [] };
+      role = { title: delatex(args[0] ?? ""), period: delatex(args[1] ?? ""), bullets: [] };
       if (current) current.roles.push(role);
     } else if (cmd === "resumeItem") {
-      if (role) role.bullets.push(delatex(args[0], { bold: true }));
+      if (role) role.bullets.push(delatex(args[0] ?? "", { bold: true }));
     } else if (cmd === "resumeItemWithHeading" || cmd === "resumeItemTwoFields") {
       const joiner = cmd === "resumeItemTwoFields" ? ": " : " ";
-      if (role) role.bullets.push(delatex(args[0] + joiner + args[1], { bold: true }));
+      if (role)
+        role.bullets.push(delatex(`${args[0] ?? ""}${joiner}${args[1] ?? ""}`, { bold: true }));
     }
   }
   return employers.filter((e) => e.roles.length > 0);
@@ -140,10 +143,10 @@ function parseEducation(body: string): Education[] {
     try {
       const { args } = readArgs(body, m.index + m[0].length, 4);
       out.push({
-        degree: delatex(args[0]),
-        period: delatex(args[1]),
-        institution: delatex(args[2]),
-        location: delatex(args[3]),
+        degree: delatex(args[0] ?? ""),
+        period: delatex(args[1] ?? ""),
+        institution: delatex(args[2] ?? ""),
+        location: delatex(args[3] ?? ""),
       });
     } catch {}
   }
@@ -216,7 +219,7 @@ export function parseTex(source: string): ResumeData {
   const secs: { title: string; matchStart: number; contentStart: number }[] = [];
   for (const m of region.matchAll(secRe)) {
     secs.push({
-      title: delatex(m[1]).toLowerCase(),
+      title: delatex(m[1] ?? "").toLowerCase(),
       matchStart: m.index,
       contentStart: m.index + m[0].length,
     });
@@ -228,14 +231,15 @@ export function parseTex(source: string): ResumeData {
   const docEnd = region.indexOf("\\end{document}");
   const bodyOf = (needle: string): string => {
     const idx = secs.findIndex((s) => s.title.includes(needle));
-    if (idx < 0) return "";
-    const start = secs[idx].contentStart;
-    const end =
-      idx + 1 < secs.length ? secs[idx + 1].matchStart : docEnd >= 0 ? docEnd : region.length;
+    const sec = idx < 0 ? undefined : secs[idx];
+    if (!sec) return "";
+    const start = sec.contentStart;
+    const next = secs[idx + 1];
+    const end = next ? next.matchStart : docEnd >= 0 ? docEnd : region.length;
     return region.slice(start, end);
   };
 
-  const heading = parseHeading(region.slice(0, secs[0].matchStart));
+  const heading = parseHeading(region.slice(0, secs[0]?.matchStart ?? 0));
 
   const draft: ResumeData = {
     ...heading,

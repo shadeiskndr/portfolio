@@ -112,7 +112,7 @@ type Commit = Doc<"commits">;
 
 type FileEntry = {
   path: string;
-  prevPath?: string;
+  prevPath?: string | undefined;
   status: string;
   additions: number;
   deletions: number;
@@ -139,7 +139,7 @@ type ThemeOption = {
 
 const SWATCH_KEYS: (keyof ThemeSwatch)[] = ["background", "foreground", "selection"];
 
-const THEMES: ThemeOption[] = [
+const THEMES: [ThemeOption, ...ThemeOption[]] = [
   {
     key: "github",
     label: "GitHub",
@@ -339,6 +339,7 @@ function buildFileTree(files: FileEntry[]): TreeItem[] {
     let current = root;
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
+      if (part === undefined) continue;
       const folderPath = parts.slice(0, i + 1).join("/");
       let folder = current.children.find(
         (c): c is TreeFolderNode => c.type === "folder" && c.name === part
@@ -604,7 +605,7 @@ function FileDiff({
       sha: commitSha,
       parentSha,
       path: file.path,
-      prevPath: file.prevPath,
+      ...(file.prevPath !== undefined && { prevPath: file.prevPath }),
       status: file.status,
     }).catch((e: unknown) => {
       setBlobError(e instanceof Error ? e.message : "Failed to load file");

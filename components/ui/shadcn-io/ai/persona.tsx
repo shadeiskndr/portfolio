@@ -191,14 +191,22 @@ export const Persona: FC<PersonaProps> = memo(
 
     const stableCallbacks = useMemo(
       () => ({
-        onLoad: ((loadedRive) =>
-          callbacksRef.current.onLoad?.(loadedRive)) as RiveParameters["onLoad"],
-        onLoadError: ((err) =>
-          callbacksRef.current.onLoadError?.(err)) as RiveParameters["onLoadError"],
+        onLoad: ((loadedRive) => callbacksRef.current.onLoad?.(loadedRive)) as NonNullable<
+          RiveParameters["onLoad"]
+        >,
+        onLoadError: ((err) => callbacksRef.current.onLoadError?.(err)) as NonNullable<
+          RiveParameters["onLoadError"]
+        >,
         onReady: () => callbacksRef.current.onReady?.(),
-        onPause: ((event) => callbacksRef.current.onPause?.(event)) as RiveParameters["onPause"],
-        onPlay: ((event) => callbacksRef.current.onPlay?.(event)) as RiveParameters["onPlay"],
-        onStop: ((event) => callbacksRef.current.onStop?.(event)) as RiveParameters["onStop"],
+        onPause: ((event) => callbacksRef.current.onPause?.(event)) as NonNullable<
+          RiveParameters["onPause"]
+        >,
+        onPlay: ((event) => callbacksRef.current.onPlay?.(event)) as NonNullable<
+          RiveParameters["onPlay"]
+        >,
+        onStop: ((event) => callbacksRef.current.onStop?.(event)) as NonNullable<
+          RiveParameters["onStop"]
+        >,
       }),
       []
     );
@@ -207,9 +215,11 @@ export const Persona: FC<PersonaProps> = memo(
       src: source.source,
       stateMachines: stateMachine,
       autoplay: true,
-      onLoad: stableCallbacks.onLoad,
-      onLoadError: stableCallbacks.onLoadError,
-      onRiveReady: stableCallbacks.onReady,
+      ...(stableCallbacks.onLoad !== undefined && { onLoad: stableCallbacks.onLoad }),
+      ...(stableCallbacks.onLoadError !== undefined && {
+        onLoadError: stableCallbacks.onLoadError,
+      }),
+      ...(stableCallbacks.onReady !== undefined && { onRiveReady: stableCallbacks.onReady }),
       onPause: stableCallbacks.onPause,
       onPlay: stableCallbacks.onPlay,
       onStop: stableCallbacks.onStop,

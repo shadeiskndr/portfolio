@@ -42,7 +42,7 @@ const SHADCN_SHADOW_VARS = {
   "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
 };
 
-export const COLOR_THEMES: ThemeOption[] = [
+export const COLOR_THEMES: [ThemeOption, ...ThemeOption[]] = [
   {
     id: "default",
     label: "Default",

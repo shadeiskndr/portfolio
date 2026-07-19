@@ -33,10 +33,10 @@ import { cn } from "@/lib/utils";
 
 type PostItData = {
   title: string;
-  body?: string;
-  author?: string;
-  color?: IdeaColor;
-  rotation?: number;
+  body?: string | undefined;
+  author?: string | undefined;
+  color?: IdeaColor | undefined;
+  rotation?: number | undefined;
 };
 
 type PostItNodeType = Node<PostItData, "postit">;

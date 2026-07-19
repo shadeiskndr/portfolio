@@ -166,6 +166,7 @@ export function MiddleTruncation({
     const debouncedRecalculate = debounceWithRAF(recalculate, 150);
 
     const ro = new ResizeObserver(([entry]) => {
+      if (!entry) return;
       debouncedRecalculate(entry.contentRect.width);
     });
 

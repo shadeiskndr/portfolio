@@ -48,6 +48,9 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
+      "complexity": {
+        "useLiteralKeys": "off"
+      },
       "suspicious": {
         "noEmptyInterface": "off",
         "noArrayIndexKey": "off"
@@ -73,7 +76,9 @@
   "overrides": [
     {
       "includes": ["**/*.config.js", "**/*.config.mjs", "**/*.config.cjs", "**/*.config.ts"],
-      "formatter": { "enabled": false }
+      "formatter": {
+        "enabled": false
+      }
     },
     {
       "includes": ["components/ui/**", "hooks/**"],

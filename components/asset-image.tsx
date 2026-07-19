@@ -33,34 +33,29 @@ export function AssetImage({
   const asset = useAsset(assetKey);
   if (!asset) return null;
 
+  const common = {
+    alt,
+    src: asset.url,
+    ...(ariaHidden !== undefined && { "aria-hidden": ariaHidden }),
+    ...(className !== undefined && { className }),
+    ...(priority !== undefined && { priority }),
+    ...(sizes !== undefined && { sizes }),
+    ...(style !== undefined && { style }),
+    ...(unoptimized !== undefined && { unoptimized }),
+  };
+
   if (fill) {
-    return (
-      <Image
-        alt={alt}
-        aria-hidden={ariaHidden}
-        className={className}
-        fill
-        priority={priority}
-        sizes={sizes}
-        src={asset.url}
-        style={style}
-        unoptimized={unoptimized}
-      />
-    );
+    return <Image {...common} fill />;
   }
+
+  const resolvedWidth = width ?? asset.width ?? undefined;
+  const resolvedHeight = height ?? asset.height ?? undefined;
 
   return (
     <Image
-      alt={alt}
-      aria-hidden={ariaHidden}
-      className={className}
-      height={height ?? asset.height ?? undefined}
-      priority={priority}
-      sizes={sizes}
-      src={asset.url}
-      style={style}
-      unoptimized={unoptimized}
-      width={width ?? asset.width ?? undefined}
+      {...common}
+      {...(resolvedWidth !== undefined && { width: resolvedWidth })}
+      {...(resolvedHeight !== undefined && { height: resolvedHeight })}
     />
   );
 }

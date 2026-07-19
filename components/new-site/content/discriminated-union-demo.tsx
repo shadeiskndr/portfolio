@@ -67,7 +67,7 @@ function validate(source: string): Result {
 }
 
 export function DiscriminatedUnionDemo() {
-  const [source, setSource] = useState(EXAMPLES[1].json);
+  const [source, setSource] = useState(EXAMPLES[1]?.json ?? "");
   const result = useMemo(() => validate(source), [source]);
 
   return (

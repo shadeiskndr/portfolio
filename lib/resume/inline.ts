@@ -10,7 +10,7 @@ export function parseInline(input: string): InlineSegment[] {
   for (const m of protectedInput.matchAll(re)) {
     const idx = m.index ?? 0;
     if (idx > last) segments.push({ text: protectedInput.slice(last, idx), bold: false });
-    segments.push({ text: m[1], bold: true });
+    segments.push({ text: m[1] ?? "", bold: true });
     last = idx + m[0].length;
   }
   if (last < protectedInput.length) {

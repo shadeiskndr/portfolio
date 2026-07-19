@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
-import { type CSSProperties, type ElementType, type JSX, memo, useMemo } from "react";
+import { type MotionStyle, motion } from "motion/react";
+import { type ElementType, type JSX, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 export interface TextShimmerProps {
@@ -40,7 +40,7 @@ const ShimmerComponent = ({
           "--spread": `${dynamicSpread}px`,
           backgroundImage:
             "var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))",
-        } as CSSProperties
+        } as MotionStyle
       }
       transition={{
         repeat: Number.POSITIVE_INFINITY,

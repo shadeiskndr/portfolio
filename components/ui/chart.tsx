@@ -124,9 +124,9 @@ const TooltipLabel = React.memo(function TooltipLabel({
     >,
   "payload" | "label" | "labelFormatter"
 > & {
-  hideLabel?: boolean;
-  labelClassName?: string;
-  labelKey?: string;
+  hideLabel?: boolean | undefined;
+  labelClassName?: string | undefined;
+  labelKey?: string | undefined;
   config: ChartConfig;
 }) {
   if (hideLabel || !payload?.length) {
@@ -188,10 +188,10 @@ function ChartTooltipContent({
     <TooltipLabel
       hideLabel={hideLabel}
       payload={payload}
-      label={label}
-      labelFormatter={labelFormatter}
-      labelClassName={labelClassName}
-      labelKey={labelKey}
+      {...(label !== undefined && { label })}
+      {...(labelFormatter !== undefined && { labelFormatter })}
+      {...(labelClassName !== undefined && { labelClassName })}
+      {...(labelKey !== undefined && { labelKey })}
       config={config}
     />
   );

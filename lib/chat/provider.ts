@@ -6,7 +6,7 @@ export const EMBEDDING_MODEL_ID = "amazon.nova-2-multimodal-embeddings-v1:0";
 export const EMBEDDING_DIMENSION = 1024;
 
 export function getEmbeddingModel() {
-  const region = process.env.AWS_EMBEDDING_REGION ?? process.env.AWS_REGION ?? "us-east-1";
+  const region = process.env["AWS_EMBEDDING_REGION"] ?? process.env["AWS_REGION"] ?? "us-east-1";
   return createAmazonBedrock({ region }).embeddingModel(EMBEDDING_MODEL_ID);
 }
 
@@ -72,14 +72,15 @@ export function getChatModel(
   surface: ChatModel["surface"],
   api: ChatModel["api"]
 ) {
-  const region = process.env.AWS_REGION ?? "us-east-1";
+  const region = process.env["AWS_REGION"] ?? "us-east-1";
   if (surface === "converse") {
     return createAmazonBedrock({ region })(modelId);
   }
   const bedrockMantle = createBedrockMantle({
     region,
     baseURL:
-      process.env.BEDROCK_MANTLE_BASE_URL ?? `https://bedrock-mantle.${region}.api.aws/openai/v1`,
+      process.env["BEDROCK_MANTLE_BASE_URL"] ??
+      `https://bedrock-mantle.${region}.api.aws/openai/v1`,
     fetch: bridgeReasoningFetch as typeof fetch,
   });
   return api === "chat" ? bedrockMantle.chat(modelId) : bedrockMantle.responses(modelId);

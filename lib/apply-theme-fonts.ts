@@ -34,7 +34,7 @@ function parseFontFamily(value: string): string | null {
   if (trimmed.startsWith("var(")) return null;
 
   const match = trimmed.match(/^["']?([^,"']+)/);
-  const name = (match ? match[1] : (trimmed.split(",")[0] ?? "")).trim();
+  const name = (match?.[1] ?? trimmed.split(",")[0] ?? "").trim();
   if (!name) return null;
   if (GENERIC_FAMILIES.has(name.toLowerCase())) return null;
   return name;

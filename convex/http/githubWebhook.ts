@@ -47,7 +47,7 @@ export function registerGithubWebhook(http: HttpRouter) {
     path: "/github/webhook",
     method: "POST",
     handler: httpAction(async (ctx, request) => {
-      const secret = process.env.GITHUB_WEBHOOK_SECRET;
+      const secret = process.env["GITHUB_WEBHOOK_SECRET"];
       if (!secret) {
         return new Response("server not configured", { status: 500 });
       }
@@ -71,7 +71,7 @@ export function registerGithubWebhook(http: HttpRouter) {
         ? (new URLSearchParams(rawBody).get("payload") ?? rawBody)
         : rawBody;
       const payload = JSON.parse(payloadText) as GitHubPushPayload;
-      const trackedRef = `refs/heads/${process.env.GITHUB_BRANCH ?? "main"}`;
+      const trackedRef = `refs/heads/${process.env["GITHUB_BRANCH"] ?? "main"}`;
       if (payload.ref !== trackedRef) {
         return new Response("ignored branch", { status: 200 });
       }

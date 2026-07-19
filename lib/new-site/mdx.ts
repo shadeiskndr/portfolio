@@ -9,9 +9,9 @@ export type PostCategory = "thoughts" | "til" | "readings";
 export type PostFrontmatter = {
   title: string;
   date: string;
-  summary?: string;
-  tags?: string[];
-  draft?: boolean;
+  summary?: string | undefined;
+  tags?: string[] | undefined;
+  draft?: boolean | undefined;
 };
 
 export type PostMeta = PostFrontmatter & {
@@ -63,7 +63,7 @@ export async function getAllPosts(category: PostCategory): Promise<PostMeta[]> {
 
   return posts
     .filter((p): p is Post => p !== null)
-    .filter((p) => (process.env.NODE_ENV === "production" ? !p.draft : true))
+    .filter((p) => (process.env["NODE_ENV"] === "production" ? !p.draft : true))
     .sort((a, b) => (a.date < b.date ? 1 : -1))
     .map(({ content: _content, ...meta }) => meta);
 }

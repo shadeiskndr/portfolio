@@ -212,7 +212,7 @@ export function GithubCalendar({
                             shapeClass,
                             isMinimal && "scale-75 rounded-full"
                           )}
-                          style={glowStyle}
+                          {...(glowStyle !== undefined && { style: glowStyle })}
                         />
                       }
                     />

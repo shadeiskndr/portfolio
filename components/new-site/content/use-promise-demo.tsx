@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 type Profile = { name: string; team: string; commits: number };
 
-const PEOPLE: Profile[] = [
+const PEOPLE: [Profile, ...Profile[]] = [
   { name: "Ada", team: "Systems", commits: 1287 },
   { name: "Grace", team: "Compilers", commits: 964 },
   { name: "Alan", team: "Theory", commits: 512 },
@@ -15,7 +15,7 @@ const PEOPLE: Profile[] = [
 let seq = 0;
 
 function loadProfile(): Promise<Profile> {
-  const person = PEOPLE[seq++ % PEOPLE.length];
+  const person = PEOPLE[seq++ % PEOPLE.length] ?? PEOPLE[0];
   return new Promise((resolve) => setTimeout(() => resolve(person), 1200));
 }
 

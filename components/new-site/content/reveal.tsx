@@ -59,7 +59,7 @@ export function RevealHighlight({
       padding={isUnderline ? 3 : 1}
       iterations={2}
       animationDuration={700}
-      className={className}
+      {...(className !== undefined && { className })}
     >
       {children}
     </Highlighter>

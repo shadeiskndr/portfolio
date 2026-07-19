@@ -307,7 +307,7 @@ const PromptInputAttachmentsDisplay = () => {
 };
 
 export function ChatbotDemo() {
-  const [model, setModel] = useState<string>(models[0].id);
+  const [model, setModel] = useState<string>(models[0]?.id ?? "");
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const [text, setText] = useState<string>("");
   const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
@@ -366,7 +366,8 @@ export function ChatbotDemo() {
 
       setTimeout(() => {
         const assistantMessageId = `assistant-${Date.now()}`;
-        const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+        const randomResponse =
+          mockResponses[Math.floor(Math.random() * mockResponses.length)] ?? "";
 
         const assistantMessage: MessageType = {
           key: `assistant-${Date.now()}`,

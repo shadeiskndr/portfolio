@@ -91,7 +91,7 @@ function ResponsiveDialogTrigger({ asChild, children, ...props }: TriggerProps) 
   const { isMobile } = useResponsiveDialog();
   if (isMobile) {
     return (
-      <DrawerTrigger data-variant="drawer" asChild={asChild} {...props}>
+      <DrawerTrigger data-variant="drawer" {...(asChild !== undefined && { asChild })} {...props}>
         {children}
       </DrawerTrigger>
     );
@@ -110,7 +110,7 @@ function ResponsiveDialogClose({ asChild, children, ...props }: TriggerProps) {
   const { isMobile } = useResponsiveDialog();
   if (isMobile) {
     return (
-      <DrawerClose data-variant="drawer" asChild={asChild} {...props}>
+      <DrawerClose data-variant="drawer" {...(asChild !== undefined && { asChild })} {...props}>
         {children}
       </DrawerClose>
     );
@@ -179,7 +179,7 @@ function ResponsiveDialogFooter({
     <DialogFooter
       data-variant="dialog"
       className={className}
-      showCloseButton={showCloseButton}
+      {...(showCloseButton !== undefined && { showCloseButton })}
       {...props}
     />
   );

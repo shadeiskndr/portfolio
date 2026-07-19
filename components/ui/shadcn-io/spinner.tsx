@@ -273,7 +273,7 @@ export function Demo() {
     <div className="grid grid-cols-4 gap-8 p-8">
       {variants.map((variant) => (
         <div key={variant} className="flex flex-col items-center gap-2">
-          <Spinner variant={variant} size={32} />
+          <Spinner {...(variant !== undefined && { variant })} size={32} />
           <span className="text-muted-foreground text-xs">{variant}</span>
         </div>
       ))}

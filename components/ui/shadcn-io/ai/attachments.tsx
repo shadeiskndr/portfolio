@@ -75,7 +75,7 @@ const AttachmentsContext = createContext<AttachmentsContextValue | null>(null);
 interface AttachmentContextValue {
   data: AttachmentData;
   mediaCategory: AttachmentMediaCategory;
-  onRemove?: () => void;
+  onRemove?: (() => void) | undefined;
   variant: AttachmentVariant;
 }
 
@@ -422,17 +422,19 @@ export default function AttachmentsDemo() {
           <span className="text-muted-foreground text-xs">Full details with media type</span>
         </div>
         <Attachments variant="list">
-          {[imageAttachments[0], ...mixedAttachments.slice(0, 2)].map((attachment) => (
-            <Attachment
-              key={attachment.id}
-              data={attachment}
-              onRemove={() => console.log("Remove", attachment.id)}
-            >
-              <AttachmentPreview />
-              <AttachmentInfo showMediaType />
-              <AttachmentRemove />
-            </Attachment>
-          ))}
+          {[imageAttachments[0], ...mixedAttachments.slice(0, 2)]
+            .filter((attachment): attachment is AttachmentData => attachment !== undefined)
+            .map((attachment) => (
+              <Attachment
+                key={attachment.id}
+                data={attachment}
+                onRemove={() => console.log("Remove", attachment.id)}
+              >
+                <AttachmentPreview />
+                <AttachmentInfo showMediaType />
+                <AttachmentRemove />
+              </Attachment>
+            ))}
         </Attachments>
       </div>
     </div>

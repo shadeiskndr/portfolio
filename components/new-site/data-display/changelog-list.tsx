@@ -243,7 +243,7 @@ function CommitRowAnchor({ commit, onOpen }: { commit: Commit; onOpen: (commit: 
       <span
         className={cn(
           "w-14 shrink-0 font-mono text-[10px] tracking-wider transition-colors sm:w-16",
-          TYPE_BADGE_CLASS[commit.type] ?? TYPE_BADGE_CLASS.other
+          TYPE_BADGE_CLASS[commit.type] ?? TYPE_BADGE_CLASS["other"]
         )}
       >
         {TYPE_LABELS[commit.type] ?? "OTHER"}

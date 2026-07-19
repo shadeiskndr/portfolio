@@ -44,7 +44,7 @@ export default function PhotoGallery({
             height={photo.height}
             index={index}
             key={photo.src}
-            layoutId={layoutIds[index]}
+            layoutId={layoutIds[index] ?? ""}
             onClick={() => handleOpen(index)}
             src={photo.src}
             title={photo.title}
@@ -54,7 +54,7 @@ export default function PhotoGallery({
       </div>
       <ImageModal
         activeIndex={activeIndex}
-        morphLayoutId={openedFromIndex !== null ? layoutIds[openedFromIndex] : null}
+        morphLayoutId={openedFromIndex !== null ? (layoutIds[openedFromIndex] ?? null) : null}
         onClose={() => setActiveIndex(null)}
         onNavigate={setActiveIndex}
         photos={photos}
@@ -210,7 +210,7 @@ function ImageModal({
             {activePhoto ? (
               <m.div
                 className="pointer-events-auto relative max-h-full max-w-full overflow-hidden rounded-2xl shadow-2xl"
-                layoutId={morphLayoutId ?? undefined}
+                {...(morphLayoutId ? { layoutId: morphLayoutId } : {})}
                 style={{
                   aspectRatio: `${activePhoto.width} / ${activePhoto.height}`,
                   height: "min(100%, calc((100vh - 240px)))",

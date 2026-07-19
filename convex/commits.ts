@@ -36,10 +36,10 @@ function parseCommitMessage(raw: string): ParsedCommit {
   const stripped = firstLine.replace(/^[^\p{L}]+/u, "").trim();
   const match = stripped.match(TYPE_RE);
   if (match) {
-    const type = match[1].toLowerCase();
+    const type = (match[1] ?? "").toLowerCase();
     return {
       type,
-      subject: match[2].trim(),
+      subject: (match[2] ?? "").trim(),
       noise: NOISE_TYPES.has(type),
     };
   }
@@ -51,8 +51,8 @@ function parseCommitMessage(raw: string): ParsedCommit {
 }
 
 function repoUrl(): string {
-  const owner = process.env.GITHUB_OWNER;
-  const repo = process.env.GITHUB_REPO;
+  const owner = process.env["GITHUB_OWNER"];
+  const repo = process.env["GITHUB_REPO"];
   if (!(owner && repo)) {
     throw new Error("GITHUB_OWNER / GITHUB_REPO env vars missing");
   }
@@ -126,8 +126,8 @@ export const backfillFromGitHub = internalAction({
     ctx,
     { perPage = 100, maxPages = 20 }
   ): Promise<{ inserted: number; received: number }> => {
-    const owner = process.env.GITHUB_OWNER;
-    const repo = process.env.GITHUB_REPO;
+    const owner = process.env["GITHUB_OWNER"];
+    const repo = process.env["GITHUB_REPO"];
     if (!(owner && repo)) {
       throw new Error("GITHUB_OWNER / GITHUB_REPO env vars missing");
     }
@@ -136,8 +136,8 @@ export const backfillFromGitHub = internalAction({
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
     };
-    const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
-    if (token) headers.Authorization = `Bearer ${token}`;
+    const token = process.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
+    if (token) headers["Authorization"] = `Bearer ${token}`;
 
     let totalInserted = 0;
     let totalReceived = 0;
@@ -208,7 +208,7 @@ export const counts = query({
 
 export type CommitFile = {
   path: string;
-  prevPath?: string;
+  prevPath?: string | undefined;
   status: string;
   additions: number;
   deletions: number;
@@ -230,7 +230,7 @@ const JSON_HEADERS: Record<string, string> = {
 };
 
 function ghHeaders(base: Record<string, string>): Record<string, string> {
-  const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+  const token = process.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
   return token ? { ...base, Authorization: `Bearer ${token}` } : { ...base };
 }
 
@@ -243,7 +243,7 @@ function isRateLimited(res: Response): boolean {
 function rateLimitError(res: Response): Error {
   const reset = res.headers.get("x-ratelimit-reset");
   const resetAt = reset ? new Date(Number(reset) * 1000).toLocaleTimeString() : "later";
-  const authed = !!process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+  const authed = !!process.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
   const hint = authed
     ? ""
     : " (set GITHUB_PERSONAL_ACCESS_TOKEN in Convex env to raise the 60/hr unauth limit to 5000/hr)";
@@ -251,8 +251,8 @@ function rateLimitError(res: Response): Error {
 }
 
 function ghRepo(): { owner: string; repo: string } {
-  const owner = process.env.GITHUB_OWNER;
-  const repo = process.env.GITHUB_REPO;
+  const owner = process.env["GITHUB_OWNER"];
+  const repo = process.env["GITHUB_REPO"];
   if (!(owner && repo)) {
     throw new Error("GITHUB_OWNER / GITHUB_REPO env vars missing");
   }

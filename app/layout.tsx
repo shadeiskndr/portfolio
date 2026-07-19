@@ -73,7 +73,7 @@ export const metadata: Metadata = {
   },
 };
 
-const umamiWebsiteId = process.env.UMAMI_WEBSITE_ID;
+const umamiWebsiteId = process.env["UMAMI_WEBSITE_ID"];
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const preloadedAssets = await preloadQuery(api.assets.list, {});
@@ -106,7 +106,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
       </head>
       <body className="antialiased">
-        {process.env.NODE_ENV === "development" ? <HideDevIndicator /> : null}
+        {process.env["NODE_ENV"] === "development" ? <HideDevIndicator /> : null}
         <ConvexClientProvider>
           <AssetsProvider preloaded={preloadedAssets}>
             <QueryProvider>

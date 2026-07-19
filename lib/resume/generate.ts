@@ -38,8 +38,9 @@ function bulletsCall(items: string[]): string {
 }
 
 function experienceBlock(e: Experience): string {
-  if (e.roles.length === 1) {
-    const r = e.roles[0];
+  const onlyRole = e.roles.length === 1 ? e.roles[0] : undefined;
+  if (onlyRole) {
+    const r = onlyRole;
     return `#block(above: 7pt, below: 7pt)[
   #firmline(${S(e.firm)}, ${S(r.period)})
   #roleline(${S(r.title)}, ${S(e.location)})${bulletsCall(r.bullets)}

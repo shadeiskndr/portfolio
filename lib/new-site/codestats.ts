@@ -17,7 +17,7 @@ export function toDayKey(date: Date): string {
 }
 
 export function fromDayKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
+  const [year = 0, month = 1, day = 1] = key.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
@@ -80,7 +80,10 @@ export function computeStreaks(
   if (lastKey && daysBetween(today, fromDayKey(lastKey)) <= 1) {
     current = 1;
     for (let i = keys.length - 1; i > 0; i--) {
-      if (daysBetween(fromDayKey(keys[i]), fromDayKey(keys[i - 1])) !== 1) break;
+      const cur = keys[i];
+      const prev = keys[i - 1];
+      if (!(cur && prev)) break;
+      if (daysBetween(fromDayKey(cur), fromDayKey(prev)) !== 1) break;
       current++;
     }
   }
@@ -151,9 +154,9 @@ export function buildLanguages(
   all.sort((a, b) => b.xp - a.xp || a.name.localeCompare(b.name));
 
   let otherXp = 0;
-  for (let i = 0; i < all.length; i++) {
-    all[i].share = total > 0 ? all[i].xp / total : 0;
-    if (i >= topN) otherXp += all[i].xp;
+  for (const [i, entry] of all.entries()) {
+    entry.share = total > 0 ? entry.xp / total : 0;
+    if (i >= topN) otherXp += entry.xp;
   }
 
   return {
@@ -190,7 +193,7 @@ export type CalendarCell = {
 
 export type Calendar = {
   weeks: CalendarCell[][];
-  thresholds: number[];
+  thresholds: [number, number, number];
   totalXp: number;
 };
 
@@ -225,8 +228,8 @@ export function buildCalendar(
   }
   values.sort((a, b) => a - b);
 
-  const quantile = (q: number) => (values.length ? values[Math.floor((values.length - 1) * q)] : 0);
-  const thresholds = [quantile(0.25), quantile(0.5), quantile(0.75)];
+  const quantile = (q: number) => values[Math.floor((values.length - 1) * q)] ?? 0;
+  const thresholds: [number, number, number] = [quantile(0.25), quantile(0.5), quantile(0.75)];
 
   const weeks: CalendarCell[][] = [];
   for (let week = 0; week < weekCount; week++) {
@@ -243,7 +246,7 @@ export function buildCalendar(
   return { weeks, thresholds, totalXp };
 }
 
-function levelFor(xp: number, thresholds: number[]): number {
+function levelFor(xp: number, thresholds: [number, number, number]): number {
   if (xp <= 0) return 0;
   if (xp <= thresholds[0]) return 1;
   if (xp <= thresholds[1]) return 2;
@@ -362,7 +365,7 @@ export function formatDayLong(key: string): string {
 }
 
 export function formatMonthShort(key: string): string {
-  return MONTH_NAMES[Number(key.split("-")[1]) - 1];
+  return MONTH_NAMES[Number(key.split("-")[1]) - 1] ?? "";
 }
 
 export function isSameMonth(a: string, b: string): boolean {

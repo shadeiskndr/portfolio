@@ -462,7 +462,7 @@ export type UsesEntry = { label: string; value: string };
 export type UsesRig = { id: string; label: string; rows: UsesEntry[] };
 export type UsesSectionData = { title: string; rows: UsesEntry[] };
 
-export const USES_RIGS: UsesRig[] = [
+export const USES_RIGS: [UsesRig, ...UsesRig[]] = [
   {
     id: "laptop",
     label: "Laptop",

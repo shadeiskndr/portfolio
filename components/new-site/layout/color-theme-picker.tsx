@@ -78,7 +78,7 @@ export default function ColorThemePicker({
           open={sheetOpen}
           onOpenChange={setSheetOpen}
           title="Color theme"
-          description={selectedTheme ? `Currently ${selectedTheme.label}.` : undefined}
+          {...(selectedTheme ? { description: `Currently ${selectedTheme.label}.` } : {})}
           contentClassName="px-0 pt-0"
         >
           <ThemeCommand

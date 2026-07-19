@@ -51,6 +51,7 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
     }
 
     const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
       const boxProp =
         box === "border-box"
           ? "borderBoxSize"

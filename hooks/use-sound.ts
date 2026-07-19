@@ -97,6 +97,7 @@ export function playClick(variant: SoundVariant = "mouse") {
   }
   const audio = pool.audios[pool.cursor % pool.audios.length];
   pool.cursor += 1;
+  if (!audio) return;
   try {
     audio.currentTime = 0;
     void audio.play();

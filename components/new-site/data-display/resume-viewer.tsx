@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 
 const PDFJS_BASE =
-  process.env.NODE_ENV === "production"
+  process.env["NODE_ENV"] === "production"
     ? "/pdfjs"
     : `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}`;
 

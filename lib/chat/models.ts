@@ -7,6 +7,7 @@ export interface ChatModel {
   surface: "mantle" | "converse";
   api: "responses" | "chat";
   supportsReasoning: boolean;
+  supportsTools: boolean;
 }
 
 export const CHAT_MODELS = [
@@ -19,6 +20,7 @@ export const CHAT_MODELS = [
     surface: "mantle",
     api: "responses",
     supportsReasoning: true,
+    supportsTools: true,
   },
   {
     id: "google.gemma-4-26b-a4b",
@@ -29,6 +31,7 @@ export const CHAT_MODELS = [
     surface: "mantle",
     api: "responses",
     supportsReasoning: true,
+    supportsTools: false,
   },
   {
     id: "google.gemma-4-31b",
@@ -39,6 +42,7 @@ export const CHAT_MODELS = [
     surface: "mantle",
     api: "responses",
     supportsReasoning: true,
+    supportsTools: true,
   },
   {
     id: "zai.glm-4.7-flash",
@@ -49,26 +53,29 @@ export const CHAT_MODELS = [
     surface: "converse",
     api: "chat",
     supportsReasoning: false,
+    supportsTools: true,
   },
   {
-    id: "openai.gpt-oss-120b",
+    id: "openai.gpt-oss-120b-1:0",
     name: "GPT OSS 120B",
     provider: "OpenAI",
     contextTokens: 131_072,
     pricing: { inputPer1M: 0.15, outputPer1M: 0.6 },
-    surface: "mantle",
+    surface: "converse",
     api: "responses",
     supportsReasoning: true,
+    supportsTools: true,
   },
   {
-    id: "openai.gpt-oss-20b",
+    id: "openai.gpt-oss-20b-1:0",
     name: "GPT OSS 20B",
     provider: "OpenAI",
     contextTokens: 131_072,
     pricing: { inputPer1M: 0.07, outputPer1M: 0.3 },
-    surface: "mantle",
+    surface: "converse",
     api: "responses",
     supportsReasoning: true,
+    supportsTools: true,
   },
 ] as const satisfies readonly ChatModel[];
 

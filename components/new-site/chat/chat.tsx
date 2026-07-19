@@ -113,7 +113,7 @@ type MergedToolCall = {
   state: ToolUIPart["state"];
   input: unknown;
   output: unknown;
-  errorText?: string;
+  errorText?: string | undefined;
 };
 
 const TOOL_STATE_RANK: Record<ToolUIPart["state"], number> = {
@@ -422,7 +422,13 @@ function ChatSession({
     const text = message.text?.trim();
     if (!text || isBusy || !clientId) return;
     setPending(true);
-    sendMessage({ sessionId, clientId, text, modelId, reasoning })
+    sendMessage({
+      sessionId,
+      clientId,
+      text,
+      reasoning,
+      ...(modelId !== undefined && { modelId }),
+    })
       .catch((error: unknown) => {
         toast.error(error instanceof Error ? error.message : "Chat request failed");
       })

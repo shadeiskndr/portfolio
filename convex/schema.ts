@@ -159,6 +159,7 @@ export default defineSchema({
     surface: v.optional(v.union(v.literal("mantle"), v.literal("converse"))),
     api: v.union(v.literal("responses"), v.literal("chat")),
     supportsReasoning: v.optional(v.boolean()),
+    supportsTools: v.optional(v.boolean()),
     isDefault: v.boolean(),
     order: v.number(),
   })

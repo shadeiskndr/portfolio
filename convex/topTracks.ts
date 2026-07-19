@@ -90,10 +90,14 @@ export const refreshTopTracks = internalAction({
         song: item.name,
         artist: item.artists.map((a) => a.name).join(", "),
         album: item.album.name,
-        albumArtUrl: item.album.images[0]?.url,
+        ...(item.album.images[0]?.url !== undefined && {
+          albumArtUrl: item.album.images[0]?.url,
+        }),
         url: item.external_urls?.spotify ?? `https://open.spotify.com/track/${item.id}`,
         durationMs: item.duration_ms,
-        releaseDate: item.album.release_date,
+        ...(item.album.release_date !== undefined && {
+          releaseDate: item.album.release_date,
+        }),
       }));
 
       if (tracks.length === 0) continue;

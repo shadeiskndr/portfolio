@@ -27,12 +27,12 @@ async function loadTilPosts(): Promise<TilPostInput[]> {
   const posts = await Promise.all(
     files.map(async (file): Promise<TilPostInput | null> => {
       const { data, content } = matter(await readFile(path.join(dir, file), "utf-8"));
-      if (data.draft) return null;
+      if (data["draft"]) return null;
       return {
         slug: file.replace(/\.mdx$/, ""),
-        title: String(data.title ?? file),
-        summary: data.summary ? String(data.summary) : undefined,
-        tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
+        title: String(data["title"] ?? file),
+        summary: data["summary"] ? String(data["summary"]) : undefined,
+        tags: Array.isArray(data["tags"]) ? data["tags"].map(String) : undefined,
         body: content,
       };
     })

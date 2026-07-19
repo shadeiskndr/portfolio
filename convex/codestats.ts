@@ -14,7 +14,7 @@ export type CodestatsProfileData = {
 export const refreshProfile = internalAction({
   args: {},
   handler: async (ctx) => {
-    const username = process.env.CODESTATS_USERNAME;
+    const username = process.env["CODESTATS_USERNAME"];
     if (!username) {
       throw new Error("CODESTATS_USERNAME missing");
     }

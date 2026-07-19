@@ -11,9 +11,9 @@ export default function BottomDock() {
   const hidden = useHideOnScroll();
 
   useEffect(() => {
-    document.documentElement.dataset.dockHidden = hidden ? "true" : "false";
+    document.documentElement.dataset["dockHidden"] = hidden ? "true" : "false";
     return () => {
-      delete document.documentElement.dataset.dockHidden;
+      delete document.documentElement.dataset["dockHidden"];
     };
   }, [hidden]);
 

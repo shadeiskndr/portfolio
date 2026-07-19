@@ -55,7 +55,6 @@ const files = (await $`git ls-files -z -- ${positionals.length > 0 ? positionals
 
 const extraKeep = (values["keep-pattern"] ?? []).map((pattern) => new RegExp(pattern));
 
-/** True for comments we must not delete. */
 const isKept = (type: "Line" | "Block", value: string, raw: string) => {
   const body = (type === "Block" ? value.replace(/^[\s*]+/, "") : value).trimStart();
   if (KEEP.some((re) => re.test(body))) return true;
@@ -75,7 +74,7 @@ const findJsxContainers = (node: unknown, out: Array<[number, number]> = []) => 
   const record = node as Record<string, unknown> & { type?: string; start?: number; end?: number };
   if (
     record.type === "JSXExpressionContainer" &&
-    (record.expression as { type?: string } | undefined)?.type === "JSXEmptyExpression"
+    (record["expression"] as { type?: string } | undefined)?.type === "JSXEmptyExpression"
   ) {
     out.push([record.start as number, record.end as number]);
   }

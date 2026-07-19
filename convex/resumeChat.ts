@@ -582,7 +582,9 @@ export async function resolveResumeModel(
   ctx: ActionCtx,
   modelId?: string
 ): Promise<ReturnType<typeof getChatModel>> {
-  const resolved = await ctx.runQuery(internal.models.resolveForRun, { modelId });
+  const resolved = await ctx.runQuery(internal.models.resolveForRun, {
+    ...(modelId !== undefined && { modelId }),
+  });
   return getChatModel(
     resolved?.id ?? DEFAULT_MODEL.id,
     resolved?.surface ?? DEFAULT_MODEL.surface,

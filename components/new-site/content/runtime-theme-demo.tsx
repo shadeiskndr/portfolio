@@ -106,36 +106,36 @@ export function RuntimeThemeDemo() {
 
       <div
         className="rounded-xl border p-4"
-        style={{ backgroundColor: r.surface, borderColor: r.outline, color: r.onSurface }}
+        style={{ backgroundColor: r["surface"], borderColor: r["outline"], color: r["onSurface"] }}
       >
-        <p className="font-semibold text-sm" style={{ color: r.onSurface }}>
+        <p className="font-semibold text-sm" style={{ color: r["onSurface"] }}>
           Quarterly report
         </p>
-        <p className="mt-1 text-xs" style={{ color: r.onSurfaceVariant }}>
+        <p className="mt-1 text-xs" style={{ color: r["onSurfaceVariant"] }}>
           Every role — surface, container, outline, and each on-color — comes from the one seed.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span
             className="rounded-md px-3 py-1.5 font-medium text-xs"
-            style={{ backgroundColor: r.primary, color: r.onPrimary }}
+            style={{ backgroundColor: r["primary"], color: r["onPrimary"] }}
           >
             Filled
           </span>
           <span
             className="rounded-md px-3 py-1.5 font-medium text-xs"
-            style={{ backgroundColor: r.primaryContainer, color: r.onPrimaryContainer }}
+            style={{ backgroundColor: r["primaryContainer"], color: r["onPrimaryContainer"] }}
           >
             Tonal
           </span>
           <span
             className="rounded-md border px-3 py-1.5 font-medium text-xs"
-            style={{ borderColor: r.outline, color: r.onSurfaceVariant }}
+            style={{ borderColor: r["outline"], color: r["onSurfaceVariant"] }}
           >
             Outlined
           </span>
           <span
             className="ml-auto rounded-md px-2 py-1 text-xs"
-            style={{ backgroundColor: r.surfaceContainer, color: r.onSurfaceVariant }}
+            style={{ backgroundColor: r["surfaceContainer"], color: r["onSurfaceVariant"] }}
           >
             container
           </span>

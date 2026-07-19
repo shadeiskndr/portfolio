@@ -449,6 +449,7 @@ function MarqueeContent(props: DivProps) {
         resizeObserverStore.unobserve(rootElement, contentElement);
       };
     }
+    return undefined;
   }, [context.rootRef, context.contentRef]);
 
   const multiplier = React.useMemo(() => {

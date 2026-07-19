@@ -32,10 +32,12 @@ export default function CodestatsCalendar({ calendar }: { calendar: Calendar }) 
   const monthLabels: (string | null)[] = [];
   let lastLabelled = Number.NEGATIVE_INFINITY;
   for (const [index, week] of calendar.weeks.entries()) {
+    const first = week[0];
+    const prevFirst = calendar.weeks[index - 1]?.[0];
     const startsMonth =
-      index === 0 || !isSameMonth(week[0].date, calendar.weeks[index - 1][0].date);
-    if (startsMonth && index - lastLabelled >= 2) {
-      monthLabels.push(formatMonthShort(week[0].date));
+      index === 0 || !prevFirst || !isSameMonth(first?.date ?? "", prevFirst.date);
+    if (first && startsMonth && index - lastLabelled >= 2) {
+      monthLabels.push(formatMonthShort(first.date));
       lastLabelled = index;
     } else {
       monthLabels.push(null);
@@ -59,7 +61,7 @@ export default function CodestatsCalendar({ calendar }: { calendar: Calendar }) 
 
           <div className="flex gap-[3px]">
             {calendar.weeks.map((week, weekIndex) => (
-              <div key={week[0].date} className="flex flex-col gap-[3px]">
+              <div key={week[0]?.date ?? weekIndex} className="flex flex-col gap-[3px]">
                 <div className="h-5 text-[10px] text-muted-foreground leading-none">
                   {monthLabels[weekIndex]}
                 </div>

@@ -78,13 +78,13 @@ export default function CertificatesList() {
           >
             <m.div
               ref={ref}
-              layoutId={shouldReduceMotion ? undefined : `cert-${active.name}`}
+              {...(shouldReduceMotion ? {} : { layoutId: `cert-${active.name}` })}
               className="flex w-full max-w-md cursor-default select-none flex-col gap-4 overflow-hidden rounded-2xl border bg-card p-5 shadow-lg"
               transition={morph}
             >
               <div className="flex items-start gap-3">
                 <m.div
-                  layoutId={shouldReduceMotion ? undefined : `cert-logo-${active.name}`}
+                  {...(shouldReduceMotion ? {} : { layoutId: `cert-logo-${active.name}` })}
                   style={{ flexShrink: 0 }}
                 >
                   <CertLogo cert={active} size={48} />
@@ -137,16 +137,16 @@ export default function CertificatesList() {
           <m.button
             key={cert.name}
             type="button"
-            layoutId={shouldReduceMotion ? undefined : `cert-${cert.name}`}
+            {...(shouldReduceMotion ? {} : { layoutId: `cert-${cert.name}` })}
             onClick={() => setActive(cert)}
-            whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
+            {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.99 } })}
             transition={morph}
             className="block w-full cursor-pointer select-none rounded-2xl text-left"
           >
             <SpotlightCard borderColor="var(--border)" className="p-3 shadow-sm dark:shadow-xl">
               <div className="flex items-center gap-3">
                 <m.div
-                  layoutId={shouldReduceMotion ? undefined : `cert-logo-${cert.name}`}
+                  {...(shouldReduceMotion ? {} : { layoutId: `cert-logo-${cert.name}` })}
                   style={{ flexShrink: 0 }}
                 >
                   <CertLogo cert={cert} size={40} />

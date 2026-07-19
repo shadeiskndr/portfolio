@@ -33,6 +33,7 @@ function tokenize(input: string): Token[] {
   let i = 0;
   while (i < input.length) {
     const ch = input[i];
+    if (ch === undefined) break;
     if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
       i++;
       continue;
@@ -81,7 +82,11 @@ const BIN_PREC: Record<string, number> = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 
 
 class Parser {
   private pos = 0;
-  constructor(private readonly tokens: Token[]) {}
+  private readonly tokens: Token[];
+
+  constructor(tokens: Token[]) {
+    this.tokens = tokens;
+  }
 
   private peek(): Token | undefined {
     return this.tokens[this.pos];
@@ -116,7 +121,7 @@ class Parser {
       const t = this.peek();
       if (t?.type !== "punc" || !(t.value in BIN_PREC)) break;
       const prec = BIN_PREC[t.value];
-      if (prec < minPrec) break;
+      if (prec === undefined || prec < minPrec) break;
       this.next();
       const rightAssoc = t.value === "**";
       const right = this.parseExpression(rightAssoc ? prec : prec + 1);
@@ -220,7 +225,7 @@ function evalNode(node: Node): unknown {
     case "unary": {
       const arg = evalNode(node.arg);
       if (isNumber(arg)) return node.op === "-" ? -arg : arg;
-      if (node.op === "-") return (NP.negative as (a: unknown) => unknown)(arg);
+      if (node.op === "-") return (NP["negative"] as (a: unknown) => unknown)(arg);
       return arg;
     }
     case "binary": {
@@ -242,7 +247,9 @@ function evalNode(node: Node): unknown {
             return left ** right;
         }
       }
-      const fn = NP[BINARY_UFUNC[node.op]] as (a: unknown, b: unknown) => unknown;
+      const ufunc = BINARY_UFUNC[node.op];
+      if (!ufunc) throw new Error(`Unsupported operator "${node.op}".`);
+      const fn = NP[ufunc] as (a: unknown, b: unknown) => unknown;
       return fn(left, right);
     }
     case "member": {

@@ -30,7 +30,7 @@ export interface ResumeAssistantProps {
   ref?: Ref<ResumeAssistantHandle>;
 }
 
-const base = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
+const base = process.env["NEXT_PUBLIC_CONVEX_SITE_URL"];
 const CHAT_URL = base ? `${base}/resume-chat` : null;
 const IMPORT_URL = base ? `${base}/resume-import` : null;
 const TAILOR_URL = base ? `${base}/resume-tailor` : null;

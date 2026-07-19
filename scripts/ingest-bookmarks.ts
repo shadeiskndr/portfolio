@@ -19,8 +19,8 @@ type Seed = {
   url: string;
   section: Section;
   tags: string[];
-  title?: string;
-  addedAt?: number;
+  title?: string | undefined;
+  addedAt?: number | undefined;
 };
 
 const READINGS: Omit<Seed, "section">[] = [
@@ -136,7 +136,7 @@ function jsonLdDate(html: string): string | undefined {
 function urlDate(url: string): number | undefined {
   const m = url.match(/(20\d{2})[-/](\d{1,2})[-/](\d{1,2})/);
   if (!m) return undefined;
-  const t = Date.parse(`${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`);
+  const t = Date.parse(`${m[1]}-${(m[2] ?? "").padStart(2, "0")}-${(m[3] ?? "").padStart(2, "0")}`);
   return Number.isNaN(t) ? undefined : t;
 }
 
@@ -214,10 +214,10 @@ async function fetchFavicon(pageUrl: string, html: string): Promise<string | und
 }
 
 type Meta = {
-  title?: string;
-  description?: string;
-  publishedAt?: number;
-  faviconUrl?: string;
+  title?: string | undefined;
+  description?: string | undefined;
+  publishedAt?: number | undefined;
+  faviconUrl?: string | undefined;
 };
 
 async function scrapeMeta(url: string, wantDate: boolean): Promise<Meta> {
@@ -321,8 +321,8 @@ function parseBrowserExport(html: string, existing: Set<string>): Seed[] {
   let m: RegExpExecArray | null;
   m = re.exec(html);
   while (m !== null) {
-    const url = m[1];
-    const attrs = m[2];
+    const url = m[1] ?? "";
+    const attrs = m[2] ?? "";
     if (/^https?:\/\//i.test(url) && !seen.has(url)) {
       seen.add(url);
       const addDate = attrs.match(/ADD_DATE="(\d+)"/i)?.[1];
@@ -333,7 +333,7 @@ function parseBrowserExport(html: string, existing: Set<string>): Seed[] {
         url,
         section: "resource",
         tags,
-        title: decodeEntities(m[3]).trim() || undefined,
+        title: decodeEntities(m[3] ?? "").trim() || undefined,
         addedAt: addDate ? Number(addDate) * 1000 : undefined,
       });
     }
@@ -348,8 +348,9 @@ function iconFromExport(html: string): Map<string, string> {
   let m: RegExpExecArray | null;
   m = re.exec(html);
   while (m !== null) {
-    const icon = m[2].match(/ICON="(data:image[^"]+)"/i)?.[1];
-    if (icon) map.set(m[1], icon);
+    const icon = (m[2] ?? "").match(/ICON="(data:image[^"]+)"/i)?.[1];
+    const key = m[1];
+    if (icon && key) map.set(key, icon);
     m = re.exec(html);
   }
   return map;
@@ -392,8 +393,10 @@ async function pool<T>(items: T[], limit: number, fn: (item: T, i: number) => Pr
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
     while (cursor < items.length) {
       const i = cursor++;
+      const item = items[i];
+      if (item === undefined) break;
       try {
-        await fn(items[i], i);
+        await fn(item, i);
       } catch (err) {
         console.error(`✗ failed item ${i}:`, err);
       }

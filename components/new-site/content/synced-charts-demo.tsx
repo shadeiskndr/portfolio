@@ -51,7 +51,7 @@ function Panel({
             width={width}
             height={height}
             data={DATA}
-            syncId={synced ? "scenario" : undefined}
+            {...(synced ? { syncId: "scenario" } : {})}
             margin={{ top: 4, right: 8, bottom: 0, left: -18 }}
           >
             <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />

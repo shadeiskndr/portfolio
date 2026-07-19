@@ -25,8 +25,8 @@ interface SignatureProps {
   fontUrl?: string;
 }
 
-export function Signature({ fontUrl, ...props }: SignatureProps) {
-  return <SignatureInner key={fontUrl ?? "default"} fontUrl={fontUrl} {...props} />;
+export function Signature(props: SignatureProps) {
+  return <SignatureInner key={props.fontUrl ?? "default"} {...props} />;
 }
 
 function SignatureInner({
@@ -104,8 +104,7 @@ function SignatureInner({
       fill="none"
       className={cn("overflow-visible text-foreground", className)}
       initial="hidden"
-      whileInView={inView ? "visible" : undefined}
-      animate={inView ? undefined : "visible"}
+      {...(inView ? { whileInView: "visible" } : { animate: "visible" })}
       viewport={{ once }}
     >
       <defs>

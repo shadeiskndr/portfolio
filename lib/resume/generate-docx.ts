@@ -24,7 +24,12 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
   const inlineRuns = (text: string, opts: { size?: number; italics?: boolean } = {}) =>
     parseInline(text).map(
       (seg) =>
-        new TextRun({ text: seg.text, bold: seg.bold, italics: opts.italics, size: opts.size })
+        new TextRun({
+          text: seg.text,
+          bold: seg.bold,
+          ...(opts.italics !== undefined && { italics: opts.italics }),
+          ...(opts.size !== undefined && { size: opts.size }),
+        })
     );
 
   const twoCol = (
@@ -36,8 +41,16 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
       tabStops: [{ type: TabStopType.RIGHT, position: TEXT_WIDTH }],
       spacing: { before: opts?.spacingBefore ?? 0, after: 0 },
       children: [
-        new TextRun({ text: left.text, bold: left.bold, italics: left.italics }),
-        new TextRun({ text: `\t${right.text}`, italics: right.italics, size: right.size }),
+        new TextRun({
+          text: left.text,
+          ...(left.bold !== undefined && { bold: left.bold }),
+          ...(left.italics !== undefined && { italics: left.italics }),
+        }),
+        new TextRun({
+          text: `\t${right.text}`,
+          ...(right.italics !== undefined && { italics: right.italics }),
+          ...(right.size !== undefined && { size: right.size }),
+        }),
       ],
     });
 
@@ -94,8 +107,9 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
   if (data.experience.length > 0) {
     body.push(sectionHeading("Work Experience"));
     for (const e of data.experience) {
-      if (e.roles.length === 1) {
-        const r = e.roles[0];
+      const onlyRole = e.roles.length === 1 ? e.roles[0] : undefined;
+      if (onlyRole) {
+        const r = onlyRole;
         body.push(
           twoCol(
             { text: `•  ${e.firm}`, bold: true },
@@ -196,7 +210,7 @@ export async function generateDocx(data: ResumeData): Promise<Blob> {
     for (let i = 0; i < data.references.length; i += 2) {
       rows.push(
         new TableRow({
-          children: [refCell(data.references[i]), refCell(data.references[i + 1] ?? null)],
+          children: [refCell(data.references[i] ?? null), refCell(data.references[i + 1] ?? null)],
         })
       );
     }

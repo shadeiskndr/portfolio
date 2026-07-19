@@ -34,11 +34,11 @@ export interface ContextCost {
 interface ContextSchema {
   usedTokens: number;
   maxTokens: number;
-  usage?: LanguageModelUsage;
-  modelId?: ModelId;
-  pricing?: ContextPricing;
-  usedPercent?: number;
-  cost?: ContextCost;
+  usage?: LanguageModelUsage | undefined;
+  modelId?: ModelId | undefined;
+  pricing?: ContextPricing | undefined;
+  usedPercent?: number | undefined;
+  cost?: ContextCost | undefined;
 }
 
 const ContextContext = createContext<ContextSchema | null>(null);
@@ -71,7 +71,12 @@ function formatUSD(value: number | undefined): string {
 }
 
 function pricingCostUSD(
-  tokens: { input?: number; output?: number; cacheReads?: number; reasoningTokens?: number },
+  tokens: {
+    input?: number | undefined;
+    output?: number | undefined;
+    cacheReads?: number | undefined;
+    reasoningTokens?: number | undefined;
+  },
   pricing: ContextPricing | undefined
 ): number | undefined {
   if (!pricing) {
@@ -406,7 +411,13 @@ export const ContextCacheUsage = ({ className, children, ...props }: ContextCach
   );
 };
 
-const TokensWithCost = ({ tokens, costText }: { tokens?: number; costText?: string }) => (
+const TokensWithCost = ({
+  tokens,
+  costText,
+}: {
+  tokens?: number | undefined;
+  costText?: string | undefined;
+}) => (
   <span>
     {tokens === undefined ? "—" : COMPACT_FORMAT.format(tokens)}
     {costText ? <span className="ml-2 text-muted-foreground">• {costText}</span> : null}

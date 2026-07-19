@@ -48,9 +48,9 @@ function normalize(item: NonNullable<SpotifyTrackResponse["item"]>): NormalizedT
 }
 
 async function mintAccessToken(): Promise<{ token: string; expiresAt: number }> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+  const clientId = process.env["SPOTIFY_CLIENT_ID"];
+  const clientSecret = process.env["SPOTIFY_CLIENT_SECRET"];
+  const refreshToken = process.env["SPOTIFY_REFRESH_TOKEN"];
 
   if (!(clientId && clientSecret && refreshToken)) {
     throw new Error("Spotify env vars missing");
@@ -279,17 +279,19 @@ export const upsertStatus = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db.query("spotifyStatus").first();
     const now = Date.now();
+    const track = args.track;
+    const recentCheckedAt = args.recentChecked ? now : existing?.recentCheckedAt;
     const fields = {
       isPlaying: args.isPlaying,
-      trackId: args.track?.trackId,
-      song: args.track?.song,
-      artist: args.track?.artist,
-      album: args.track?.album,
-      albumArtUrl: args.track?.albumArtUrl ?? undefined,
-      url: args.track?.url,
-      playedAt: args.playedAt,
       fetchedAt: now,
-      recentCheckedAt: args.recentChecked ? now : existing?.recentCheckedAt,
+      ...(track?.trackId !== undefined && { trackId: track.trackId }),
+      ...(track?.song !== undefined && { song: track.song }),
+      ...(track?.artist !== undefined && { artist: track.artist }),
+      ...(track?.album !== undefined && { album: track.album }),
+      ...(track?.albumArtUrl != null && { albumArtUrl: track.albumArtUrl }),
+      ...(track?.url !== undefined && { url: track.url }),
+      ...(args.playedAt !== undefined && { playedAt: args.playedAt }),
+      ...(recentCheckedAt !== undefined && { recentCheckedAt }),
     };
 
     if (existing) {

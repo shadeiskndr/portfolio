@@ -4,14 +4,18 @@ import { getChatModel } from "../lib/chat/provider";
 import { components } from "./_generated/api";
 import { calculate } from "./tools";
 
-const SYSTEM_PROMPT =
+const PROMPT_INTRO =
   "You are a friendly assistant embedded on Shahathir Iskandar's personal portfolio site. " +
   "Be concise, helpful, and conversational. If you don't know something, say so. " +
-  "Do not use emojis. " +
+  "Do not use emojis. ";
+
+const PROMPT_CALCULATE_TOOL =
   "You have a `calculate` tool for exact arithmetic and statistics. Whenever a request " +
   "involves a computed number — sums, averages, standard deviation, powers, dot products, " +
   "and so on — call `calculate` rather than working it out yourself, then state the result " +
-  "in plain language. " +
+  "in plain language. ";
+
+const PROMPT_FORMATTING =
   "When presenting two or more items that share the same attributes (row-like data), use a " +
   "markdown table instead of repeating the same field labels under nested bullets. Use bullet " +
   "lists for prose or when items have different fields. " +
@@ -23,17 +27,24 @@ const SYSTEM_PROMPT =
   'commas — e.g. write A["Source Database (e.g., PostgreSQL)"] not A[Source Database (e.g., PostgreSQL)]. ' +
   "Unquoted special characters cause Mermaid parse errors.";
 
+function systemPrompt(withTools: boolean): string {
+  return withTools
+    ? PROMPT_INTRO + PROMPT_CALCULATE_TOOL + PROMPT_FORMATTING
+    : PROMPT_INTRO + PROMPT_FORMATTING;
+}
+
 export function chatModelArgs(
   modelId: string,
   surface: ChatModel["surface"],
   api: ChatModel["api"],
-  reasoning: boolean = DEFAULT_REASONING
+  reasoning: boolean = DEFAULT_REASONING,
+  supportsTools = true
 ) {
   const usesResponsesApi = surface === "mantle" && api === "responses";
   const reasoningOn = usesResponsesApi && reasoning;
   return {
     model: getChatModel(modelId, surface, api),
-    instructions: SYSTEM_PROMPT,
+    instructions: systemPrompt(supportsTools),
     ...(usesResponsesApi
       ? {
           providerOptions: {
@@ -53,7 +64,7 @@ export function chatModelArgs(
 export const chatAgent = new Agent(components.agent, {
   name: "portfolio-assistant",
   languageModel: getChatModel(DEFAULT_MODEL.id, DEFAULT_MODEL.surface, DEFAULT_MODEL.api),
-  instructions: SYSTEM_PROMPT,
+  instructions: systemPrompt(true),
   tools: { calculate },
-  stopWhen: stepCountIs(5),
+  stopWhen: stepCountIs(6),
 });

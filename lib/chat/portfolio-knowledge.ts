@@ -2,7 +2,7 @@ export interface PortfolioChunk {
   source: "experience" | "project" | "certificate" | "education" | "uses" | "til";
   refKey: string;
   text: string;
-  imageKey?: string;
+  imageKey?: string | undefined;
 }
 
 function formatMonth(date: Date): string {
@@ -131,8 +131,8 @@ export function serializeUsesChunks(groups: UsesGroupInput[]): PortfolioChunk[] 
 export interface TilPostInput {
   slug: string;
   title: string;
-  summary?: string;
-  tags?: string[];
+  summary?: string | undefined;
+  tags?: string[] | undefined;
   body: string;
 }
 

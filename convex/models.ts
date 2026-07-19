@@ -18,6 +18,7 @@ export function toChatModel(row: Doc<"chatModels">): ChatModel {
     surface: row.surface ?? "mantle",
     api: row.api,
     supportsReasoning: row.supportsReasoning ?? true,
+    supportsTools: row.supportsTools ?? true,
   };
 }
 
@@ -56,6 +57,7 @@ export const resolveForRun = internalQuery({
           surface: row.surface ?? "mantle",
           api: row.api,
           supportsReasoning: row.supportsReasoning ?? true,
+          supportsTools: row.supportsTools ?? true,
         }
       : null;
   },
@@ -65,17 +67,23 @@ export const seed = internalMutation({
   args: {},
   handler: async (ctx) => {
     let inserted = 0;
-    for (let i = 0; i < CHAT_MODELS.length; i++) {
-      const model = CHAT_MODELS[i];
+    for (const [i, model] of CHAT_MODELS.entries()) {
       // react-doctor-disable-next-line react-doctor/async-await-in-loop
       const existing = await ctx.db
         .query("chatModels")
         .withIndex("by_modelId", (q) => q.eq("modelId", model.id))
         .unique();
       if (existing) {
-        const backfill: { supportsReasoning?: boolean; surface?: "mantle" | "converse" } = {};
+        const backfill: {
+          supportsReasoning?: boolean;
+          supportsTools?: boolean;
+          surface?: "mantle" | "converse";
+        } = {};
         if (existing.supportsReasoning === undefined) {
           backfill.supportsReasoning = model.supportsReasoning;
+        }
+        if (existing.supportsTools !== model.supportsTools) {
+          backfill.supportsTools = model.supportsTools;
         }
         if (existing.surface === undefined) backfill.surface = model.surface;
         if (Object.keys(backfill).length > 0) await ctx.db.patch(existing._id, backfill);
@@ -93,14 +101,16 @@ export const seed = internalMutation({
         surface: model.surface,
         api: model.api,
         supportsReasoning: model.supportsReasoning,
+        supportsTools: model.supportsTools,
         isDefault: model.id === DEFAULT_MODEL_ID,
         order: i,
       });
       inserted++;
     }
     const rows = await listModels(ctx);
-    if (rows.length > 0 && !rows.some((r) => r.isDefault)) {
-      await ctx.db.patch(rows[0]._id, { isDefault: true });
+    const first = rows[0];
+    if (first && !rows.some((r) => r.isDefault)) {
+      await ctx.db.patch(first._id, { isDefault: true });
     }
     return { inserted, total: rows.length };
   },

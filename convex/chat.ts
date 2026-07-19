@@ -155,16 +155,17 @@ export const send = mutation({
         await ctx.db.patch(session._id, { lastModelId: modelId });
       }
     } else {
+      const title = titleFromText(args.text);
       const created = await chatAgent.createThread(ctx, {
         userId: args.clientId,
-        title: titleFromText(args.text),
+        ...(title !== undefined && { title }),
       });
       threadId = created.threadId;
       await ctx.db.insert("chatSessions", {
         sessionId: args.sessionId,
         clientId: args.clientId,
         threadId,
-        title: titleFromText(args.text),
+        ...(title !== undefined && { title }),
         lastModelId: modelId,
       });
     }
@@ -262,13 +263,16 @@ export const stream = internalAction({
     reasoning: v.optional(v.boolean()),
   },
   handler: async (ctx, { threadId, promptMessageId, modelId, reasoning }) => {
-    const resolved = await ctx.runQuery(internal.models.resolveForRun, { modelId });
+    const resolved = await ctx.runQuery(internal.models.resolveForRun, {
+      ...(modelId !== undefined && { modelId }),
+    });
     const id = resolved?.id ?? DEFAULT_MODEL.id;
     const surface = resolved?.surface ?? DEFAULT_MODEL.surface;
     const api = resolved?.api ?? DEFAULT_MODEL.api;
     const supportsReasoning = resolved?.supportsReasoning ?? DEFAULT_MODEL.supportsReasoning;
+    const supportsTools = resolved?.supportsTools ?? DEFAULT_MODEL.supportsTools;
     const reasoningOn = (reasoning ?? DEFAULT_REASONING) && supportsReasoning;
-    const modelArgs = chatModelArgs(id, surface, api, reasoningOn);
+    const modelArgs = chatModelArgs(id, surface, api, reasoningOn, supportsTools);
 
     const contextMessages: { role: "system"; content: string }[] = [];
 
@@ -313,6 +317,7 @@ export const stream = internalAction({
       {
         promptMessageId,
         ...modelArgs,
+        ...(supportsTools ? {} : { tools: {} }),
         ...(contextMessages.length > 0 ? { messages: contextMessages } : {}),
       },
       {

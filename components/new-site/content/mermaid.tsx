@@ -80,7 +80,7 @@ export function Mermaid({ chart, className }: { chart: string; className?: strin
       key={`${dark ? "dark" : "light"}:${chart}`}
       chart={chart}
       dark={dark}
-      className={className}
+      {...(className !== undefined && { className })}
     />
   );
 }
