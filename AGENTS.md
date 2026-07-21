@@ -26,6 +26,7 @@ Content/data scripts (each shells out to `bunx convex run`): `add-asset.ts`, `ad
 - **react-doctor suppressions belong in `doctor.config.jsonc`, with a comment explaining why.** That file is the record of every intentional rule violation — read it before "fixing" something it already justifies.
 - Biome: 100 cols, 2-space indent, double quotes, semicolons. `useSortedClasses` auto-sorts Tailwind classes in `className`/`clsx`/`cva`/`cn`/`twMerge`.
 - Commits are gitmoji + conventional: `✨ feat:`, `🐛 fix:`, `♻️ refactor:`, `🔧 chore:`, `⬆️ chore:`.
+- **Commit straight to `main`.** This is a solo repo with no PR review flow, so don't create feature branches — not even for routine chores like dependency bumps.
 - Imports use the `@/*` alias rooted at the repo.
 - Pre-commit hook runs `biome check --staged` + `react-doctor --staged`; don't bypass with `--no-verify`.
 
