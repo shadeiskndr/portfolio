@@ -24,6 +24,7 @@ Content/data scripts (each shells out to `bunx convex run`): `add-asset.ts`, `ad
 
 - **Source files carry no comments.** `bun run strip-comments:write` enforces this across tracked `.ts/.tsx/.js/.jsx`; it keeps only directives (`biome-ignore`, `@ts-expect-error`, …), legal headers, and `TODO/FIXME/HACK/@deprecated`. Write self-explanatory code instead. Config files are the exception and *are* documented in prose.
 - **react-doctor suppressions belong in `doctor.config.jsonc`, with a comment explaining why.** That file is the record of every intentional rule violation — read it before "fixing" something it already justifies.
+- **Convex lint rules live in `biome-plugins/*.grit`**, ported from `@convex-dev/eslint-plugin` and registered in `biome.json` under `overrides` for `convex/**`. Don't install the upstream package: Biome can't load ESLint plugins, and `typescript-eslint` rejects TypeScript 7. GritQL is syntax-only with no autofix; each file's header notes what it ports and where it diverges. `no-schema-import-cycle` and `import-wrong-runtime` aren't ported — they need a cross-file module graph.
 - Biome: 100 cols, 2-space indent, double quotes, semicolons. `useSortedClasses` auto-sorts Tailwind classes in `className`/`clsx`/`cva`/`cn`/`twMerge`.
 - Commits are gitmoji + conventional: `✨ feat:`, `🐛 fix:`, `♻️ refactor:`, `🔧 chore:`, `⬆️ chore:`.
 - **Commit straight to `main`.** This is a solo repo with no PR review flow, so don't create feature branches — not even for routine chores like dependency bumps.

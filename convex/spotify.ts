@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { ActionCtx } from "./_generated/server";
-import { internalAction, internalMutation, internalQuery, query } from "./_generated/server";
+import { env, internalAction, internalMutation, internalQuery, query } from "./_generated/server";
 
 type SpotifyTrackResponse = {
   is_playing?: boolean;
@@ -48,13 +48,9 @@ function normalize(item: NonNullable<SpotifyTrackResponse["item"]>): NormalizedT
 }
 
 async function mintAccessToken(): Promise<{ token: string; expiresAt: number }> {
-  const clientId = process.env["SPOTIFY_CLIENT_ID"];
-  const clientSecret = process.env["SPOTIFY_CLIENT_SECRET"];
-  const refreshToken = process.env["SPOTIFY_REFRESH_TOKEN"];
-
-  if (!(clientId && clientSecret && refreshToken)) {
-    throw new Error("Spotify env vars missing");
-  }
+  const clientId = env.SPOTIFY_CLIENT_ID;
+  const clientSecret = env.SPOTIFY_CLIENT_SECRET;
+  const refreshToken = env.SPOTIFY_REFRESH_TOKEN;
 
   const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
@@ -146,7 +142,7 @@ export const setBackoff = internalMutation({
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
       .unique();
     if (existing) {
-      await ctx.db.replace(existing._id, args);
+      await ctx.db.replace("spotifyBackoff", existing._id, args);
     } else {
       await ctx.db.insert("spotifyBackoff", args);
     }
@@ -166,7 +162,7 @@ export const setCachedToken = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db.query("spotifyAuth").first();
     if (existing) {
-      await ctx.db.replace(existing._id, args);
+      await ctx.db.replace("spotifyAuth", existing._id, args);
     } else {
       await ctx.db.insert("spotifyAuth", args);
     }
@@ -251,7 +247,7 @@ export const markNotPlaying = internalMutation({
       });
       return;
     }
-    await ctx.db.patch(existing._id, {
+    await ctx.db.patch("spotifyStatus", existing._id, {
       isPlaying: false,
       fetchedAt: now,
       ...(recentChecked ? { recentCheckedAt: now } : {}),
@@ -295,7 +291,7 @@ export const upsertStatus = internalMutation({
     };
 
     if (existing) {
-      await ctx.db.replace(existing._id, fields);
+      await ctx.db.replace("spotifyStatus", existing._id, fields);
     } else {
       await ctx.db.insert("spotifyStatus", fields);
     }

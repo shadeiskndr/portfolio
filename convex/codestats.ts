@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalAction, internalMutation, query } from "./_generated/server";
+import { env, internalAction, internalMutation, query } from "./_generated/server";
 
 export type CodestatsProfileData = {
   user: string;
@@ -14,10 +14,7 @@ export type CodestatsProfileData = {
 export const refreshProfile = internalAction({
   args: {},
   handler: async (ctx) => {
-    const username = process.env["CODESTATS_USERNAME"];
-    if (!username) {
-      throw new Error("CODESTATS_USERNAME missing");
-    }
+    const username = env.CODESTATS_USERNAME;
 
     const res = await fetch(`https://codestats.net/api/users/${encodeURIComponent(username)}`, {
       headers: { Accept: "application/json" },
@@ -46,7 +43,7 @@ export const upsertProfile = internalMutation({
       .unique();
     const fields = { username, payload, fetchedAt: Date.now() };
     if (existing) {
-      await ctx.db.replace(existing._id, fields);
+      await ctx.db.replace("codestatsProfile", existing._id, fields);
     } else {
       await ctx.db.insert("codestatsProfile", fields);
     }

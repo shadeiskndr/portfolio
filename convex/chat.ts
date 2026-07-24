@@ -152,7 +152,7 @@ export const send = mutation({
     if (session) {
       threadId = session.threadId;
       if (session.lastModelId !== modelId) {
-        await ctx.db.patch(session._id, { lastModelId: modelId });
+        await ctx.db.patch("chatSessions", session._id, { lastModelId: modelId });
       }
     } else {
       const title = titleFromText(args.text);

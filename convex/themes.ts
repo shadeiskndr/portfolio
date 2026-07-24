@@ -88,7 +88,7 @@ export const upsertTweakcnThemes = internalMutation({
       .unique();
     const fields = { key: STORE_KEY, payload, fetchedAt: Date.now() };
     if (existing) {
-      await ctx.db.replace(existing._id, fields);
+      await ctx.db.replace("tweakcnThemes", existing._id, fields);
     } else {
       await ctx.db.insert("tweakcnThemes", fields);
     }

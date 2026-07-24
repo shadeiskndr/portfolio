@@ -75,6 +75,17 @@
   },
   "overrides": [
     {
+      "includes": ["convex/**"],
+      "plugins": [
+        "./biome-plugins/convex-require-args-validator.grit",
+        "./biome-plugins/convex-no-old-registered-function-syntax.grit",
+        "./biome-plugins/convex-explicit-table-ids.grit",
+        "./biome-plugins/convex-no-filter-in-query.grit",
+        "./biome-plugins/convex-no-collect-in-query.grit",
+        "./biome-plugins/convex-no-top-of-hour-crons.grit"
+      ]
+    },
+    {
       "includes": ["**/*.config.js", "**/*.config.mjs", "**/*.config.cjs", "**/*.config.ts"],
       "formatter": {
         "enabled": false

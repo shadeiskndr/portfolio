@@ -4,6 +4,7 @@ import { internalMutation, internalQuery, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    // biome-ignore lint/plugin: curated playlist; every song is rendered
     const rows = await ctx.db.query("songs").withIndex("by_order").collect();
     const resolved = await Promise.all(
       rows.map(async (row) => {
@@ -30,8 +31,8 @@ export const addSong = internalMutation({
     artist: v.string(),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.query("songs").collect();
-    const order = existing.reduce((max, s) => Math.max(max, s.order), -1) + 1;
+    const last = await ctx.db.query("songs").withIndex("by_order").order("desc").first();
+    const order = (last?.order ?? -1) + 1;
     await ctx.db.insert("songs", { ...args, order });
     return { order };
   },
@@ -40,6 +41,7 @@ export const addSong = internalMutation({
 export const listForCover = internalQuery({
   args: {},
   handler: async (ctx) => {
+    // biome-ignore lint/plugin: cover backfill must see every song
     const rows = await ctx.db.query("songs").withIndex("by_order").collect();
     return rows.map((row) => ({
       id: row._id,
@@ -52,6 +54,6 @@ export const listForCover = internalQuery({
 export const setCover = internalMutation({
   args: { id: v.id("songs"), coverStorageId: v.id("_storage") },
   handler: async (ctx, { id, coverStorageId }) => {
-    await ctx.db.patch(id, { coverStorageId });
+    await ctx.db.patch("songs", id, { coverStorageId });
   },
 });

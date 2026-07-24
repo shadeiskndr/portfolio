@@ -33,7 +33,7 @@ export const rename = mutation({
     const session = await findSession(ctx, sessionId, clientId);
     if (!session) return null;
     const trimmed = title.trim().slice(0, 80);
-    await ctx.db.patch(session._id, { title: trimmed || undefined });
+    await ctx.db.patch("chatSessions", session._id, { title: trimmed || undefined });
     return null;
   },
 });
@@ -47,7 +47,7 @@ export const remove = mutation({
       threadId: session.threadId,
       patch: { status: "archived" },
     });
-    await ctx.db.delete(session._id);
+    await ctx.db.delete("chatSessions", session._id);
     return null;
   },
 });

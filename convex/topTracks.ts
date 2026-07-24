@@ -117,11 +117,12 @@ export const replaceRange = internalMutation({
     tracks: v.array(v.object({ rank: v.number(), ...trackFields })),
   },
   handler: async (ctx, { timeRange, tracks }) => {
+    // biome-ignore lint/plugin: Spotify returns at most 50 tracks per range
     const existing = await ctx.db
       .query("topTracks")
       .withIndex("by_range_rank", (q) => q.eq("timeRange", timeRange))
       .collect();
-    await Promise.all(existing.map((row) => ctx.db.delete(row._id)));
+    await Promise.all(existing.map((row) => ctx.db.delete("topTracks", row._id)));
 
     const fetchedAt = Date.now();
     await Promise.all(
@@ -133,6 +134,7 @@ export const replaceRange = internalMutation({
 export const list = query({
   args: { timeRange: timeRangeValidator },
   handler: async (ctx, { timeRange }) => {
+    // biome-ignore lint/plugin: Spotify returns at most 50 tracks per range
     return await ctx.db
       .query("topTracks")
       .withIndex("by_range_rank", (q) => q.eq("timeRange", timeRange))

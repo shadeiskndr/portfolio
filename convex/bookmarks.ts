@@ -30,6 +30,7 @@ function sortForSection(section: "reading" | "resource", rows: Doc<"bookmarks">[
 export const list = query({
   args: { section: sectionValidator },
   handler: async (ctx, { section }): Promise<ResolvedBookmark[]> => {
+    // biome-ignore lint/plugin: one curated section; every row is rendered
     const rows = await ctx.db
       .query("bookmarks")
       .withIndex("by_section", (q) => q.eq("section", section))
@@ -75,7 +76,7 @@ export const upsertBookmark = internalMutation({
       if (args.previewId && existing.previewId && existing.previewId !== args.previewId) {
         await ctx.storage.delete(existing.previewId);
       }
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("bookmarks", existing._id, {
         ...args,
         previewId: args.previewId ?? existing.previewId,
       });
@@ -92,6 +93,7 @@ async function collectReferencedStorageIds(ctx: QueryCtx): Promise<Set<string>> 
   const add = (id: Id<"_storage"> | undefined | null) => {
     if (id) referenced.add(id);
   };
+  // biome-ignore-start lint/plugin: GC reachability scan; a partial read would mark live blobs as orphans
   for (const b of await ctx.db.query("bookmarks").collect()) add(b.previewId);
   for (const p of await ctx.db.query("photos").collect()) add(p.storageId);
   for (const a of await ctx.db.query("assets").collect()) add(a.storageId);
@@ -100,6 +102,7 @@ async function collectReferencedStorageIds(ctx: QueryCtx): Promise<Set<string>> 
     add(s.coverStorageId);
   }
   for (const c of await ctx.db.query("portfolioChunks").collect()) add(c.storageId);
+  // biome-ignore-end lint/plugin: GC reachability scan; a partial read would mark live blobs as orphans
   return referenced;
 }
 
@@ -108,6 +111,7 @@ export const findOrphanBlobs = internalQuery({
   handler: async (ctx) => {
     const [referenced, files] = await Promise.all([
       collectReferencedStorageIds(ctx),
+      // biome-ignore lint/plugin: orphan detection must see every stored file
       ctx.db.system.query("_storage").collect(),
     ]);
     const orphans = files.filter((f) => !referenced.has(f._id));
@@ -131,6 +135,7 @@ export const deleteOrphanBlobs = internalMutation({
   handler: async (ctx) => {
     const [referenced, files] = await Promise.all([
       collectReferencedStorageIds(ctx),
+      // biome-ignore lint/plugin: orphan deletion must see every stored file
       ctx.db.system.query("_storage").collect(),
     ]);
     const orphans = files.filter((f) => !referenced.has(f._id));
@@ -145,6 +150,7 @@ export const deleteOrphanBlobs = internalMutation({
 export const clearSection = internalMutation({
   args: { section: sectionValidator },
   handler: async (ctx, { section }) => {
+    // biome-ignore lint/plugin: must delete every row in the section
     const rows = await ctx.db
       .query("bookmarks")
       .withIndex("by_section", (q) => q.eq("section", section))
@@ -152,7 +158,7 @@ export const clearSection = internalMutation({
     await Promise.all(
       rows.map(async (row) => {
         if (row.previewId) await ctx.storage.delete(row.previewId);
-        await ctx.db.delete(row._id);
+        await ctx.db.delete("bookmarks", row._id);
       })
     );
     return { deleted: rows.length };

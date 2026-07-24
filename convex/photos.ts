@@ -4,6 +4,7 @@ import { internalMutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    // biome-ignore lint/plugin: curated gallery; every photo is rendered
     const rows = await ctx.db
       .query("photos")
       .withIndex("by_kind_order", (q) => q.eq("kind", "gallery"))
@@ -29,6 +30,7 @@ export const list = query({
 export const listByKind = query({
   args: { kind: v.string() },
   handler: async (ctx, { kind }) => {
+    // biome-ignore lint/plugin: curated set for one kind; every photo is rendered
     const rows = await ctx.db
       .query("photos")
       .withIndex("by_kind_order", (q) => q.eq("kind", kind))
@@ -56,11 +58,12 @@ export const addPhoto = internalMutation({
     height: v.number(),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
+    const last = await ctx.db
       .query("photos")
       .withIndex("by_kind_order", (q) => q.eq("kind", args.kind))
-      .collect();
-    const order = existing.reduce((max, p) => Math.max(max, p.order), -1) + 1;
+      .order("desc")
+      .first();
+    const order = (last?.order ?? -1) + 1;
     await ctx.db.insert("photos", { ...args, order });
     return { order };
   },

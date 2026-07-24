@@ -23,6 +23,7 @@ export function toChatModel(row: Doc<"chatModels">): ChatModel {
 }
 
 export async function listModels(ctx: QueryCtx | MutationCtx): Promise<Doc<"chatModels">[]> {
+  // biome-ignore lint/plugin: chatModels is a hand-tuned seed list
   return await ctx.db.query("chatModels").withIndex("by_order").collect();
 }
 
@@ -86,7 +87,8 @@ export const seed = internalMutation({
           backfill.supportsTools = model.supportsTools;
         }
         if (existing.surface === undefined) backfill.surface = model.surface;
-        if (Object.keys(backfill).length > 0) await ctx.db.patch(existing._id, backfill);
+        if (Object.keys(backfill).length > 0)
+          await ctx.db.patch("chatModels", existing._id, backfill);
         continue;
       }
       await ctx.db.insert("chatModels", {
@@ -110,7 +112,7 @@ export const seed = internalMutation({
     const rows = await listModels(ctx);
     const first = rows[0];
     if (first && !rows.some((r) => r.isDefault)) {
-      await ctx.db.patch(first._id, { isDefault: true });
+      await ctx.db.patch("chatModels", first._id, { isDefault: true });
     }
     return { inserted, total: rows.length };
   },

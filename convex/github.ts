@@ -48,7 +48,7 @@ export const upsertContributions = internalMutation({
       .unique();
     const fields = { username, payload, fetchedAt: Date.now() };
     if (existing) {
-      await ctx.db.replace(existing._id, fields);
+      await ctx.db.replace("githubContributions", existing._id, fields);
     } else {
       await ctx.db.insert("githubContributions", fields);
     }

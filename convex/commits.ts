@@ -4,6 +4,7 @@ import type { Doc } from "./_generated/dataModel";
 import {
   type ActionCtx,
   action,
+  env,
   internalAction,
   internalMutation,
   query,
@@ -51,12 +52,7 @@ function parseCommitMessage(raw: string): ParsedCommit {
 }
 
 function repoUrl(): string {
-  const owner = process.env["GITHUB_OWNER"];
-  const repo = process.env["GITHUB_REPO"];
-  if (!(owner && repo)) {
-    throw new Error("GITHUB_OWNER / GITHUB_REPO env vars missing");
-  }
-  return `https://github.com/${owner}/${repo}`;
+  return `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}`;
 }
 
 function commitUrl(sha: string): string {
@@ -100,7 +96,7 @@ export const ingestCommits = internalMutation({
         .withIndex("by_type", (q) => q.eq("type", parsed.type))
         .unique();
       if (countRow) {
-        await ctx.db.patch(countRow._id, { count: countRow.count + 1 });
+        await ctx.db.patch("commitCounts", countRow._id, { count: countRow.count + 1 });
       } else {
         await ctx.db.insert("commitCounts", { type: parsed.type, count: 1 });
       }
@@ -126,17 +122,14 @@ export const backfillFromGitHub = internalAction({
     ctx,
     { perPage = 100, maxPages = 20 }
   ): Promise<{ inserted: number; received: number }> => {
-    const owner = process.env["GITHUB_OWNER"];
-    const repo = process.env["GITHUB_REPO"];
-    if (!(owner && repo)) {
-      throw new Error("GITHUB_OWNER / GITHUB_REPO env vars missing");
-    }
+    const owner = env.GITHUB_OWNER;
+    const repo = env.GITHUB_REPO;
 
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
     };
-    const token = process.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
+    const token = env.GITHUB_PERSONAL_ACCESS_TOKEN;
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
     let totalInserted = 0;
@@ -195,6 +188,7 @@ export const list = query({
 export const counts = query({
   args: {},
   handler: async (ctx) => {
+    // biome-ignore lint/plugin: one row per conventional-commit type
     const rows = await ctx.db.query("commitCounts").collect();
     const byType: Record<string, number> = {};
     let all = 0;
@@ -230,7 +224,7 @@ const JSON_HEADERS: Record<string, string> = {
 };
 
 function ghHeaders(base: Record<string, string>): Record<string, string> {
-  const token = process.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
+  const token = env.GITHUB_PERSONAL_ACCESS_TOKEN;
   return token ? { ...base, Authorization: `Bearer ${token}` } : { ...base };
 }
 
@@ -243,7 +237,7 @@ function isRateLimited(res: Response): boolean {
 function rateLimitError(res: Response): Error {
   const reset = res.headers.get("x-ratelimit-reset");
   const resetAt = reset ? new Date(Number(reset) * 1000).toLocaleTimeString() : "later";
-  const authed = !!process.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
+  const authed = !!env.GITHUB_PERSONAL_ACCESS_TOKEN;
   const hint = authed
     ? ""
     : " (set GITHUB_PERSONAL_ACCESS_TOKEN in Convex env to raise the 60/hr unauth limit to 5000/hr)";
@@ -251,12 +245,7 @@ function rateLimitError(res: Response): Error {
 }
 
 function ghRepo(): { owner: string; repo: string } {
-  const owner = process.env["GITHUB_OWNER"];
-  const repo = process.env["GITHUB_REPO"];
-  if (!(owner && repo)) {
-    throw new Error("GITHUB_OWNER / GITHUB_REPO env vars missing");
-  }
-  return { owner, repo };
+  return { owner: env.GITHUB_OWNER, repo: env.GITHUB_REPO };
 }
 
 export const getCachedFileList = query({
@@ -281,7 +270,7 @@ export const cacheFileList = internalMutation({
       .unique();
     const fields = { sha, parentSha, filesJson, fetchedAt: Date.now() };
     if (existing) {
-      await ctx.db.replace(existing._id, fields);
+      await ctx.db.replace("commitFileLists", existing._id, fields);
     } else {
       await ctx.db.insert("commitFileLists", fields);
     }
@@ -314,7 +303,7 @@ export const cacheBlob = internalMutation({
       .unique();
     const fields = { ref, path, content, truncated, fetchedAt: Date.now() };
     if (existing) {
-      await ctx.db.replace(existing._id, fields);
+      await ctx.db.replace("commitBlobs", existing._id, fields);
     } else {
       await ctx.db.insert("commitBlobs", fields);
     }

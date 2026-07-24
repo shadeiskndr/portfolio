@@ -1,6 +1,6 @@
 import type { HttpRouter } from "convex/server";
 import { internal } from "../_generated/api";
-import { httpAction } from "../_generated/server";
+import { env, httpAction } from "../_generated/server";
 
 type GitHubPushCommit = {
   id: string;
@@ -47,10 +47,7 @@ export function registerGithubWebhook(http: HttpRouter) {
     path: "/github/webhook",
     method: "POST",
     handler: httpAction(async (ctx, request) => {
-      const secret = process.env["GITHUB_WEBHOOK_SECRET"];
-      if (!secret) {
-        return new Response("server not configured", { status: 500 });
-      }
+      const secret = env.GITHUB_WEBHOOK_SECRET;
 
       const rawBody = await request.text();
       const ok = await verifySignature(secret, rawBody, request.headers.get("X-Hub-Signature-256"));
@@ -71,7 +68,7 @@ export function registerGithubWebhook(http: HttpRouter) {
         ? (new URLSearchParams(rawBody).get("payload") ?? rawBody)
         : rawBody;
       const payload = JSON.parse(payloadText) as GitHubPushPayload;
-      const trackedRef = `refs/heads/${process.env["GITHUB_BRANCH"] ?? "main"}`;
+      const trackedRef = `refs/heads/${env.GITHUB_BRANCH ?? "main"}`;
       if (payload.ref !== trackedRef) {
         return new Response("ignored branch", { status: 200 });
       }
