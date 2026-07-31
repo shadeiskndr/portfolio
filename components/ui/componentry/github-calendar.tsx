@@ -115,7 +115,7 @@ export function GithubCalendar({
     const shapeClass = getShapeClass(shape);
     return (
       <div className={cn("flex w-max max-w-full flex-col gap-4", className)}>
-        {showTotal && (
+        {showTotal ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Skeleton className="h-4 w-4 rounded-full" />
@@ -123,7 +123,7 @@ export function GithubCalendar({
             </div>
             <Skeleton className="h-4 w-40" />
           </div>
-        )}
+        ) : null}
         <div className="flex w-max max-w-full flex-nowrap gap-0.75">
           {Array.from({ length: 53 }).map((_, weekIndex) => (
             <div key={weekIndex} className="flex w-3.5 flex-col gap-0.75">
@@ -146,7 +146,7 @@ export function GithubCalendar({
   return (
     <TooltipProvider delay={50}>
       <div className={cn("flex w-max max-w-full flex-col gap-4", className)}>
-        {showTotal && (
+        {showTotal ? (
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               <svg
@@ -166,7 +166,7 @@ export function GithubCalendar({
               {data?.totalContributions} contributions in the last year
             </span>
           </div>
-        )}
+        ) : null}
 
         <div className="flex w-max max-w-full flex-nowrap gap-0.75">
           {weeks.map((week, weekIndex) => (

@@ -2,9 +2,10 @@
 
 import { useForm } from "@tanstack/react-form";
 import { ChevronDown, Download, FileText, Loader2, RotateCcw } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,11 +24,13 @@ import type { ResumeData } from "@/lib/resume/schema";
 import { compilePdf, warmTypst } from "@/lib/resume/typst-engine";
 import { cn } from "@/lib/utils";
 import { AddButton, ItemCard, RemoveButton, TextAreaField, TextField } from "./fields";
-import { ImportDialog } from "./import-dialog";
+import { ImportDialog, type ImportFormat } from "./import-dialog";
 import { ResumeAssistant, type ResumeAssistantHandle } from "./resume-assistant";
 import { TailorDialog } from "./tailor-dialog";
 import { TypstPreview } from "./typst-preview";
 
+const emptyString = () => "";
+const selectFormValues = (s: { values: unknown }) => s.values;
 const emptyRole = () => ({ title: "", period: "", bullets: [""] });
 const emptyExperience = () => ({ firm: "", location: "", roles: [emptyRole()] });
 const emptyEducation = () => ({ degree: "", period: "", institution: "", location: "" });
@@ -65,6 +68,28 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+function RemoveRoleButton({
+  index,
+  onRemove,
+}: {
+  index: number;
+  onRemove: (index: number) => void;
+}) {
+  const handleClick = useCallback(() => onRemove(index), [onRemove, index]);
+
+  return (
+    <Button
+      className="self-start text-muted-foreground text-xs"
+      onClick={handleClick}
+      size="sm"
+      type="button"
+      variant="ghost"
+    >
+      Remove role
+    </Button>
+  );
+}
+
 export default function ResumeBuilder() {
   const form = useForm({ defaultValues: DEFAULT_RESUME });
   const isDesktop = useMediaQuery("(min-width: 1024px)", { initializeWithValue: false });
@@ -74,6 +99,14 @@ export default function ResumeBuilder() {
   useMountEffect(() => {
     warmTypst();
   });
+
+  const handleImportSubmit = useCallback(
+    (source: string, format: ImportFormat, label: string) =>
+      assistantRef.current?.startImport(source, format, label),
+    []
+  );
+  const handleTailorSubmit = useCallback((jd: string) => assistantRef.current?.startTailor(jd), []);
+  const getResume = useCallback(() => form.state.values as ResumeData, [form]);
 
   async function handleDownloadPdf() {
     setExporting(true);
@@ -104,14 +137,19 @@ export default function ResumeBuilder() {
     }
   }
 
-  function loadResume(resume: ResumeData) {
-    form.reset(resume);
-    form.setFieldValue("competencies", resume.competencies);
-    form.setFieldValue("experience", resume.experience);
-    form.setFieldValue("education", resume.education);
-    form.setFieldValue("systems", resume.systems);
-    form.setFieldValue("references", resume.references);
-  }
+  const loadResume = useCallback(
+    (resume: ResumeData) => {
+      form.reset(resume);
+      form.setFieldValue("competencies", resume.competencies);
+      form.setFieldValue("experience", resume.experience);
+      form.setFieldValue("education", resume.education);
+      form.setFieldValue("systems", resume.systems);
+      form.setFieldValue("references", resume.references);
+    },
+    [form]
+  );
+
+  const handleReset = useCallback(() => loadResume(DEFAULT_RESUME), [loadResume]);
 
   function handleImport(resume: ResumeData, method: "deterministic" | "ai") {
     const previous = structuredClone(form.state.values);
@@ -342,10 +380,12 @@ export default function ResumeBuilder() {
                     <form.Field name={`competencies[${i}]`}>
                       {(f) => <TextField className="flex-1" field={f} />}
                     </form.Field>
-                    <RemoveButton onClick={() => arr.removeValue(i)} />
+                    <RemoveButton index={i} onRemove={arr.removeValue} />
                   </div>
                 ))}
-                <AddButton onClick={() => arr.pushValue("")}>Add competency</AddButton>
+                <AddButton makeValue={emptyString} onAdd={arr.pushValue}>
+                  Add competency
+                </AddButton>
               </div>
             )}
           </form.Field>
@@ -360,9 +400,9 @@ export default function ResumeBuilder() {
                     canMoveDown={i < exp.state.value.length - 1}
                     canMoveUp={i > 0}
                     key={i}
-                    onMoveDown={() => exp.moveValue(i, i + 1)}
-                    onMoveUp={() => exp.moveValue(i, i - 1)}
-                    onRemove={() => exp.removeValue(i)}
+                    index={i}
+                    onMove={exp.moveValue}
+                    onRemove={exp.removeValue}
                     title={`Employer ${i + 1}`}
                   >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -410,11 +450,12 @@ export default function ResumeBuilder() {
                                           </form.Field>
                                           <RemoveButton
                                             label="Remove bullet"
-                                            onClick={() => bullets.removeValue(k)}
+                                            index={k}
+                                            onRemove={bullets.removeValue}
                                           />
                                         </div>
                                       ))}
-                                      <AddButton onClick={() => bullets.pushValue("")}>
+                                      <AddButton makeValue={emptyString} onAdd={bullets.pushValue}>
                                         Add bullet
                                       </AddButton>
                                     </div>
@@ -422,20 +463,12 @@ export default function ResumeBuilder() {
                                 </form.Field>
 
                                 {roles.state.value.length > 1 ? (
-                                  <Button
-                                    className="self-start text-muted-foreground text-xs"
-                                    onClick={() => roles.removeValue(j)}
-                                    size="sm"
-                                    type="button"
-                                    variant="ghost"
-                                  >
-                                    Remove role
-                                  </Button>
+                                  <RemoveRoleButton index={j} onRemove={roles.removeValue} />
                                 ) : null}
                               </div>
                             )
                           )}
-                          <AddButton onClick={() => roles.pushValue(emptyRole())}>
+                          <AddButton makeValue={emptyRole} onAdd={roles.pushValue}>
                             Add role
                           </AddButton>
                         </div>
@@ -443,7 +476,9 @@ export default function ResumeBuilder() {
                     </form.Field>
                   </ItemCard>
                 ))}
-                <AddButton onClick={() => exp.pushValue(emptyExperience())}>Add employer</AddButton>
+                <AddButton makeValue={emptyExperience} onAdd={exp.pushValue}>
+                  Add employer
+                </AddButton>
               </div>
             )}
           </form.Field>
@@ -458,9 +493,9 @@ export default function ResumeBuilder() {
                     canMoveDown={i < edu.state.value.length - 1}
                     canMoveUp={i > 0}
                     key={i}
-                    onMoveDown={() => edu.moveValue(i, i + 1)}
-                    onMoveUp={() => edu.moveValue(i, i - 1)}
-                    onRemove={() => edu.removeValue(i)}
+                    index={i}
+                    onMove={edu.moveValue}
+                    onRemove={edu.removeValue}
                     title={`Entry ${i + 1}`}
                   >
                     <form.Field name={`education[${i}].degree`}>
@@ -479,7 +514,9 @@ export default function ResumeBuilder() {
                     </form.Field>
                   </ItemCard>
                 ))}
-                <AddButton onClick={() => edu.pushValue(emptyEducation())}>Add education</AddButton>
+                <AddButton makeValue={emptyEducation} onAdd={edu.pushValue}>
+                  Add education
+                </AddButton>
               </div>
             )}
           </form.Field>
@@ -494,9 +531,9 @@ export default function ResumeBuilder() {
                     canMoveDown={i < sys.state.value.length - 1}
                     canMoveUp={i > 0}
                     key={i}
-                    onMoveDown={() => sys.moveValue(i, i + 1)}
-                    onMoveUp={() => sys.moveValue(i, i - 1)}
-                    onRemove={() => sys.removeValue(i)}
+                    index={i}
+                    onMove={sys.moveValue}
+                    onRemove={sys.removeValue}
                     title={`Group ${i + 1}`}
                   >
                     <form.Field name={`systems[${i}].label`}>
@@ -507,7 +544,9 @@ export default function ResumeBuilder() {
                     </form.Field>
                   </ItemCard>
                 ))}
-                <AddButton onClick={() => sys.pushValue(emptySystem())}>Add group</AddButton>
+                <AddButton makeValue={emptySystem} onAdd={sys.pushValue}>
+                  Add group
+                </AddButton>
               </div>
             )}
           </form.Field>
@@ -522,9 +561,9 @@ export default function ResumeBuilder() {
                     canMoveDown={i < refs.state.value.length - 1}
                     canMoveUp={i > 0}
                     key={i}
-                    onMoveDown={() => refs.moveValue(i, i + 1)}
-                    onMoveUp={() => refs.moveValue(i, i - 1)}
-                    onRemove={() => refs.removeValue(i)}
+                    index={i}
+                    onMove={refs.moveValue}
+                    onRemove={refs.removeValue}
                     title={`Reference ${i + 1}`}
                   >
                     <form.Field name={`references[${i}].name`}>
@@ -543,7 +582,7 @@ export default function ResumeBuilder() {
                     </div>
                   </ItemCard>
                 ))}
-                <AddButton onClick={() => refs.pushValue(emptyReference())}>
+                <AddButton makeValue={emptyReference} onAdd={refs.pushValue}>
                   Add reference
                 </AddButton>
               </div>
@@ -555,7 +594,7 @@ export default function ResumeBuilder() {
   );
 
   const previewPane = (
-    <form.Subscribe selector={(s) => s.values}>
+    <form.Subscribe selector={selectFormValues}>
       {(values) => <TypstPreview source={generateTypst(values as ResumeData)} />}
     </form.Subscribe>
   );
@@ -570,15 +609,11 @@ export default function ResumeBuilder() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <ImportDialog
-            onSubmit={(source, format, label) =>
-              assistantRef.current?.startImport(source, format, label)
-            }
-          />
-          <TailorDialog onSubmit={(jd) => assistantRef.current?.startTailor(jd)} />
+          <ImportDialog onSubmit={handleImportSubmit} />
+          <TailorDialog onSubmit={handleTailorSubmit} />
           <Button
             className="text-muted-foreground"
-            onClick={() => loadResume(DEFAULT_RESUME)}
+            onClick={handleReset}
             size="sm"
             type="button"
             variant="ghost"
@@ -638,7 +673,7 @@ export default function ResumeBuilder() {
       <ResumeAssistant
         applyEdits={applyResumeEdits}
         applyResume={handleImport}
-        getResume={() => form.state.values as ResumeData}
+        getResume={getResume}
         ref={assistantRef}
       />
     </div>

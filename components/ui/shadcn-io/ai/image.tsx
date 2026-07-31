@@ -7,6 +7,7 @@ export type ImageProps = Experimental_GeneratedImage & {
 };
 
 export const Image = ({ base64, uint8Array, mediaType, ...props }: ImageProps) => (
+  // biome-ignore lint/performance/noImgElement: renders AI-generated images as base64 data URIs; next/image can't optimize a data URI
   <img
     {...props}
     alt={props.alt}

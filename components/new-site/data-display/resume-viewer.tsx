@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -42,6 +42,13 @@ export default function ResumeViewer({
   const canPrev = pageNumber > 1;
   const canNext = pageNumber < numPages;
 
+  const handleLoadSuccess = useCallback(
+    ({ numPages: n }: { numPages: number }) => setNumPages(n),
+    []
+  );
+  const handlePrev = useCallback(() => setPageNumber((p) => Math.max(1, p - 1)), []);
+  const handleNext = useCallback(() => setPageNumber((p) => Math.min(numPages, p + 1)), [numPages]);
+
   return (
     <>
       <div
@@ -52,7 +59,7 @@ export default function ResumeViewer({
           <Document
             file={fileUrl}
             options={documentOptions}
-            onLoadSuccess={({ numPages: n }) => setNumPages(n)}
+            onLoadSuccess={handleLoadSuccess}
             loading={
               <div className="flex items-center gap-2 py-12 text-muted-foreground text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading {label}…
@@ -90,24 +97,14 @@ export default function ResumeViewer({
         </Button>
         {numPages > 1 && (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!canPrev}
-              onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-            >
+            <Button variant="outline" size="sm" disabled={!canPrev} onClick={handlePrev}>
               <ChevronLeft className="h-4 w-4" />
               Prev
             </Button>
             <span className="min-w-20 text-center text-muted-foreground text-xs tabular-nums">
               Page {pageNumber} of {numPages}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!canNext}
-              onClick={() => setPageNumber((p) => Math.min(numPages, p + 1))}
-            >
+            <Button variant="outline" size="sm" disabled={!canNext} onClick={handleNext}>
               Next
               <ChevronRight className="h-4 w-4" />
             </Button>

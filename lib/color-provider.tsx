@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTimeout } from "@/hooks/use-timeout";
 import { applyThemeCSSVars } from "@/lib/apply-theme-css-vars";
 import { applyThemeFonts } from "@/lib/apply-theme-fonts";
+import { ColorThemeProviderContext, type ColorThemeProviderState } from "@/lib/color-context";
 import {
   COLOR_THEMES,
   type ColorTheme,
@@ -21,30 +22,6 @@ type ColorThemeProviderProps = {
   defaultTheme?: ColorTheme;
   storageKey?: string;
 };
-
-type ColorThemeProviderState = {
-  colorTheme: ColorTheme;
-  setColorTheme: (theme: ColorTheme) => void;
-  setColorThemeWithTransition: (theme: ColorTheme) => void;
-  themes: ThemeOption[];
-  localThemes: ThemeOption[];
-  remoteThemes: ThemeOption[];
-  transitionEnabled: boolean;
-  setTransitionEnabled: (enabled: boolean) => void;
-};
-
-const initialState: ColorThemeProviderState = {
-  colorTheme: "default",
-  setColorTheme: () => null,
-  setColorThemeWithTransition: () => null,
-  themes: COLOR_THEMES,
-  localThemes: COLOR_THEMES,
-  remoteThemes: [],
-  transitionEnabled: true,
-  setTransitionEnabled: () => null,
-};
-
-const ColorThemeProviderContext = createContext<ColorThemeProviderState>(initialState);
 
 export function ColorThemeProvider({
   children,
@@ -169,12 +146,3 @@ export function ColorThemeProvider({
     </ColorThemeProviderContext.Provider>
   );
 }
-
-export const useColorTheme = () => {
-  const context = useContext(ColorThemeProviderContext);
-
-  if (context === undefined)
-    throw new Error("useColorTheme must be used within a ColorThemeProvider");
-
-  return context;
-};

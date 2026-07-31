@@ -72,6 +72,7 @@ function SpotlightCard({
   const glow = `color-mix(in oklch, ${accentColor} 12%, transparent)`;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer handlers only drive a decorative cursor-following glow; there is no action a keyboard user could take
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
@@ -219,12 +220,16 @@ function MultiSpotlightCard({
     });
   }, []);
 
+  const handleMouseEnter = React.useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = React.useCallback(() => setIsHovered(false), []);
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer handlers only drive a decorative cursor-following glow; there is no action a keyboard user could take
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "relative overflow-hidden",
         "rounded-2xl",
@@ -288,12 +293,16 @@ function BeamSpotlightCard({
     });
   }, []);
 
+  const handleMouseEnter = React.useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = React.useCallback(() => setIsHovered(false), []);
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer handlers only drive a decorative cursor-following glow; there is no action a keyboard user could take
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "relative overflow-hidden",
         "rounded-2xl",
@@ -377,12 +386,16 @@ function GradientFollowCard({
     setPosition({ x, y });
   }, []);
 
+  const handleMouseEnter = React.useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = React.useCallback(() => setIsHovered(false), []);
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer handlers only drive a decorative cursor-following glow; there is no action a keyboard user could take
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "relative overflow-hidden rounded-2xl",
         "transition-all duration-500",
@@ -496,11 +509,14 @@ function TiltSpotlightCard({
     setIsHovered(false);
   }, []);
 
+  const handleMouseEnter = React.useCallback(() => setIsHovered(true), []);
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer handlers only drive a decorative cursor-following glow; there is no action a keyboard user could take
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
         "relative overflow-hidden",

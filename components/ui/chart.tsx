@@ -86,6 +86,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
   return (
     <style
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: CSS text built from the local ChartConfig, never user input; a <style> block can't be expressed as inline styles because it emits light/dark-scoped selectors
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
@@ -106,7 +107,9 @@ ${colorConfig
   );
 };
 
-const ChartTooltip = RechartsPrimitive.Tooltip;
+function ChartTooltip(props: React.ComponentProps<typeof RechartsPrimitive.Tooltip>) {
+  return <RechartsPrimitive.Tooltip {...props} />;
+}
 
 const TooltipLabel = React.memo(function TooltipLabel({
   hideLabel,
@@ -283,7 +286,9 @@ function ChartTooltipContent({
   );
 }
 
-const ChartLegend = RechartsPrimitive.Legend;
+function ChartLegend(props: React.ComponentProps<typeof RechartsPrimitive.Legend>) {
+  return <RechartsPrimitive.Legend {...props} />;
+}
 
 function ChartLegendContent({
   className,

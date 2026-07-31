@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -52,14 +52,37 @@
         "useLiteralKeys": "off"
       },
       "suspicious": {
-        "noEmptyInterface": "off",
+        "noEmptyInterface": "on",
         "noArrayIndexKey": "off"
       },
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "error",
+        "useComponentExportOnlyModules": {
+          "level": "error",
+          "options": {
+            "allowExportNames": [
+              "metadata",
+              "generateMetadata",
+              "viewport",
+              "generateViewport",
+              "generateStaticParams",
+              "generateImageMetadata",
+              "alt",
+              "size",
+              "contentType",
+              "dynamic",
+              "dynamicParams",
+              "revalidate",
+              "fetchCache",
+              "runtime",
+              "preferredRegion",
+              "maxDuration"
+            ]
+          }
+        }
       },
       "performance": {
-        "noImgElement": "off"
+        "noImgElement": "error"
       },
       "nursery": {
         "useSortedClasses": {
@@ -71,6 +94,10 @@
           }
         }
       }
+    },
+    "domains": {
+      "next": "all",
+      "react": "all"
     }
   },
   "overrides": [
@@ -84,47 +111,6 @@
         "./biome-plugins/convex-no-collect-in-query.grit",
         "./biome-plugins/convex-no-top-of-hour-crons.grit"
       ]
-    },
-    {
-      "includes": ["**/*.config.js", "**/*.config.mjs", "**/*.config.cjs", "**/*.config.ts"],
-      "formatter": {
-        "enabled": false
-      }
-    },
-    {
-      "includes": ["components/ui/**", "hooks/**"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useSemanticElements": "off",
-            "useFocusableInteractive": "off",
-            "useAriaPropsForRole": "off",
-            "useKeyWithClickEvents": "off",
-            "noRedundantRoles": "off",
-            "useButtonType": "off",
-            "noStaticElementInteractions": "off"
-          },
-          "correctness": {
-            "useExhaustiveDependencies": "off"
-          },
-          "suspicious": {
-            "noDocumentCookie": "off"
-          },
-          "security": {
-            "noDangerouslySetInnerHtml": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["components/ui/shadcn-io/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          }
-        }
-      }
     }
   ]
 }

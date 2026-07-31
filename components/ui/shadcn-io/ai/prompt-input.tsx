@@ -18,7 +18,6 @@ import {
   Children,
   type ClipboardEventHandler,
   type ComponentProps,
-  createContext,
   type FormEvent,
   type FormEventHandler,
   Fragment,
@@ -28,7 +27,6 @@ import {
   type ReactNode,
   type RefObject,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -64,55 +62,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  type AttachmentsContext,
+  LocalAttachmentsContext,
+  PromptInputController,
+  type PromptInputControllerProps,
+  ProviderAttachmentsContext,
+  useOptionalPromptInputController,
+  usePromptInputAttachments,
+} from "@/components/ui/shadcn-io/ai/prompt-input-context";
 import { cn } from "@/lib/utils";
-
-export interface AttachmentsContext {
-  files: (FileUIPart & { id: string })[];
-  add: (files: File[] | FileList) => void;
-  remove: (id: string) => void;
-  clear: () => void;
-  openFileDialog: () => void;
-  fileInputRef: RefObject<HTMLInputElement | null>;
-}
-
-export interface TextInputContext {
-  value: string;
-  setInput: (v: string) => void;
-  clear: () => void;
-}
-
-export interface PromptInputControllerProps {
-  textInput: TextInputContext;
-  attachments: AttachmentsContext;
-  __registerFileInput: (ref: RefObject<HTMLInputElement | null>, open: () => void) => void;
-}
-
-const PromptInputController = createContext<PromptInputControllerProps | null>(null);
-const ProviderAttachmentsContext = createContext<AttachmentsContext | null>(null);
-
-export const usePromptInputController = () => {
-  const ctx = useContext(PromptInputController);
-  if (!ctx) {
-    throw new Error(
-      "Wrap your component inside <PromptInputProvider> to use usePromptInputController()."
-    );
-  }
-  return ctx;
-};
-
-const useOptionalPromptInputController = () => useContext(PromptInputController);
-
-export const useProviderAttachments = () => {
-  const ctx = useContext(ProviderAttachmentsContext);
-  if (!ctx) {
-    throw new Error(
-      "Wrap your component inside <PromptInputProvider> to use useProviderAttachments()."
-    );
-  }
-  return ctx;
-};
-
-const useOptionalProviderAttachments = () => useContext(ProviderAttachmentsContext);
 
 export type PromptInputProviderProps = PropsWithChildren<{
   initialInput?: string;
@@ -228,20 +187,6 @@ export function PromptInputProvider({
   );
 }
 
-const LocalAttachmentsContext = createContext<AttachmentsContext | null>(null);
-
-export const usePromptInputAttachments = () => {
-  const provider = useOptionalProviderAttachments();
-  const local = useContext(LocalAttachmentsContext);
-  const context = provider ?? local;
-  if (!context) {
-    throw new Error(
-      "usePromptInputAttachments must be used within a PromptInput or PromptInputProvider"
-    );
-  }
-  return context;
-};
-
 export type PromptInputAttachmentProps = HTMLAttributes<HTMLDivElement> & {
   data: FileUIPart & { id: string };
   className?: string;
@@ -254,6 +199,14 @@ export function PromptInputAttachment({ data, className, ...props }: PromptInput
 
   const mediaType = data.mediaType?.startsWith("image/") && data.url ? "image" : "file";
   const isImage = mediaType === "image";
+
+  const handleRemove = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      attachments.remove(data.id);
+    },
+    [attachments, data.id]
+  );
 
   const attachmentLabel = filename || (isImage ? "Image" : "Attachment");
 
@@ -274,6 +227,7 @@ export function PromptInputAttachment({ data, className, ...props }: PromptInput
         <div className="relative size-5 shrink-0">
           <div className="absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0">
             {isImage ? (
+              // biome-ignore lint/performance/noImgElement: attachment previews render blob/data URLs from the chat runtime; next/image can't optimize them
               <img
                 alt={filename || "attachment"}
                 className="size-5 object-cover"
@@ -290,10 +244,7 @@ export function PromptInputAttachment({ data, className, ...props }: PromptInput
           <Button
             aria-label="Remove attachment"
             className="absolute inset-0 size-5 cursor-pointer rounded p-0 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 [&>svg]:size-2.5"
-            onClick={(e) => {
-              e.stopPropagation();
-              attachments.remove(data.id);
-            }}
+            onClick={handleRemove}
             type="button"
             variant="ghost"
           >
@@ -307,6 +258,7 @@ export function PromptInputAttachment({ data, className, ...props }: PromptInput
         <div className="w-auto space-y-3">
           {isImage && (
             <div className="flex max-h-96 w-96 items-center justify-center overflow-hidden rounded-md border">
+              {/* biome-ignore lint/performance/noImgElement: attachment previews render blob/data URLs from the chat runtime; next/image can't optimize them */}
               <img
                 alt={filename || "attachment preview"}
                 className="max-h-full max-w-full object-contain"
@@ -321,9 +273,9 @@ export function PromptInputAttachment({ data, className, ...props }: PromptInput
               <h4 className="truncate font-semibold text-sm leading-none">
                 {filename || (isImage ? "Image" : "Attachment")}
               </h4>
-              {data.mediaType && (
+              {data.mediaType ? (
                 <p className="truncate font-mono text-muted-foreground text-xs">{data.mediaType}</p>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -366,14 +318,18 @@ export const PromptInputActionAddAttachments = ({
 }: PromptInputActionAddAttachmentsProps) => {
   const attachments = usePromptInputAttachments();
 
+  const handleSelect = useCallback<
+    NonNullable<React.ComponentProps<typeof DropdownMenuItem>["onSelect"]>
+  >(
+    (e) => {
+      e.preventDefault();
+      attachments.openFileDialog();
+    },
+    [attachments]
+  );
+
   return (
-    <DropdownMenuItem
-      {...props}
-      onSelect={(e) => {
-        e.preventDefault();
-        attachments.openFileDialog();
-      }}
-    >
+    <DropdownMenuItem {...props} onSelect={handleSelect}>
       <ImageIcon className="mr-2 size-4" /> {label}
     </DropdownMenuItem>
   );
@@ -821,16 +777,19 @@ export const PromptInputTextarea = ({
         onChange,
       };
 
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+  const handleCompositionEnd = useCallback(() => {
+    isComposingRef.current = false;
+  }, []);
+
   return (
     <InputGroupTextarea
       className={cn("field-sizing-content max-h-48 min-h-16", className)}
       name="message"
-      onCompositionEnd={() => {
-        isComposingRef.current = false;
-      }}
-      onCompositionStart={() => {
-        isComposingRef.current = true;
-      }}
+      onCompositionEnd={handleCompositionEnd}
+      onCompositionStart={handleCompositionStart}
       onKeyDown={handleKeyDown}
       onPaste={handlePaste}
       placeholder={placeholder}
@@ -960,10 +919,10 @@ interface SpeechRecognition extends EventTarget {
   lang: string;
   start(): void;
   stop(): void;
-  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
 }
 
 interface SpeechRecognitionEvent extends Event {
@@ -1236,15 +1195,14 @@ export const PromptInputCommandSeparator = ({
   ...props
 }: PromptInputCommandSeparatorProps) => <CommandSeparator className={cn(className)} {...props} />;
 
+const logSubmit = (message: PromptInputMessage) => {
+  console.log("Submitting message:", message);
+};
+
 export default function PromptInputDemo() {
   return (
     <div className="size-full">
-      <PromptInput
-        multiple
-        onSubmit={(message) => {
-          console.log("Submitting message:", message);
-        }}
-      >
+      <PromptInput multiple onSubmit={logSubmit}>
         <PromptInputAttachments>
           {(attachment) => <PromptInputAttachment data={attachment} />}
         </PromptInputAttachments>

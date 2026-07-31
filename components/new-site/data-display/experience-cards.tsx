@@ -6,7 +6,7 @@ import * as React from "react";
 import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { EXPERIENCES, type ExperienceEntry } from "@/lib/new-site/data";
-import AttachmentDialog from "./attachment-dialog";
+import { AttachmentDialog } from "./attachment-dialog";
 
 function formatDuration(start: Date, end?: Date): string {
   const endDate = end ?? new Date();
@@ -51,18 +51,22 @@ function ToggleIcon({ isOpen }: { isOpen: boolean }) {
 function ExperienceCard({
   experience,
   isOpen,
+  index,
   onToggle,
   itemId,
   panelId,
 }: {
   experience: ExperienceEntry;
   isOpen: boolean;
-  onToggle: () => void;
+  index: number;
+  onToggle: (index: number) => void;
   itemId: string;
   panelId: string;
 }) {
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [contentH, setContentH] = React.useState(0);
+
+  const handleToggle = React.useCallback(() => onToggle(index), [onToggle, index]);
 
   React.useEffect(() => {
     const el = contentRef.current;
@@ -87,7 +91,7 @@ function ExperienceCard({
           type="button"
           aria-controls={panelId}
           aria-expanded={isOpen}
-          onClick={onToggle}
+          onClick={handleToggle}
           className="flex w-full cursor-pointer select-none items-center gap-3 px-4 py-4 text-left sm:gap-4 sm:px-6 sm:py-5"
         >
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted/50 ring-1 ring-border">
@@ -182,7 +186,10 @@ export default function ExperienceCards() {
   const baseId = `experience-${rawId.replace(/:/g, "")}`;
   const [openIndex, setOpenIndex] = React.useState<number | null>(0);
 
-  const toggle = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
+  const toggle = React.useCallback(
+    (i: number) => setOpenIndex((prev) => (prev === i ? null : i)),
+    []
+  );
 
   return (
     <m.div layout className="flex flex-col gap-4">
@@ -191,7 +198,8 @@ export default function ExperienceCards() {
           key={experience.company}
           experience={experience}
           isOpen={openIndex === i}
-          onToggle={() => toggle(i)}
+          index={i}
+          onToggle={toggle}
           itemId={`${baseId}-trigger-${i}`}
           panelId={`${baseId}-panel-${i}`}
         />

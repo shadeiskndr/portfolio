@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import type React from "react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +42,7 @@ export function MusicPlayer({
 
   const youtubeId = !isControlled && src ? getYoutubeId(src) : null;
 
-  const playMedia = () => {
+  const playMedia = useCallback(() => {
     if (youtubeId && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
         JSON.stringify({ event: "command", func: "playVideo", args: [] }),
@@ -51,9 +51,9 @@ export function MusicPlayer({
     } else {
       audioRef.current?.play().catch(() => setInternalIsPlaying(false));
     }
-  };
+  }, [youtubeId]);
 
-  const pauseMedia = () => {
+  const pauseMedia = useCallback(() => {
     if (youtubeId && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
         JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
@@ -62,7 +62,7 @@ export function MusicPlayer({
     } else {
       audioRef.current?.pause();
     }
-  };
+  }, [youtubeId]);
 
   useMountEffect(() => {
     if (!isControlled && autoPlay) {
@@ -70,7 +70,7 @@ export function MusicPlayer({
     }
   });
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (isControlled) return;
     const next = !internalIsPlaying;
     setInternalIsPlaying(next);
@@ -79,7 +79,20 @@ export function MusicPlayer({
     } else {
       pauseMedia();
     }
-  };
+  }, [isControlled, internalIsPlaying, playMedia, pauseMedia]);
+
+  const handleEnded = useCallback(() => setInternalIsPlaying(false), []);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        togglePlay();
+      }
+    },
+    [togglePlay]
+  );
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
 
   return (
     <div className={cn("relative inline-flex flex-col items-center", className)} {...props}>
@@ -97,34 +110,29 @@ export function MusicPlayer({
             sandbox="allow-scripts allow-same-origin allow-presentation"
           />
         ) : src ? (
-          <audio
-            ref={audioRef}
-            src={src}
-            onEnded={() => setInternalIsPlaying(false)}
-            className="hidden"
-          >
+          <audio ref={audioRef} src={src} onEnded={handleEnded} className="hidden">
             <track kind="captions" />
           </audio>
         ) : null)}
 
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: hover only pauses the decorative disc spin; the play/pause affordance below carries role/tabIndex when interactive */}
       <div
         className={cn(
           "relative select-none",
           !isControlled && "cursor-pointer",
           discClassName ?? "h-64 w-64 md:h-80 md:w-80"
         )}
-        onClick={togglePlay}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            togglePlay();
-          }
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        role={isControlled ? undefined : "button"}
-        tabIndex={isControlled ? undefined : 0}
-        title={isControlled ? undefined : isPlaying ? "Pause" : "Play"}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        {...(isControlled
+          ? {}
+          : {
+              onClick: togglePlay,
+              onKeyDown: handleKeyDown,
+              role: "button" as const,
+              tabIndex: 0,
+              title: isPlaying ? "Pause" : "Play",
+            })}
       >
         {!hideTonearm && (
           <motion.div

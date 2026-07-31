@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -66,18 +66,37 @@ function validate(source: string): Result {
   return { status: "invalid", issues, tag };
 }
 
+function ExampleButton({
+  example,
+  onLoad,
+}: {
+  example: (typeof EXAMPLES)[number];
+  onLoad: (json: string) => void;
+}) {
+  const handleClick = useCallback(() => onLoad(example.json), [onLoad, example.json]);
+
+  return (
+    <Button size="sm" variant="ghost" onClick={handleClick}>
+      {example.label}
+    </Button>
+  );
+}
+
 export function DiscriminatedUnionDemo() {
   const [source, setSource] = useState(EXAMPLES[1]?.json ?? "");
   const result = useMemo(() => validate(source), [source]);
+
+  const handleSourceChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setSource(e.target.value),
+    []
+  );
 
   return (
     <div className="my-6 overflow-hidden rounded-xl border">
       <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 p-2">
         <span className="mr-1 text-muted-foreground text-xs">Load a block:</span>
         {EXAMPLES.map((ex) => (
-          <Button key={ex.label} size="sm" variant="ghost" onClick={() => setSource(ex.json)}>
-            {ex.label}
-          </Button>
+          <ExampleButton key={ex.label} example={ex} onLoad={setSource} />
         ))}
       </div>
       <div className="grid md:grid-cols-2">
@@ -85,7 +104,7 @@ export function DiscriminatedUnionDemo() {
           aria-label="Block JSON"
           spellCheck={false}
           value={source}
-          onChange={(e) => setSource(e.target.value)}
+          onChange={handleSourceChange}
           className="min-h-55 resize-y border-b bg-transparent p-4 font-mono text-xs leading-relaxed outline-none md:border-r md:border-b-0"
         />
         <div className="min-w-0 p-4">

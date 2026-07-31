@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 import {
   type ChartConfig,
@@ -15,6 +16,17 @@ import {
   formatFullXp,
   formatXp,
 } from "@/lib/new-site/codestats";
+
+type TooltipContentProps = React.ComponentProps<typeof ChartTooltipContent>;
+
+const formatTooltipDay: NonNullable<TooltipContentProps["labelFormatter"]> = (label) =>
+  formatDayLong(String(label));
+
+const formatTooltipXp: NonNullable<TooltipContentProps["formatter"]> = (value) =>
+  `${formatFullXp(Number(value))} XP`;
+
+const formatBarLabel: NonNullable<React.ComponentProps<typeof LabelList>["formatter"]> = (value) =>
+  formatXp(Number(value));
 
 const ACTIVITY_CONFIG = {
   xp: { label: "XP", color: "var(--color-chart-1)" },
@@ -35,12 +47,13 @@ export function XpActivityChart({
     if (point[dataKey] > peak) peak = point[dataKey];
   }
   const formatTick = peak >= 10_000 ? formatCompactXp : formatFullXp;
+  const fillId = useId();
 
   return (
     <ChartContainer config={ACTIVITY_CONFIG} className="aspect-auto h-56 w-full">
       <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <defs>
-          <linearGradient id="codestats-xp-fill" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.28} />
             <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.02} />
           </linearGradient>
@@ -66,8 +79,8 @@ export function XpActivityChart({
           content={
             <ChartTooltipContent
               indicator="line"
-              labelFormatter={(label) => formatDayLong(String(label))}
-              formatter={(value) => `${formatFullXp(Number(value))} XP`}
+              labelFormatter={formatTooltipDay}
+              formatter={formatTooltipXp}
             />
           }
         />
@@ -76,7 +89,7 @@ export function XpActivityChart({
           type="monotone"
           stroke="var(--color-chart-1)"
           strokeWidth={2}
-          fill="url(#codestats-xp-fill)"
+          fill={`url(#${fillId})`}
           dot={false}
           activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--color-background)" }}
           isAnimationActive={false}
@@ -109,12 +122,7 @@ export function LanguagesChart({ rows }: { rows: { name: string; xp: number }[] 
         />
         <ChartTooltip
           cursor={{ fill: "var(--color-muted)", fillOpacity: 0.5 }}
-          content={
-            <ChartTooltipContent
-              hideIndicator
-              formatter={(value) => `${formatFullXp(Number(value))} XP`}
-            />
-          }
+          content={<ChartTooltipContent hideIndicator formatter={formatTooltipXp} />}
         />
         <Bar
           dataKey="xp"
@@ -129,7 +137,7 @@ export function LanguagesChart({ rows }: { rows: { name: string; xp: number }[] 
             offset={8}
             fontSize={11}
             className="fill-muted-foreground"
-            formatter={(value) => formatXp(Number(value))}
+            formatter={formatBarLabel}
           />
         </Bar>
       </BarChart>

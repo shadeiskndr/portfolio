@@ -1,3 +1,4 @@
+// biome-ignore-all lint/security/noDangerouslySetInnerHtml: this module's whole job is rendering Shiki highlighter output; a per-site ignore would displace the adjacent react-doctor suppression
 "use client";
 
 import { CheckIcon, CopyIcon } from "lucide-react";
@@ -50,11 +51,7 @@ const lineNumberTransformer: ShikiTransformer = {
   },
 };
 
-export async function highlightCode(
-  code: string,
-  language: BundledLanguage,
-  showLineNumbers = false
-) {
+async function highlightCode(code: string, language: BundledLanguage, showLineNumbers = false) {
   const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
 
   return await Promise.all([
@@ -119,9 +116,9 @@ export const CodeBlock = ({
             // react-doctor-disable-next-line react-doctor/dangerous-html-sink
             dangerouslySetInnerHTML={{ __html: darkHtml }}
           />
-          {children && (
+          {children ? (
             <div className="absolute top-2 right-2 flex items-center gap-2">{children}</div>
-          )}
+          ) : null}
         </div>
       </div>
     </CodeBlockContext.Provider>
@@ -176,6 +173,9 @@ export const CodeBlockCopyButton = ({
   );
 };
 
+const logCopied = () => console.log("Copied code to clipboard");
+const logCopyError = () => console.error("Failed to copy code to clipboard");
+
 export default function CodeBlockDemo() {
   const code = `function MyComponent(props) {
   return (
@@ -189,10 +189,7 @@ export default function CodeBlockDemo() {
   return (
     <div className="w-full max-w-2xl p-6">
       <CodeBlock code={code} language="jsx">
-        <CodeBlockCopyButton
-          onCopy={() => console.log("Copied code to clipboard")}
-          onError={() => console.error("Failed to copy code to clipboard")}
-        />
+        <CodeBlockCopyButton onCopy={logCopied} onError={logCopyError} />
       </CodeBlock>
     </div>
   );

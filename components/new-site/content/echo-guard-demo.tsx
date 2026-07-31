@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type Origin = "chart" | "grid";
@@ -15,39 +15,57 @@ export function EchoGuardDemo() {
   const generation = useRef(0);
   const producedBy = useRef(new Map<Origin, number>());
 
-  const commit = (next: number, origin: Origin) => {
-    generation.current += 1;
-    producedBy.current.set(origin, generation.current);
-    setValue(next);
+  const commit = useCallback(
+    (next: number, origin: Origin) => {
+      generation.current += 1;
+      producedBy.current.set(origin, generation.current);
+      setValue(next);
 
-    if (origin === "chart") {
-      const isOwnEcho = producedBy.current.get("chart") === generation.current;
-      if (guard && isOwnEcho) {
-        setSkipped((n) => n + 1);
-      } else {
-        setZoom(1);
-        setClobbers((n) => n + 1);
+      if (origin === "chart") {
+        const isOwnEcho = producedBy.current.get("chart") === generation.current;
+        if (guard && isOwnEcho) {
+          setSkipped((n) => n + 1);
+        } else {
+          setZoom(1);
+          setClobbers((n) => n + 1);
+        }
       }
-    }
-  };
+    },
+    [guard]
+  );
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setValue(50);
     setZoom(1.6);
     setSkipped(0);
     setClobbers(0);
     generation.current = 0;
     producedBy.current.clear();
-  };
+  }, []);
+
+  const handleToggleGuard = useCallback(() => setGuard((g) => !g), []);
+  const handleChartChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => commit(Number(e.target.value), "chart"),
+    [commit]
+  );
+  const handleZoomChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setZoom(Number(e.target.value)),
+    []
+  );
+  const handleGridChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      const next = raw === "" ? value : Number(raw);
+      if (Number.isNaN(next)) return;
+      commit(next, "grid");
+    },
+    [commit, value]
+  );
 
   return (
     <div className="my-6 rounded-xl border p-4">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          variant={guard ? "default" : "outline"}
-          onClick={() => setGuard((g) => !g)}
-        >
+        <Button size="sm" variant={guard ? "default" : "outline"} onClick={handleToggleGuard}>
           {guard ? "Echo guard: on" : "Echo guard: off"}
         </Button>
         <Button size="sm" variant="ghost" onClick={reset}>
@@ -81,7 +99,7 @@ export function EchoGuardDemo() {
             min={0}
             max={100}
             value={value}
-            onChange={(e) => commit(Number(e.target.value), "chart")}
+            onChange={handleChartChange}
             className="h-1 flex-1 cursor-pointer accent-primary"
             aria-label="Chart value"
           />
@@ -94,7 +112,7 @@ export function EchoGuardDemo() {
             max={2}
             step={0.05}
             value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
+            onChange={handleZoomChange}
             className="h-1 flex-1 cursor-pointer accent-primary"
             aria-label="Chart zoom"
           />
@@ -110,12 +128,7 @@ export function EchoGuardDemo() {
           min={0}
           max={100}
           value={value}
-          onChange={(e) => {
-            const raw = e.target.value;
-            const next = raw === "" ? value : Number(raw);
-            if (Number.isNaN(next)) return;
-            commit(next, "grid");
-          }}
+          onChange={handleGridChange}
           className="w-24 rounded-md border bg-transparent px-2 py-1 font-mono text-sm outline-none"
           aria-label="Grid value"
         />

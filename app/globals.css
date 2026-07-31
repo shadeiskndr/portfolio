@@ -80,6 +80,23 @@
     var(--marquee-loop-count);
   --animate-marquee-up: marquee-up var(--marquee-duration) linear var(--marquee-loop-count);
   --animate-marquee-down: marquee-down var(--marquee-duration) linear var(--marquee-loop-count);
+  @keyframes scale {
+    0% {
+      transform: scale(2);
+      opacity: 0;
+      box-shadow: 0px 0px 50px rgba(255, 165, 0, 0.5);
+    }
+    50% {
+      transform: translate(0px, -5px) scale(1);
+      opacity: 1;
+      box-shadow: 0px 8px 20px rgba(255, 165, 0, 0.5);
+    }
+    100% {
+      transform: translate(0px, 5px) scale(0.1);
+      opacity: 0;
+      box-shadow: 0px 10px 20px rgba(255, 165, 0, 0);
+    }
+  }
   @keyframes marquee-left {
     0% {
       transform: translateX(0%);

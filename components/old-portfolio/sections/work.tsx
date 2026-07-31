@@ -6,6 +6,7 @@ import { PROJECTS } from "@/lib/data";
 
 const WorkSection = () => {
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: stable page-section landmark; NAV_LINKS in lib/data.tsx anchors to this exact id
     <Container id="projects">
       <div className="flex flex-col items-center gap-4">
         <div className="self-center">

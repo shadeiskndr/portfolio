@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useAsset } from "@/lib/assets-provider";
+import { useAsset } from "@/lib/assets-context";
 
 type AssetImageProps = {
   assetKey: string;

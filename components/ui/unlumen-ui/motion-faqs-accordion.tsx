@@ -19,18 +19,22 @@ export interface MotionAccordionProps {
 function AccordionItem({
   item,
   isOpen,
+  index,
   onToggle,
   itemId,
   panelId,
 }: {
   item: MotionAccordionItem;
   isOpen: boolean;
-  onToggle: () => void;
+  index: number;
+  onToggle: (index: number) => void;
   itemId: string;
   panelId: string;
 }) {
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [contentH, setContentH] = React.useState(0);
+
+  const handleToggle = React.useCallback(() => onToggle(index), [onToggle, index]);
 
   React.useEffect(() => {
     const el = contentRef.current;
@@ -58,7 +62,7 @@ function AccordionItem({
         type="button"
         aria-controls={panelId}
         aria-expanded={isOpen}
-        onClick={onToggle}
+        onClick={handleToggle}
         className="flex w-full cursor-pointer select-none items-center justify-between gap-4 px-7 py-5 text-left"
       >
         <span className="font-medium text-[clamp(1.2rem,1.6vw,1.3rem)] leading-snug">
@@ -133,7 +137,10 @@ export function MotionAccordion({ items, gap = 10, className }: MotionAccordionP
 
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
 
-  const toggle = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
+  const toggle = React.useCallback(
+    (i: number) => setOpenIndex((prev) => (prev === i ? null : i)),
+    []
+  );
 
   return (
     <div className={cn("w-full", className)}>
@@ -144,7 +151,8 @@ export function MotionAccordion({ items, gap = 10, className }: MotionAccordionP
             key={i}
             item={item}
             isOpen={openIndex === i}
-            onToggle={() => toggle(i)}
+            index={i}
+            onToggle={toggle}
             itemId={`${baseId}-trigger-${i}`}
             panelId={`${baseId}-panel-${i}`}
           />

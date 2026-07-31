@@ -1,14 +1,14 @@
 "use client";
 
 import { Bell, BellOff, MoonStar, Sun } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import ColorThemePicker from "@/components/new-site/layout/color-theme-picker";
 import MusicPlayerPopover from "@/components/new-site/layout/music-player-popover";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useSound } from "@/hooks/use-sound";
-import { useTheme } from "@/lib/light-dark-providers";
+import { useTheme } from "@/lib/theme-context";
 
 export default function ThemeControls({
   variant = "bar",
@@ -24,6 +24,19 @@ export default function ThemeControls({
   const size = variant === "bar" ? "size-8" : "size-10";
   const iconButtonClassName = `${size} rounded-full text-muted-foreground`;
 
+  const handleToggleSound = useCallback(() => {
+    const willEnable = !soundEnabled;
+    toggleSound();
+    if (willEnable) {
+      playClick("sound");
+    }
+  }, [soundEnabled, toggleSound, playClick]);
+
+  const handleToggleTheme = useCallback(() => {
+    playClick("icon");
+    setThemeWithTransition(theme === "dark" ? "light" : "dark");
+  }, [playClick, setThemeWithTransition, theme]);
+
   const soundToggle = (
     <Tooltip disableHoverablePopup>
       <TooltipTrigger
@@ -34,13 +47,7 @@ export default function ThemeControls({
             className={iconButtonClassName}
             aria-label={soundEnabled ? "Mute sounds" : "Unmute sounds"}
             aria-pressed={soundEnabled}
-            onClick={() => {
-              const willEnable = !soundEnabled;
-              toggleSound();
-              if (willEnable) {
-                playClick("sound");
-              }
-            }}
+            onClick={handleToggleSound}
           >
             {mounted && soundEnabled ? (
               <Bell className="h-4 w-4" />
@@ -63,10 +70,7 @@ export default function ThemeControls({
             size="icon"
             className={iconButtonClassName}
             aria-label="Toggle dark mode"
-            onClick={() => {
-              playClick("icon");
-              setThemeWithTransition(theme === "dark" ? "light" : "dark");
-            }}
+            onClick={handleToggleTheme}
           >
             {mounted && theme === "dark" ? (
               <Sun className="h-4 w-4" />

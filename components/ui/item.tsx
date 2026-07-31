@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <ul> carries UA list-style and padding; this is a styled flex container that only needs the list role
     <div
       // react-doctor-disable-next-line react-doctor/prefer-tag-over-role
       role="list"

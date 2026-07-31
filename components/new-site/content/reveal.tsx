@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnimationDefinition } from "motion/react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { Highlighter } from "@/components/ui/magicui/highlighter";
 import { cn } from "@/lib/utils";
@@ -13,14 +13,16 @@ type RevealFadeProps = React.ComponentProps<typeof BlurFade>;
 export function RevealFade({ children, onAnimationComplete, ...props }: RevealFadeProps) {
   const [revealed, setRevealed] = useState(false);
 
+  const handleAnimationComplete = useCallback(
+    (definition: AnimationDefinition) => {
+      if (definition === "visible") setRevealed(true);
+      onAnimationComplete?.(definition);
+    },
+    [onAnimationComplete]
+  );
+
   return (
-    <BlurFade
-      {...props}
-      onAnimationComplete={(definition: AnimationDefinition) => {
-        if (definition === "visible") setRevealed(true);
-        onAnimationComplete?.(definition);
-      }}
-    >
+    <BlurFade {...props} onAnimationComplete={handleAnimationComplete}>
       <RevealedContext.Provider value={revealed}>{children}</RevealedContext.Provider>
     </BlurFade>
   );

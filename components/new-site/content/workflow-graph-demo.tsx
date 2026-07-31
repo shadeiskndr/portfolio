@@ -16,7 +16,7 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import type { CSSProperties } from "react";
-import { useTheme } from "@/lib/light-dark-providers";
+import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 type Status = "ok" | "running" | "failed" | "idle";

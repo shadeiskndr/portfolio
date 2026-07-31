@@ -101,6 +101,52 @@ const lineVariants = {
 
 const transition = { type: "spring", bounce: 0, duration: 0.4 };
 
+function ToolbarItemButton({
+  item,
+  isSelected,
+  onSelect,
+}: {
+  item: ToolbarItem;
+  isSelected: boolean;
+  onSelect: (itemId: string) => void;
+}) {
+  const handleClick = React.useCallback(() => onSelect(item.id), [onSelect, item.id]);
+
+  return (
+    <motion.button
+      animate="animate"
+      className={cn(
+        "relative flex items-center rounded-none px-3 py-2",
+        "font-medium text-sm transition-colors duration-300",
+        isSelected
+          ? "rounded-lg bg-[#1F9CFE] text-white"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
+      custom={isSelected}
+      initial={false}
+      onClick={handleClick}
+      transition={transition as any}
+      variants={buttonVariants as any}
+    >
+      <item.icon className={cn(isSelected && "text-white")} size={16} />
+      <AnimatePresence initial={false}>
+        {isSelected ? (
+          <motion.span
+            animate="animate"
+            className="overflow-hidden"
+            exit="exit"
+            initial="initial"
+            transition={transition as any}
+            variants={spanVariants as any}
+          >
+            {item.title}
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
+    </motion.button>
+  );
+}
+
 export function Toolbar({
   items = DEFAULT_TOOLBAR_ITEMS,
   defaultSelected = "select",
@@ -112,12 +158,17 @@ export function Toolbar({
   const [activeNotification, setActiveNotification] = React.useState<string | null>(null);
   const outsideClickRef = React.useRef(null);
 
-  const handleItemClick = (itemId: string) => {
-    setSelected(selected === itemId ? null : itemId);
-    onSelect?.(itemId);
-    setActiveNotification(itemId);
-    setTimeout(() => setActiveNotification(null), 1500);
-  };
+  const handleItemClick = React.useCallback(
+    (itemId: string) => {
+      setSelected(selected === itemId ? null : itemId);
+      onSelect?.(itemId);
+      setActiveNotification(itemId);
+      setTimeout(() => setActiveNotification(null), 1500);
+    },
+    [selected, onSelect]
+  );
+
+  const handleToggle = React.useCallback(() => setIsToggled((v) => !v), []);
 
   return (
     <div className="space-y-2">
@@ -132,7 +183,7 @@ export function Toolbar({
         ref={outsideClickRef}
       >
         <AnimatePresence>
-          {activeNotification && (
+          {activeNotification ? (
             <motion.div
               animate="animate"
               className="absolute -top-8 left-1/2 z-50 -translate-x-1/2 transform"
@@ -152,43 +203,17 @@ export function Toolbar({
                 variants={lineVariants as any}
               />
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
 
         <div className="flex items-center gap-2">
           {items.map((item) => (
-            <motion.button
-              animate="animate"
-              className={cn(
-                "relative flex items-center rounded-none px-3 py-2",
-                "font-medium text-sm transition-colors duration-300",
-                selected === item.id
-                  ? "rounded-lg bg-[#1F9CFE] text-white"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-              custom={selected === item.id}
-              initial={false}
+            <ToolbarItemButton
+              isSelected={selected === item.id}
+              item={item}
               key={item.id}
-              onClick={() => handleItemClick(item.id)}
-              transition={transition as any}
-              variants={buttonVariants as any}
-            >
-              <item.icon className={cn(selected === item.id && "text-white")} size={16} />
-              <AnimatePresence initial={false}>
-                {selected === item.id && (
-                  <motion.span
-                    animate="animate"
-                    className="overflow-hidden"
-                    exit="exit"
-                    initial="initial"
-                    transition={transition as any}
-                    variants={spanVariants as any}
-                  >
-                    {item.title}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+              onSelect={handleItemClick}
+            />
           ))}
 
           <motion.button
@@ -211,7 +236,7 @@ export function Toolbar({
                     "hover:border-border/40",
                   ]
             )}
-            onClick={() => setIsToggled(!isToggled)}
+            onClick={handleToggle}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -223,5 +248,3 @@ export function Toolbar({
     </div>
   );
 }
-
-export default Toolbar;

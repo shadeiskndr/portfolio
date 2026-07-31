@@ -4,9 +4,9 @@ import { EditorView } from "@codemirror/view";
 import { langs } from "@uiw/codemirror-extensions-langs";
 import { githubDark, githubLight } from "@uiw/codemirror-themes-all";
 import CodeMirror from "@uiw/react-codemirror";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/lib/light-dark-providers";
+import { useTheme } from "@/lib/theme-context";
 
 const LANGS = {
   tsx: { label: "TypeScript", ext: () => langs.tsx() },
@@ -42,6 +42,24 @@ class Point:
 }`,
 };
 
+function LangButton({
+  langKey,
+  active,
+  onSelect,
+}: {
+  langKey: LangKey;
+  active: boolean;
+  onSelect: (key: LangKey) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(langKey), [onSelect, langKey]);
+
+  return (
+    <Button size="sm" variant={active ? "default" : "ghost"} onClick={handleClick}>
+      {LANGS[langKey].label}
+    </Button>
+  );
+}
+
 export function CodeMirrorDemo() {
   const { resolvedTheme } = useTheme();
   const [lang, setLang] = useState<LangKey>("tsx");
@@ -54,24 +72,23 @@ export function CodeMirrorDemo() {
     [lang, wrap]
   );
 
+  const handleToggleWrap = useCallback(() => setWrap((w) => !w), []);
+  const handleChange = useCallback(
+    (val: string) => setBuffers((b) => ({ ...b, [lang]: val })),
+    [lang]
+  );
+
   return (
     <div className="my-6 overflow-hidden rounded-xl border">
       <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 p-2">
         {(Object.keys(LANGS) as LangKey[]).map((k) => (
-          <Button
-            key={k}
-            size="sm"
-            variant={lang === k ? "default" : "ghost"}
-            onClick={() => setLang(k)}
-          >
-            {LANGS[k].label}
-          </Button>
+          <LangButton key={k} langKey={k} active={lang === k} onSelect={setLang} />
         ))}
         <Button
           className="ml-auto"
           size="sm"
           variant={wrap ? "default" : "ghost"}
-          onClick={() => setWrap((w) => !w)}
+          onClick={handleToggleWrap}
         >
           Wrap
         </Button>
@@ -80,7 +97,7 @@ export function CodeMirrorDemo() {
         value={buffers[lang]}
         theme={theme}
         extensions={extensions}
-        onChange={(val) => setBuffers((b) => ({ ...b, [lang]: val }))}
+        onChange={handleChange}
         basicSetup={{ lineNumbers: true, foldGutter: true, highlightActiveLine: true }}
         className="text-sm"
       />

@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -24,31 +24,33 @@ export interface IconButtonProps
   asChild?: boolean;
   showTooltip?: boolean;
   tooltipText?: string;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
-const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    { className, size, asChild = false, showTooltip = false, tooltipText = "", children, ...props },
-    ref
-  ) => {
-    return (
-      <button
-        className={cn("relative", iconButtonVariants({ size }), className)}
-        ref={ref}
-        {...props}
-      >
-        {children}
-        {showTooltip && tooltipText.length > 0 && (
-          <span className="absolute -top-8 rounded-lg bg-primary px-2 py-1 text-sm">
-            {tooltipText}
-          </span>
-        )}
-      </button>
-    );
-  }
-);
-
-IconButton.displayName = "IconButton";
+function IconButton({
+  className,
+  size,
+  asChild: _asChild = false,
+  showTooltip = false,
+  tooltipText = "",
+  children,
+  ref,
+  ...props
+}: IconButtonProps) {
+  return (
+    <button
+      className={cn("relative", iconButtonVariants({ size }), className)}
+      ref={ref}
+      {...props}
+    >
+      {children}
+      {showTooltip && tooltipText.length > 0 ? (
+        <span className="absolute -top-8 rounded-lg bg-primary px-2 py-1 text-sm">
+          {tooltipText}
+        </span>
+      ) : null}
+    </button>
+  );
+}
 
 export default IconButton;

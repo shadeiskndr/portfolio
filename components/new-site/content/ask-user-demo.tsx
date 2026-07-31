@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
@@ -11,25 +11,35 @@ type Phase = "idle" | "running" | "awaiting" | "done";
 const QUESTION = "Which source should I summarize from?";
 const OPTIONS = ["Finance export", "Shared drive"];
 
+function OptionButton({ option, onAnswer }: { option: string; onAnswer: (o: string) => void }) {
+  const handleClick = useCallback(() => onAnswer(option), [onAnswer, option]);
+
+  return (
+    <Button size="sm" variant="outline" onClick={handleClick}>
+      {option}
+    </Button>
+  );
+}
+
 export function AskUserDemo() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const nextId = useRef(0);
 
-  const clear = () => {
+  const clear = useCallback(() => {
     for (const t of timers.current) clearTimeout(t);
     timers.current = [];
-  };
-  const push = (m: Omit<Msg, "id">) => {
+  }, []);
+  const push = useCallback((m: Omit<Msg, "id">) => {
     const id = nextId.current++;
     setMessages((xs) => [...xs, { ...m, id }]);
-  };
-  const after = (ms: number, fn: () => void) => {
+  }, []);
+  const after = useCallback((ms: number, fn: () => void) => {
     timers.current.push(setTimeout(fn, ms));
-  };
+  }, []);
 
-  const run = () => {
+  const run = useCallback(() => {
     clear();
     setPhase("running");
     setMessages([
@@ -40,34 +50,37 @@ export function AskUserDemo() {
       push({ role: "tool", text: `ask_user — ${QUESTION}` });
       setPhase("awaiting");
     });
-  };
+  }, [clear, after, push]);
 
-  const answer = (choice: string) => {
-    push({ role: "user", text: choice });
-    setPhase("running");
-    after(500, () =>
-      push({ role: "assistant", text: `Reading from the ${choice.toLowerCase()}…` })
-    );
-    after(1500, () => {
-      push({ role: "assistant", text: "Done — here's the summary." });
-      setPhase("done");
-    });
-  };
+  const answer = useCallback(
+    (choice: string) => {
+      push({ role: "user", text: choice });
+      setPhase("running");
+      after(500, () =>
+        push({ role: "assistant", text: `Reading from the ${choice.toLowerCase()}…` })
+      );
+      after(1500, () => {
+        push({ role: "assistant", text: "Done — here's the summary." });
+        setPhase("done");
+      });
+    },
+    [after, push]
+  );
 
-  const skip = () => {
+  const skip = useCallback(() => {
     push({ role: "assistant", text: "No preference given — I'll use my best judgment." });
     setPhase("running");
     after(1200, () => {
       push({ role: "assistant", text: "Done — here's the summary." });
       setPhase("done");
     });
-  };
+  }, [after, push]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     clear();
     setMessages([]);
     setPhase("idle");
-  };
+  }, [clear]);
 
   useMountEffect(() => () => clear());
 
@@ -120,9 +133,7 @@ export function AskUserDemo() {
             <p className="mb-2 font-medium text-sm">{QUESTION}</p>
             <div className="flex flex-wrap gap-2">
               {OPTIONS.map((o) => (
-                <Button key={o} size="sm" variant="outline" onClick={() => answer(o)}>
-                  {o}
-                </Button>
+                <OptionButton key={o} option={o} onAnswer={answer} />
               ))}
               <Button size="sm" variant="ghost" onClick={skip}>
                 Skip

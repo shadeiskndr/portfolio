@@ -1,7 +1,7 @@
 "use client";
 import { Menu, Sparkles, X } from "lucide-react";
 import NextLink from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DownloadCV from "@/components/old-portfolio/general/download-cv";
 import IconButton from "@/components/old-portfolio/general/icon-button";
 import ThemeSwitcher from "@/components/old-portfolio/general/theme-switcher";
@@ -32,6 +32,14 @@ const Logo = () => (
 const Header = () => {
   const scrolled = useScroll(40);
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleClose = useCallback(() => setIsOpen(false), []);
+  const handleMobileLinkClick = useCallback(() => {
+    const timeoutId = setTimeout(() => {
+      setIsOpen(false);
+      clearTimeout(timeoutId);
+    }, 500);
+  }, []);
   const size = useWindowSize();
 
   useEffect(() => {
@@ -114,12 +122,7 @@ const Header = () => {
                   <li key={index}>
                     <Link
                       href={link.href}
-                      onClick={() => {
-                        const timeoutId = setTimeout(() => {
-                          setIsOpen(false);
-                          clearTimeout(timeoutId);
-                        }, 500);
-                      }}
+                      onClick={handleMobileLinkClick}
                       className="text-foreground hover:text-muted-foreground"
                     >
                       {link.label}
@@ -134,7 +137,7 @@ const Header = () => {
                 <NextLink
                   href="/"
                   aria-label="Go to new site"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleClose}
                   className="flex items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground active:bg-secondary [&_svg]:h-6 [&_svg]:w-6 [&_svg]:stroke-muted-foreground [&_svg]:hover:stroke-foreground"
                 >
                   <Sparkles />

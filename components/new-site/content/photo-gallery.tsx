@@ -4,7 +4,7 @@ import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, m } from "motion/react";
 import Image from "next/image";
-import { useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import type { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 
@@ -27,14 +27,15 @@ export default function PhotoGallery({
   const baseId = useId();
   const photos = usePreloadedQuery(preloadedPhotos);
 
+  const handleOpen = useCallback((i: number) => {
+    setOpenedFromIndex(i);
+    setActiveIndex(i);
+  }, []);
+  const handleClose = useCallback(() => setActiveIndex(null), []);
+
   if (photos.length === 0) return null;
 
   const layoutIds = photos.map((_, i) => `${baseId}-${i}`);
-
-  const handleOpen = (i: number) => {
-    setOpenedFromIndex(i);
-    setActiveIndex(i);
-  };
 
   return (
     <MotionConfig transition={{ type: "spring", stiffness: 225, damping: 25 }}>
@@ -45,7 +46,7 @@ export default function PhotoGallery({
             index={index}
             key={photo.src}
             layoutId={layoutIds[index] ?? ""}
-            onClick={() => handleOpen(index)}
+            onOpen={handleOpen}
             src={photo.src}
             title={photo.title}
             width={photo.width}
@@ -55,7 +56,7 @@ export default function PhotoGallery({
       <ImageModal
         activeIndex={activeIndex}
         morphLayoutId={openedFromIndex !== null ? (layoutIds[openedFromIndex] ?? null) : null}
-        onClose={() => setActiveIndex(null)}
+        onClose={handleClose}
         onNavigate={setActiveIndex}
         photos={photos}
       />
@@ -70,7 +71,7 @@ function GalleryImage({
   height,
   index,
   layoutId,
-  onClick,
+  onOpen,
 }: {
   src: string;
   title: string;
@@ -78,8 +79,10 @@ function GalleryImage({
   height: number;
   index: number;
   layoutId: string;
-  onClick: () => void;
+  onOpen: (index: number) => void;
 }) {
+  const onClick = useCallback(() => onOpen(index), [onOpen, index]);
+
   return (
     <m.div
       className="group relative mb-4 break-inside-avoid"
@@ -118,6 +121,46 @@ function GalleryImage({
   );
 }
 
+const focusOnMount = (el: HTMLDivElement | null) => el?.focus();
+
+function ThumbButton({
+  photo,
+  index,
+  isActive,
+  onNavigate,
+}: {
+  photo: Photo;
+  index: number;
+  isActive: boolean;
+  onNavigate: (i: number) => void;
+}) {
+  const handleClick = useCallback(() => onNavigate(index), [onNavigate, index]);
+  const scrollActiveIntoView = useCallback(
+    (el: HTMLButtonElement | null) => {
+      if (el && isActive) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    },
+    [isActive]
+  );
+
+  return (
+    <button
+      aria-current={isActive ? "true" : undefined}
+      aria-label={photo.title}
+      className={cn(
+        "relative h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-2 transition",
+        isActive ? "ring-foreground" : "opacity-50 ring-transparent hover:opacity-100"
+      )}
+      onClick={handleClick}
+      ref={scrollActiveIntoView}
+      type="button"
+    >
+      <Image alt="" className="object-cover" fill sizes="64px" src={photo.src} />
+    </button>
+  );
+}
+
 function ImageModal({
   activeIndex,
   photos,
@@ -133,14 +176,23 @@ function ImageModal({
 }) {
   const isOpen = activeIndex !== null;
   const activePhoto = activeIndex !== null ? photos[activeIndex] : null;
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (activeIndex === null) return;
     onNavigate((activeIndex - 1 + photos.length) % photos.length);
-  };
-  const goNext = () => {
+  }, [activeIndex, onNavigate, photos.length]);
+  const goNext = useCallback(() => {
     if (activeIndex === null) return;
     onNavigate((activeIndex + 1) % photos.length);
-  };
+  }, [activeIndex, onNavigate, photos.length]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "ArrowRight") goNext();
+    },
+    [onClose, goPrev, goNext]
+  );
 
   return (
     <AnimatePresence>
@@ -149,12 +201,8 @@ function ImageModal({
           aria-label={activePhoto?.title ?? "Photo viewer"}
           aria-modal="true"
           className="fixed inset-0 z-50 flex flex-col overflow-hidden outline-none"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") onClose();
-            else if (e.key === "ArrowLeft") goPrev();
-            else if (e.key === "ArrowRight") goNext();
-          }}
-          ref={(el) => el?.focus()}
+          onKeyDown={handleKeyDown}
+          ref={focusOnMount}
           role="dialog"
           tabIndex={-1}
         >
@@ -261,28 +309,13 @@ function ImageModal({
               {photos.map((photo, i) => {
                 const isActive = i === activeIndex;
                 return (
-                  <button
-                    aria-current={isActive ? "true" : undefined}
-                    aria-label={photo.title}
-                    className={cn(
-                      "relative h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-2 transition",
-                      isActive ? "ring-foreground" : "opacity-50 ring-transparent hover:opacity-100"
-                    )}
+                  <ThumbButton
                     key={photo.src}
-                    onClick={() => onNavigate(i)}
-                    ref={(el) => {
-                      if (el && isActive) {
-                        el.scrollIntoView({
-                          behavior: "smooth",
-                          block: "nearest",
-                          inline: "center",
-                        });
-                      }
-                    }}
-                    type="button"
-                  >
-                    <Image alt="" className="object-cover" fill sizes="64px" src={photo.src} />
-                  </button>
+                    photo={photo}
+                    index={i}
+                    isActive={isActive}
+                    onNavigate={onNavigate}
+                  />
                 );
               })}
             </div>

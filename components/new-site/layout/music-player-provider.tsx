@@ -1,11 +1,14 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  type MusicPlayerApi,
+  MusicPlayerContext,
+  type Track,
+} from "@/components/new-site/layout/music-player-context";
 import { api } from "@/convex/_generated/api";
 import { useMountEffect } from "@/hooks/use-mount-effect";
-
-export type Track = { src: string; title: string; artist: string; cover: string | null };
 
 function colorCoverUri(color: string) {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='${color}'/></svg>`;
@@ -15,37 +18,6 @@ function colorCoverUri(color: string) {
 const FALLBACK_COVER = colorCoverUri("hsl(0 0% 30%)");
 
 const EMPTY_PLAYLIST: Track[] = [];
-
-export type MusicPlayerApi = {
-  playlist: Track[];
-  currentTrack: Track | undefined;
-  coverArt: string;
-  trackIndex: number;
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  hoverTime: number;
-  volume: number;
-  isMuted: boolean;
-  setHoverTime: (value: number) => void;
-  scrub: (pct: number) => void;
-  commitScrub: (pct: number) => void;
-  togglePlay: () => void;
-  prevTrack: () => void;
-  nextTrack: () => void;
-  selectTrack: (index: number) => void;
-  applyVolume: (value: number) => void;
-};
-
-const MusicPlayerContext = createContext<MusicPlayerApi | null>(null);
-
-export function useMusicPlayer() {
-  const ctx = useContext(MusicPlayerContext);
-  if (!ctx) {
-    throw new Error("`useMusicPlayer` must be used within `MusicPlayerProvider`");
-  }
-  return ctx;
-}
 
 export function MusicPlayerProvider({ children }: { children: React.ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -187,6 +159,41 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     ]
   );
 
+  const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLAudioElement>) => {
+    setCurrentTime(e.currentTarget.currentTime);
+    const d = e.currentTarget.duration;
+    if (Number.isFinite(d) && d > 0) setDuration(d);
+  }, []);
+
+  const handleLoadedMetadata = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const d = e.currentTarget.duration;
+      if (Number.isFinite(d) && d > 0) setDuration(d);
+      e.currentTarget.volume = volume / 100;
+      if (wasPlayingRef.current) {
+        wasPlayingRef.current = false;
+        e.currentTarget
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false));
+      }
+    },
+    [volume]
+  );
+
+  const handleDurationChange = useCallback((e: React.SyntheticEvent<HTMLAudioElement>) => {
+    const d = e.currentTarget.duration;
+    if (Number.isFinite(d) && d > 0) setDuration(d);
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    if (playlist.length > 1) {
+      nextTrack();
+    } else {
+      setIsPlaying(false);
+    }
+  }, [playlist.length, nextTrack]);
+
   return (
     <MusicPlayerContext.Provider value={value}>
       {children}
@@ -196,34 +203,10 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
           ref={audioRef}
           src={currentTrack.src}
           preload="auto"
-          onTimeUpdate={(e) => {
-            setCurrentTime(e.currentTarget.currentTime);
-            const d = e.currentTarget.duration;
-            if (Number.isFinite(d) && d > 0) setDuration(d);
-          }}
-          onLoadedMetadata={(e) => {
-            const d = e.currentTarget.duration;
-            if (Number.isFinite(d) && d > 0) setDuration(d);
-            e.currentTarget.volume = volume / 100;
-            if (wasPlayingRef.current) {
-              wasPlayingRef.current = false;
-              e.currentTarget
-                .play()
-                .then(() => setIsPlaying(true))
-                .catch(() => setIsPlaying(false));
-            }
-          }}
-          onDurationChange={(e) => {
-            const d = e.currentTarget.duration;
-            if (Number.isFinite(d) && d > 0) setDuration(d);
-          }}
-          onEnded={() => {
-            if (playlist.length > 1) {
-              nextTrack();
-            } else {
-              setIsPlaying(false);
-            }
-          }}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onDurationChange={handleDurationChange}
+          onEnded={handleEnded}
           className="pointer-events-none fixed h-0 w-0 opacity-0"
         />
       ) : null}

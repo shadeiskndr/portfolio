@@ -1,7 +1,7 @@
 "use client";
 
 import { Palette, Zap, ZapOff } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import MobileSheet from "@/components/new-site/layout/mobile-sheet";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type SoundVariant, useSound } from "@/hooks/use-sound";
-import { useColorTheme } from "@/lib/color-provider";
+import { useColorTheme } from "@/lib/color-context";
 import { PALETTE_KEYS, type ThemeOption } from "@/lib/color-themes";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +58,12 @@ export default function ColorThemePicker({
 
   const selectedTheme = themes.find((t) => t.id === colorTheme) ?? localThemes[0];
 
+  const handleOpenSheet = useCallback(() => {
+    playClick("icon");
+    setSheetOpen(true);
+  }, [playClick]);
+  const handleTriggerClick = useCallback(() => playClick("icon"), [playClick]);
+
   if (variant === "sheet") {
     return (
       <>
@@ -66,10 +72,7 @@ export default function ColorThemePicker({
           size="icon"
           aria-label="Color theme"
           aria-expanded={sheetOpen}
-          onClick={() => {
-            playClick("icon");
-            setSheetOpen(true);
-          }}
+          onClick={handleOpenSheet}
           className="size-10 rounded-full text-muted-foreground"
         >
           <Palette className="h-4 w-4" />
@@ -108,7 +111,7 @@ export default function ColorThemePicker({
                   variant="ghost"
                   size="icon"
                   aria-label="Color theme"
-                  onClick={() => playClick("icon")}
+                  onClick={handleTriggerClick}
                   className="rounded-full text-muted-foreground"
                 >
                   <Palette className="h-4 w-4" />
@@ -147,6 +150,25 @@ type ThemeCommandProps = {
   listClassName?: string;
 };
 
+function ThemeCommandItem({
+  theme,
+  checked,
+  onSelect,
+}: {
+  theme: ThemeOption;
+  checked: boolean;
+  onSelect: (id: ThemeOption["id"]) => void;
+}) {
+  const handleSelect = useCallback(() => onSelect(theme.id), [onSelect, theme.id]);
+
+  return (
+    <CommandItem value={theme.label} data-checked={checked} onSelect={handleSelect}>
+      <ThemePalette theme={theme} />
+      {theme.label}
+    </CommandItem>
+  );
+}
+
 function ThemeCommand({
   colorTheme,
   setColorThemeWithTransition,
@@ -158,6 +180,19 @@ function ThemeCommand({
   playClick,
   listClassName,
 }: ThemeCommandProps) {
+  const handleToggleTransition = useCallback(() => {
+    playClick("icon");
+    setTransitionEnabled(!transitionEnabled);
+  }, [playClick, setTransitionEnabled, transitionEnabled]);
+
+  const handleSelectTheme = useCallback(
+    (id: ThemeOption["id"]) => {
+      playClick("mouse");
+      setColorThemeWithTransition(id);
+    },
+    [playClick, setColorThemeWithTransition]
+  );
+
   return (
     <Command
       className={cn(
@@ -179,10 +214,7 @@ function ThemeCommand({
           aria-label={
             transitionEnabled ? "Disable transition animation" : "Enable transition animation"
           }
-          onClick={() => {
-            playClick("icon");
-            setTransitionEnabled(!transitionEnabled);
-          }}
+          onClick={handleToggleTransition}
           className="mt-1.5 shrink-0 self-start text-muted-foreground"
         >
           {transitionEnabled ? <Zap /> : <ZapOff />}
@@ -206,18 +238,12 @@ function ThemeCommand({
         <CommandEmpty>No themes found.</CommandEmpty>
         <CommandGroup heading={`Local (${localThemes.length})`}>
           {localThemes.map((t) => (
-            <CommandItem
+            <ThemeCommandItem
               key={t.id}
-              value={t.label}
-              data-checked={colorTheme === t.id}
-              onSelect={() => {
-                playClick("mouse");
-                setColorThemeWithTransition(t.id);
-              }}
-            >
-              <ThemePalette theme={t} />
-              {t.label}
-            </CommandItem>
+              theme={t}
+              checked={colorTheme === t.id}
+              onSelect={handleSelectTheme}
+            />
           ))}
         </CommandGroup>
         {remoteThemes.length > 0 ? (
@@ -225,18 +251,12 @@ function ThemeCommand({
             <CommandSeparator />
             <CommandGroup heading={`Remote (${remoteThemes.length})`}>
               {remoteThemes.map((t) => (
-                <CommandItem
+                <ThemeCommandItem
                   key={t.id}
-                  value={t.label}
-                  data-checked={colorTheme === t.id}
-                  onSelect={() => {
-                    playClick("mouse");
-                    setColorThemeWithTransition(t.id);
-                  }}
-                >
-                  <ThemePalette theme={t} />
-                  {t.label}
-                </CommandItem>
+                  theme={t}
+                  checked={colorTheme === t.id}
+                  onSelect={handleSelectTheme}
+                />
               ))}
             </CommandGroup>
           </>

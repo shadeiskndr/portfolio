@@ -3,38 +3,12 @@
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
-import {
-  createContext,
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useEffectEvent,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { memo, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ReasoningContext, useReasoning } from "@/components/ui/shadcn-io/ai/reasoning-context";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "./shimmer";
-
-interface ReasoningContextValue {
-  isStreaming: boolean;
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  duration: number | undefined;
-}
-
-const ReasoningContext = createContext<ReasoningContextValue | null>(null);
-
-export const useReasoning = () => {
-  const context = useContext(ReasoningContext);
-  if (!context) {
-    throw new Error("Reasoning components must be used within Reasoning");
-  }
-  return context;
-};
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;

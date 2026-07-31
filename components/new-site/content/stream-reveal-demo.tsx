@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -34,17 +34,17 @@ export function StreamRevealDemo() {
   const countRef = useRef(max);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clear = () => {
+  const clear = useCallback(() => {
     if (timer.current) {
       clearTimeout(timer.current);
       timer.current = null;
     }
-  };
-  const setBoth = (n: number) => {
+  }, []);
+  const setBoth = useCallback((n: number) => {
     countRef.current = n;
     setCount(n);
-  };
-  const step = () => {
+  }, []);
+  const step = useCallback(() => {
     const next = Math.min(countRef.current + STEP, max);
     setBoth(next);
     if (next >= max) {
@@ -53,21 +53,30 @@ export function StreamRevealDemo() {
       return;
     }
     timer.current = setTimeout(step, INTERVAL);
-  };
-  const play = () => {
+  }, [setBoth, clear]);
+  const play = useCallback(() => {
     clear();
     if (countRef.current >= max) setBoth(0);
     setPlaying(true);
     timer.current = setTimeout(step, INTERVAL);
-  };
-  const pause = () => {
+  }, [clear, setBoth, step]);
+  const pause = useCallback(() => {
     clear();
     setPlaying(false);
-  };
-  const onScrub = (n: number) => {
-    pause();
-    setBoth(n);
-  };
+  }, [clear]);
+  const onScrub = useCallback(
+    (n: number) => {
+      pause();
+      setBoth(n);
+    },
+    [pause, setBoth]
+  );
+
+  const handlePlayPause = useCallback(() => (playing ? pause() : play()), [playing, pause, play]);
+  const handleScrubChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onScrub(Number(e.target.value)),
+    [onScrub]
+  );
 
   useMountEffect(() => () => clear());
 
@@ -76,7 +85,7 @@ export function StreamRevealDemo() {
   return (
     <div className="my-6 overflow-hidden rounded-xl border">
       <div className="flex items-center gap-3 border-b p-2">
-        <Button size="sm" variant="outline" onClick={() => (playing ? pause() : play())}>
+        <Button size="sm" variant="outline" onClick={handlePlayPause}>
           {playing ? "Pause" : count >= max ? "Replay" : "Play"}
         </Button>
         <input
@@ -85,7 +94,7 @@ export function StreamRevealDemo() {
           min={0}
           max={max}
           value={count}
-          onChange={(e) => onScrub(Number(e.target.value))}
+          onChange={handleScrubChange}
           className="h-1 flex-1 cursor-pointer accent-primary"
         />
         <span className="w-14 shrink-0 text-right font-mono text-muted-foreground text-xs tabular-nums">

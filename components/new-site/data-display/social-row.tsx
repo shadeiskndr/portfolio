@@ -30,12 +30,12 @@ export default function SocialRow() {
             key={label}
             variant="ghost"
             size="icon"
+            aria-label={label}
             className={iconButtonClassName}
             nativeButton={false}
             render={
               <a
                 href={url}
-                aria-label={label}
                 target={url.startsWith("http") ? "_blank" : undefined}
                 rel={url.startsWith("http") ? "noopener noreferrer" : undefined}
               >

@@ -53,16 +53,14 @@ const suggestions = [
   "Best practices for React development",
 ];
 
+const logSelected = (s: string) => console.log("Selected:", s);
+
 export default function SuggestionDemo() {
   return (
     <div className="p-6">
       <Suggestions>
         {suggestions.map((suggestion) => (
-          <Suggestion
-            key={suggestion}
-            onClick={(s) => console.log("Selected:", s)}
-            suggestion={suggestion}
-          />
+          <Suggestion key={suggestion} onClick={logSelected} suggestion={suggestion} />
         ))}
       </Suggestions>
     </div>

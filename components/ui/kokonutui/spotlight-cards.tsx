@@ -13,7 +13,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Cloud, Code, Cpu, Globe, Lock, Zap } from "lucide-react";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const TILT_MAX = 9;
@@ -69,11 +69,10 @@ const DEFAULT_ITEMS: SpotlightItem[] = [
 interface CardProps {
   item: SpotlightItem;
   dimmed: boolean;
-  onHoverStart: () => void;
-  onHoverEnd: () => void;
+  onHoverChange: (title: string | null) => void;
 }
 
-function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
+function Card({ item, dimmed, onHoverChange }: CardProps) {
   const Icon = item.icon;
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -87,27 +86,30 @@ function Card({ item, dimmed, onHoverStart, onHoverEnd }: CardProps) {
   const rotateY = useSpring(rawRotateY, TILT_SPRING);
   const glowOpacity = useSpring(0, GLOW_SPRING);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = cardRef.current;
-    if (!el) {
-      return;
-    }
-    const rect = el.getBoundingClientRect();
-    normX.set((e.clientX - rect.left) / rect.width);
-    normY.set((e.clientY - rect.top) / rect.height);
-  };
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const el = cardRef.current;
+      if (!el) {
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      normX.set((e.clientX - rect.left) / rect.width);
+      normY.set((e.clientY - rect.top) / rect.height);
+    },
+    [normX, normY]
+  );
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     glowOpacity.set(1);
-    onHoverStart();
-  };
+    onHoverChange(item.title);
+  }, [glowOpacity, onHoverChange, item.title]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     normX.set(0.5);
     normY.set(0.5);
     glowOpacity.set(0);
-    onHoverEnd();
-  };
+    onHoverChange(null);
+  }, [normX, normY, glowOpacity, onHoverChange]);
 
   return (
     <motion.div
@@ -234,8 +236,7 @@ export default function SpotlightCards({
             dimmed={hoveredTitle !== null && hoveredTitle !== item.title}
             item={item}
             key={item.title}
-            onHoverEnd={() => setHoveredTitle(null)}
-            onHoverStart={() => setHoveredTitle(item.title)}
+            onHoverChange={setHoveredTitle}
           />
         ))}
       </div>

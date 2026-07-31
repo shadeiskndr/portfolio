@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import type React from "react";
 import { type ReactNode, useCallback, useId, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,59 @@ const SPRING = {
   duration: 0.25,
   bounce: 0.05,
 };
+
+function TabButton({
+  tab,
+  index,
+  isActive,
+  layoutId,
+  className,
+  indicatorClassName,
+  shouldReduceMotion,
+  onSelect,
+  onKeyDown,
+}: {
+  tab: AnimatedTabsProps["tabs"][number];
+  index: number;
+  isActive: boolean;
+  layoutId: string;
+  className: string;
+  indicatorClassName: string;
+  shouldReduceMotion: boolean | null;
+  onSelect: (id: string) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(tab.id), [onSelect, tab.id]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => onKeyDown(e, index),
+    [onKeyDown, index]
+  );
+
+  return (
+    <button
+      aria-selected={isActive}
+      className={className}
+      id={`${layoutId}-tab-${tab.id}`}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="tab"
+      tabIndex={isActive ? 0 : -1}
+      type="button"
+    >
+      {isActive ? (
+        <motion.span
+          className={indicatorClassName}
+          layout
+          layoutId={layoutId}
+          style={{ originY: "0px" }}
+          transition={shouldReduceMotion ? { duration: 0 } : SPRING}
+        />
+      ) : null}
+      {tab.icon ? <span className="relative z-10">{tab.icon}</span> : null}
+      <span className="relative z-10">{tab.label}</span>
+    </button>
+  );
+}
 
 export default function AnimatedTabs({
   tabs,
@@ -118,35 +172,20 @@ export default function AnimatedTabs({
 
   return (
     <div aria-label="Tabs" className={cn(baseContainerStyles, className)} role="tablist">
-      {tabs.map((tab, index) => {
-        const isActive = activeTab === tab.id;
-
-        return (
-          <button
-            aria-selected={isActive}
-            className={getTabStyles(isActive)}
-            id={`${layoutId}-tab-${tab.id}`}
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-            role="tab"
-            tabIndex={isActive ? 0 : -1}
-            type="button"
-          >
-            {isActive && (
-              <motion.span
-                className={getIndicatorStyles()}
-                layout
-                layoutId={layoutId}
-                style={{ originY: "0px" }}
-                transition={shouldReduceMotion ? { duration: 0 } : SPRING}
-              />
-            )}
-            {tab.icon && <span className="relative z-10">{tab.icon}</span>}
-            <span className="relative z-10">{tab.label}</span>
-          </button>
-        );
-      })}
+      {tabs.map((tab, index) => (
+        <TabButton
+          className={getTabStyles(activeTab === tab.id)}
+          index={index}
+          indicatorClassName={getIndicatorStyles()}
+          isActive={activeTab === tab.id}
+          key={tab.id}
+          layoutId={layoutId}
+          onKeyDown={handleKeyDown}
+          onSelect={handleTabChange}
+          shouldReduceMotion={shouldReduceMotion}
+          tab={tab}
+        />
+      ))}
     </div>
   );
 }

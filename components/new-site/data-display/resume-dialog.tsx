@@ -10,7 +10,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { useAsset } from "@/lib/assets-provider";
+import { useAsset } from "@/lib/assets-context";
 
 const ResumeViewer = dynamic(() => import("./resume-viewer"), {
   ssr: false,
@@ -54,5 +54,3 @@ export function ResumeDialog({ children }: ResumeDialogProps) {
     </ResponsiveDialog>
   );
 }
-
-export default ResumeDialog;

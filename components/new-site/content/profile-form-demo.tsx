@@ -1,7 +1,7 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { type AnyFieldApi, useForm } from "@tanstack/react-form";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,48 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputClass =
   "w-full rounded-md border bg-transparent px-2 py-1 text-sm outline-none focus:border-primary";
+
+const formSelector = (s: { isValid: boolean; isDirty: boolean; values: Profile }) => ({
+  isValid: s.isValid,
+  isDirty: s.isDirty,
+  values: s.values,
+});
+
+function TextInput({ field, label, type }: { field: AnyFieldApi; label: string; type?: string }) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value),
+    [field]
+  );
+
+  return (
+    <input
+      type={type}
+      value={field.state.value}
+      onChange={handleChange}
+      onBlur={field.handleBlur}
+      className={inputClass}
+      aria-label={label}
+    />
+  );
+}
+
+function TextArea({ field, label, rows }: { field: AnyFieldApi; label: string; rows: number }) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => field.handleChange(e.target.value),
+    [field]
+  );
+
+  return (
+    <textarea
+      value={field.state.value}
+      onChange={handleChange}
+      onBlur={field.handleBlur}
+      rows={rows}
+      className={cn(inputClass, "resize-y")}
+      aria-label={label}
+    />
+  );
+}
 
 function FieldError({ errors, isTouched }: { errors: unknown[]; isTouched: boolean }) {
   if (!isTouched || errors.length === 0) return null;
@@ -29,16 +71,19 @@ export function ProfileFormDemo() {
     },
   });
 
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      form.handleSubmit();
+    },
+    [form]
+  );
+  const handleReset = useCallback(() => form.reset(), [form]);
+
   return (
     <div className="my-6 rounded-xl border p-4">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-3"
-      >
+      <form onSubmit={handleSubmit} className="space-y-3">
         <form.Field
           name="name"
           validators={{
@@ -51,13 +96,7 @@ export function ProfileFormDemo() {
               <span className="mb-1 block font-medium text-muted-foreground text-xs uppercase tracking-wide">
                 Name
               </span>
-              <input
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                className={inputClass}
-                aria-label="Name"
-              />
+              <TextInput field={field} label="Name" />
               <FieldError errors={field.state.meta.errors} isTouched={field.state.meta.isTouched} />
             </div>
           )}
@@ -85,14 +124,7 @@ export function ProfileFormDemo() {
               <span className="mb-1 block font-medium text-muted-foreground text-xs uppercase tracking-wide">
                 Email
               </span>
-              <input
-                type="email"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                className={inputClass}
-                aria-label="Email"
-              />
+              <TextInput field={field} label="Email" type="email" />
               <FieldError errors={field.state.meta.errors} isTouched={field.state.meta.isTouched} />
             </div>
           )}
@@ -122,33 +154,20 @@ export function ProfileFormDemo() {
                   {field.state.value.length}/{BIO_MAX}
                 </span>
               </div>
-              <textarea
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                rows={2}
-                className={cn(inputClass, "resize-y")}
-                aria-label="Bio"
-              />
+              <TextArea field={field} label="Bio" rows={2} />
               <FieldError errors={field.state.meta.errors} isTouched={field.state.meta.isTouched} />
             </div>
           )}
         </form.Field>
 
-        <form.Subscribe
-          selector={(s) => ({
-            isValid: s.isValid,
-            isDirty: s.isDirty,
-            values: s.values,
-          })}
-        >
+        <form.Subscribe selector={formSelector}>
           {({ isValid, isDirty, values }) => (
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-3">
                 <Button type="submit" size="sm" disabled={!(isValid && isDirty)}>
                   Save
                 </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={() => form.reset()}>
+                <Button type="button" size="sm" variant="ghost" onClick={handleReset}>
                   Reset
                 </Button>
                 <span className="flex gap-2 font-mono text-xs">

@@ -25,29 +25,35 @@ export function useLocalStorage<T>(
   initialValue: T | (() => T),
   options: UseLocalStorageOptions<T> = {}
 ): [T, Dispatch<SetStateAction<T>>, () => void] {
-  const { initializeWithValue = true } = options;
+  const {
+    initializeWithValue = true,
+    serializer: customSerializer,
+    deserializer: customDeserializer,
+  } = options;
+
+  const [defaultValue] = useState<T>(
+    initialValue instanceof Function ? (initialValue as () => T) : () => initialValue
+  );
 
   const serializer = useCallback<(value: T) => string>(
     (value) => {
-      if (options.serializer) {
-        return options.serializer(value);
+      if (customSerializer) {
+        return customSerializer(value);
       }
 
       return JSON.stringify(value);
     },
-    [options]
+    [customSerializer]
   );
 
   const deserializer = useCallback<(value: string) => T>(
     (value) => {
-      if (options.deserializer) {
-        return options.deserializer(value);
+      if (customDeserializer) {
+        return customDeserializer(value);
       }
       if (value === "undefined") {
         return undefined as unknown as T;
       }
-
-      const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
 
       let parsed: unknown;
       try {
@@ -59,31 +65,29 @@ export function useLocalStorage<T>(
 
       return parsed as T;
     },
-    [options, initialValue]
+    [customDeserializer, defaultValue]
   );
 
   const readValue = useCallback((): T => {
-    const initialValueToUse = initialValue instanceof Function ? initialValue() : initialValue;
-
     if (IS_SERVER) {
-      return initialValueToUse;
+      return defaultValue;
     }
 
     try {
       const raw = window.localStorage.getItem(key);
-      return raw ? deserializer(raw) : initialValueToUse;
+      return raw ? deserializer(raw) : defaultValue;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValueToUse;
+      return defaultValue;
     }
-  }, [initialValue, key, deserializer]);
+  }, [defaultValue, key, deserializer]);
 
   const [storedValue, setStoredValue] = useState(() => {
     if (initializeWithValue) {
       return readValue();
     }
 
-    return initialValue instanceof Function ? initialValue() : initialValue;
+    return defaultValue;
   });
 
   const setValue: Dispatch<SetStateAction<T>> = useEventCallback((value) => {
@@ -113,8 +117,6 @@ export function useLocalStorage<T>(
       );
     }
 
-    const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
-
     window.localStorage.removeItem(key);
 
     setStoredValue(defaultValue);
@@ -125,8 +127,7 @@ export function useLocalStorage<T>(
   useEffect(() => {
     // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent
     setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [readValue]);
 
   const handleStorageChange = useCallback(
     (event: StorageEvent | CustomEvent) => {

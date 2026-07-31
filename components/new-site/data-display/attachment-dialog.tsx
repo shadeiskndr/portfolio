@@ -9,7 +9,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { useAsset } from "@/lib/assets-provider";
+import { useAsset } from "@/lib/assets-context";
 
 const PdfViewer = dynamic(() => import("./resume-viewer"), {
   ssr: false,
@@ -59,5 +59,3 @@ export function AttachmentDialog({
     </ResponsiveDialog>
   );
 }
-
-export default AttachmentDialog;

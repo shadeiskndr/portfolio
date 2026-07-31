@@ -16,10 +16,11 @@ import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowDownIcon, BrainIcon, CheckIcon, Plus, SparklesIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, useId, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v7 as uuidv7 } from "uuid";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -152,16 +153,17 @@ function ModelSelector({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const handleValueChange = useCallback(
+    (next: unknown) => {
+      if (typeof next === "string") {
+        onChange(next);
+      }
+    },
+    [onChange]
+  );
+
   return (
-    <PromptInputSelect
-      items={labels}
-      onValueChange={(next) => {
-        if (typeof next === "string") {
-          onChange(next);
-        }
-      }}
-      value={value}
-    >
+    <PromptInputSelect items={labels} onValueChange={handleValueChange} value={value}>
       <PromptInputSelectTrigger aria-label="Model" className="h-8 gap-1 px-2 text-xs">
         <PromptInputSelectValue />
       </PromptInputSelectTrigger>
@@ -190,6 +192,44 @@ function ReasoningToggle({ on, onChange }: { on: boolean; onChange: (on: boolean
       <span className="hidden pt-0.5 sm:inline">Reasoning</span>
       <Switch checked={on} id={id} onCheckedChange={onChange} size="sm" />
     </label>
+  );
+}
+
+function SessionRow({
+  sessionId,
+  title,
+  isActive,
+  onSelect,
+  onDelete,
+}: {
+  sessionId: string;
+  title: string | null;
+  isActive: boolean;
+  onSelect: (sessionId: string) => void;
+  onDelete: (sessionId: string) => void;
+}) {
+  const handleSelect = useCallback(() => onSelect(sessionId), [onSelect, sessionId]);
+  const handleDelete = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      onDelete(sessionId);
+    },
+    [onDelete, sessionId]
+  );
+
+  return (
+    <DropdownMenuItem className={cn("gap-2", isActive && "font-medium")} onClick={handleSelect}>
+      <CheckIcon className={cn("size-3.5 shrink-0", isActive ? "opacity-100" : "opacity-0")} />
+      <span className="flex-1 truncate">{title ?? "New chat"}</span>
+      <button
+        aria-label="Delete chat"
+        className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+        onClick={handleDelete}
+        type="button"
+      >
+        <Trash2Icon className="size-3.5" />
+      </button>
+    </DropdownMenuItem>
   );
 }
 
@@ -227,15 +267,26 @@ export default function Chat() {
     setActiveSessionId(uuidv7());
   }
 
-  function handleSelectSession(sessionId: string) {
-    if (sessionId !== activeSessionId) setActiveSessionId(sessionId);
-  }
+  const handleSelectSession = useCallback(
+    (sessionId: string) => {
+      if (sessionId !== activeSessionId) setActiveSessionId(sessionId);
+    },
+    [activeSessionId, setActiveSessionId]
+  );
 
-  function handleDeleteSession(sessionId: string) {
-    if (!clientId) return;
-    void removeSession({ sessionId, clientId });
-    if (sessionId === activeSessionId) setActiveSessionId(uuidv7());
-  }
+  const handleDeleteSession = useCallback(
+    (sessionId: string) => {
+      if (!clientId) return;
+      void removeSession({ sessionId, clientId });
+      if (sessionId === activeSessionId) setActiveSessionId(uuidv7());
+    },
+    [clientId, removeSession, activeSessionId, setActiveSessionId]
+  );
+
+  const handleSent = useCallback(
+    () => setActiveSessionId(activeSessionId),
+    [setActiveSessionId, activeSessionId]
+  );
 
   const controls = (
     <div className="flex items-center gap-0.5">
@@ -289,30 +340,14 @@ export default function Chat() {
               <DropdownMenuItem disabled>No saved chats yet</DropdownMenuItem>
             ) : (
               sessions.map((session) => (
-                <DropdownMenuItem
-                  className={cn("gap-2", session.sessionId === activeSessionId && "font-medium")}
+                <SessionRow
                   key={session.sessionId}
-                  onClick={() => handleSelectSession(session.sessionId)}
-                >
-                  <CheckIcon
-                    className={cn(
-                      "size-3.5 shrink-0",
-                      session.sessionId === activeSessionId ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <span className="flex-1 truncate">{session.title ?? "New chat"}</span>
-                  <button
-                    aria-label="Delete chat"
-                    className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleDeleteSession(session.sessionId);
-                    }}
-                    type="button"
-                  >
-                    <Trash2Icon className="size-3.5" />
-                  </button>
-                </DropdownMenuItem>
+                  sessionId={session.sessionId}
+                  title={session.title ?? null}
+                  isActive={session.sessionId === activeSessionId}
+                  onSelect={handleSelectSession}
+                  onDelete={handleDeleteSession}
+                />
               ))
             )}
           </DropdownMenuGroup>
@@ -348,7 +383,7 @@ export default function Chat() {
         clientId={clientId}
         key={activeSessionId}
         modelId={selectedModelId}
-        onSent={() => setActiveSessionId(activeSessionId)}
+        onSent={handleSent}
         reasoning={reasoning}
         sessionId={activeSessionId}
         toolbar={controls}
@@ -418,32 +453,40 @@ function ChatSession({
   const isBusy = status === "submitted" || status === "streaming";
   const isEmpty = messages.length === 0;
 
-  function handleSubmit(message: PromptInputMessage) {
-    const text = message.text?.trim();
-    if (!text || isBusy || !clientId) return;
-    setPending(true);
-    sendMessage({
-      sessionId,
-      clientId,
-      text,
-      reasoning,
-      ...(modelId !== undefined && { modelId }),
-    })
-      .catch((error: unknown) => {
-        toast.error(error instanceof Error ? error.message : "Chat request failed");
+  const handleTextareaChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setHasText(e.target.value.trim().length > 0),
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (message: PromptInputMessage) => {
+      const text = message.text?.trim();
+      if (!text || isBusy || !clientId) return;
+      setPending(true);
+      sendMessage({
+        sessionId,
+        clientId,
+        text,
+        reasoning,
+        ...(modelId !== undefined && { modelId }),
       })
-      .finally(() => setPending(false));
-    onSent();
-    setHasText(false);
-    scrollToBottom();
-  }
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : "Chat request failed");
+        })
+        .finally(() => setPending(false));
+      onSent();
+      setHasText(false);
+      scrollToBottom();
+    },
+    [isBusy, clientId, sendMessage, sessionId, reasoning, modelId, onSent, scrollToBottom]
+  );
 
   const composer = (
     <PromptInput className={COMPOSER_CARD} onSubmit={handleSubmit}>
       <PromptInputBody>
         <PromptInputTextarea
           className="min-h-18"
-          onChange={(e) => setHasText(e.target.value.trim().length > 0)}
+          onChange={handleTextareaChange}
           placeholder="Ask anything"
         />
       </PromptInputBody>

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/performance/noImgElement: attachment previews render blob/data URLs from the chat runtime; next/image can't optimize them
 "use client";
 
 import {
@@ -9,88 +10,24 @@ import {
   VideoIcon,
   XIcon,
 } from "lucide-react";
+import type React from "react";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  AttachmentContext,
+  type AttachmentContextValue,
+  type AttachmentData,
+  type AttachmentMediaCategory,
+  AttachmentsContext,
+  type AttachmentVariant,
+  getAttachmentLabel,
+  getMediaCategory,
+  useAttachmentContext,
+  useAttachmentsContext,
+} from "@/components/ui/shadcn-io/ai/attachments-context";
 import { cn } from "@/lib/utils";
-
-export interface AttachmentData {
-  id: string;
-  type: "file" | "source-document";
-  filename?: string;
-  title?: string;
-  url?: string;
-  mediaType?: string;
-}
-
-export type AttachmentMediaCategory =
-  | "image"
-  | "video"
-  | "audio"
-  | "document"
-  | "source"
-  | "unknown";
-
-export type AttachmentVariant = "grid" | "inline" | "list";
-
-export const getMediaCategory = (data: AttachmentData): AttachmentMediaCategory => {
-  if (data.type === "source-document") {
-    return "source";
-  }
-
-  const mediaType = data.mediaType ?? "";
-
-  if (mediaType.startsWith("image/")) {
-    return "image";
-  }
-  if (mediaType.startsWith("video/")) {
-    return "video";
-  }
-  if (mediaType.startsWith("audio/")) {
-    return "audio";
-  }
-  if (mediaType.startsWith("application/") || mediaType.startsWith("text/")) {
-    return "document";
-  }
-
-  return "unknown";
-};
-
-export const getAttachmentLabel = (data: AttachmentData): string => {
-  if (data.type === "source-document") {
-    return data.title || data.filename || "Source";
-  }
-
-  const category = getMediaCategory(data);
-  return data.filename || (category === "image" ? "Image" : "Attachment");
-};
-
-interface AttachmentsContextValue {
-  variant: AttachmentVariant;
-}
-
-const AttachmentsContext = createContext<AttachmentsContextValue | null>(null);
-
-interface AttachmentContextValue {
-  data: AttachmentData;
-  mediaCategory: AttachmentMediaCategory;
-  onRemove?: (() => void) | undefined;
-  variant: AttachmentVariant;
-}
-
-const AttachmentContext = createContext<AttachmentContextValue | null>(null);
-
-export const useAttachmentsContext = () =>
-  useContext(AttachmentsContext) ?? { variant: "grid" as const };
-
-export const useAttachmentContext = () => {
-  const ctx = useContext(AttachmentContext);
-  if (!ctx) {
-    throw new Error("Attachment components must be used within <Attachment>");
-  }
-  return ctx;
-};
 
 export type AttachmentsProps = HTMLAttributes<HTMLDivElement> & {
   variant?: AttachmentVariant;
@@ -256,9 +193,9 @@ export const AttachmentInfo = ({
   return (
     <div className={cn("min-w-0 flex-1", className)} {...props}>
       <span className="block truncate">{label}</span>
-      {showMediaType && data.mediaType && (
+      {showMediaType && data.mediaType ? (
         <span className="block truncate text-muted-foreground text-xs">{data.mediaType}</span>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -274,6 +211,14 @@ export const AttachmentRemove = ({
   ...props
 }: AttachmentRemoveProps) => {
   const { onRemove, variant } = useAttachmentContext();
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      onRemove?.();
+    },
+    [onRemove]
+  );
 
   if (!onRemove) {
     return null;
@@ -298,10 +243,7 @@ export const AttachmentRemove = ({
         variant === "list" && ["size-8 shrink-0 rounded p-0", "[&>svg]:size-4"],
         className
       )}
-      onClick={(e) => {
-        e.stopPropagation();
-        onRemove();
-      }}
+      onClick={handleClick}
       type="button"
       variant="ghost"
       {...props}
@@ -374,6 +316,22 @@ const mixedAttachments: AttachmentData[] = [
   { id: "7", type: "source-document", title: "API Documentation" },
 ];
 
+function DemoAttachment({
+  attachment,
+  children,
+}: {
+  attachment: AttachmentData;
+  children: React.ReactNode;
+}) {
+  const handleRemove = useCallback(() => console.log("Remove", attachment.id), [attachment.id]);
+
+  return (
+    <Attachment data={attachment} onRemove={handleRemove}>
+      {children}
+    </Attachment>
+  );
+}
+
 export default function AttachmentsDemo() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-8 p-6">
@@ -384,14 +342,10 @@ export default function AttachmentsDemo() {
         </div>
         <Attachments variant="grid" className="ml-0 justify-start">
           {imageAttachments.map((attachment) => (
-            <Attachment
-              key={attachment.id}
-              data={attachment}
-              onRemove={() => console.log("Remove", attachment.id)}
-            >
+            <DemoAttachment key={attachment.id} attachment={attachment}>
               <AttachmentPreview />
               <AttachmentRemove />
-            </Attachment>
+            </DemoAttachment>
           ))}
         </Attachments>
       </div>
@@ -403,15 +357,11 @@ export default function AttachmentsDemo() {
         </div>
         <Attachments variant="inline" className="justify-start">
           {[...imageAttachments.slice(0, 1), ...mixedAttachments].map((attachment) => (
-            <Attachment
-              key={attachment.id}
-              data={attachment}
-              onRemove={() => console.log("Remove", attachment.id)}
-            >
+            <DemoAttachment key={attachment.id} attachment={attachment}>
               <AttachmentPreview />
               <AttachmentInfo />
               <AttachmentRemove />
-            </Attachment>
+            </DemoAttachment>
           ))}
         </Attachments>
       </div>
@@ -425,15 +375,11 @@ export default function AttachmentsDemo() {
           {[imageAttachments[0], ...mixedAttachments.slice(0, 2)]
             .filter((attachment): attachment is AttachmentData => attachment !== undefined)
             .map((attachment) => (
-              <Attachment
-                key={attachment.id}
-                data={attachment}
-                onRemove={() => console.log("Remove", attachment.id)}
-              >
+              <DemoAttachment key={attachment.id} attachment={attachment}>
                 <AttachmentPreview />
                 <AttachmentInfo showMediaType />
                 <AttachmentRemove />
-              </Attachment>
+              </DemoAttachment>
             ))}
         </Attachments>
       </div>

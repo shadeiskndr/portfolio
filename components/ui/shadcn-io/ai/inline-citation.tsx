@@ -10,12 +10,8 @@ import {
   useState,
 } from "react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel-context";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 
@@ -231,11 +227,11 @@ export const InlineCitationSource = ({
   ...props
 }: InlineCitationSourceProps) => (
   <div className={cn("space-y-1", className)} {...props}>
-    {title && <h4 className="truncate font-medium text-sm leading-tight">{title}</h4>}
-    {url && <p className="truncate break-all text-muted-foreground text-xs">{url}</p>}
-    {description && (
+    {title ? <h4 className="truncate font-medium text-sm leading-tight">{title}</h4> : null}
+    {url ? <p className="truncate break-all text-muted-foreground text-xs">{url}</p> : null}
+    {description ? (
       <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">{description}</p>
-    )}
+    ) : null}
     {children}
   </div>
 );

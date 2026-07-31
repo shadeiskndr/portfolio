@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 const TONES = [95, 90, 80, 70, 60, 50, 40, 30, 20, 10];
 
@@ -38,6 +38,20 @@ export function ToneRampDemo() {
   const [hue, setHue] = useState(90);
   const [chroma, setChroma] = useState(0.12);
 
+  const handleHueChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setHue(Number(e.target.value)),
+    []
+  );
+  const handleChromaChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setChroma(Number(e.target.value)),
+    []
+  );
+  const oklchSwatch = useCallback(
+    (tone: number) => `oklch(${tone / 100} ${chroma} ${hue})`,
+    [chroma, hue]
+  );
+  const hslSwatch = useCallback((tone: number) => `hsl(${hue} 65% ${tone}%)`, [hue]);
+
   return (
     <div className="my-6 rounded-xl border p-4">
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
@@ -48,7 +62,7 @@ export function ToneRampDemo() {
             min={0}
             max={360}
             value={hue}
-            onChange={(e) => setHue(Number(e.target.value))}
+            onChange={handleHueChange}
             className="h-1 flex-1 cursor-pointer accent-primary"
             aria-label="Hue"
           />
@@ -61,7 +75,7 @@ export function ToneRampDemo() {
             max={0.3}
             step={0.01}
             value={chroma}
-            onChange={(e) => setChroma(Number(e.target.value))}
+            onChange={handleChromaChange}
             className="h-1 flex-1 cursor-pointer accent-primary"
             aria-label="Chroma"
           />
@@ -70,12 +84,12 @@ export function ToneRampDemo() {
 
       <Ramp
         label="By tone — OKLCH lightness (perceptual)"
-        swatch={(tone) => `oklch(${tone / 100} ${chroma} ${hue})`}
+        swatch={oklchSwatch}
         note="Text picked by one constant tone threshold. Drag hue — every step stays readable."
       />
       <Ramp
         label="By HSL lightness (naive)"
-        swatch={(tone) => `hsl(${hue} 65% ${tone}%)`}
+        swatch={hslSwatch}
         note="Same threshold, but HSL 'lightness' ≠ perceived lightness — contrast wobbles with hue."
       />
     </div>

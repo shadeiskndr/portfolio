@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { ArrowUpRight, Globe, Search } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -99,6 +99,11 @@ function BookmarkSection({
 
   const isLoading = bookmarks === undefined;
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    []
+  );
+
   return (
     <div className="space-y-5">
       <div className="relative">
@@ -106,21 +111,22 @@ function BookmarkSection({
         <Input
           placeholder={variant === "reading" ? "Search readings..." : "Search resources..."}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="h-9 pl-8"
         />
       </div>
 
       {facets.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
-          <TagChip label="All" active={activeTag === "all"} onClick={() => setActiveTag("all")} />
+          <TagChip label="All" value="all" active={activeTag === "all"} onSelect={setActiveTag} />
           {facets.map(({ tag, count }) => (
             <TagChip
               key={tag}
               label={tag}
+              value={tag}
               count={count}
               active={activeTag === tag}
-              onClick={() => setActiveTag(tag)}
+              onSelect={setActiveTag}
             />
           ))}
         </div>
@@ -147,19 +153,23 @@ function BookmarkSection({
 
 function TagChip({
   label,
+  value,
   count,
   active,
-  onClick,
+  onSelect,
 }: {
   label: string;
+  value: string;
   count?: number;
   active: boolean;
-  onClick: () => void;
+  onSelect: (value: string) => void;
 }) {
+  const handleClick = useCallback(() => onSelect(value), [onSelect, value]);
+
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs capitalize transition-colors",
         active
@@ -247,6 +257,7 @@ function BookmarkCard({ bookmark, variant }: { bookmark: ResolvedBookmark; varia
 
 function Favicon({ faviconUrl }: { faviconUrl: string | null }) {
   if (faviconUrl) {
+    // biome-ignore lint/performance/noImgElement: favicons are byte-capped data URIs at 14–32px; next/image can't optimize a data URI (see doctor.config.jsonc)
     return <img alt="" src={faviconUrl} className="size-3.5 shrink-0 rounded-sm" />;
   }
   return <Globe className="size-3.5 shrink-0 opacity-60" aria-hidden />;
@@ -256,6 +267,7 @@ function PreviewFallback({ domain, faviconUrl }: { domain: string; faviconUrl: s
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-linear-to-br from-muted to-muted/40">
       {faviconUrl ? (
+        // biome-ignore lint/performance/noImgElement: favicons are byte-capped data URIs at 14–32px; next/image can't optimize a data URI (see doctor.config.jsonc)
         <img alt="" src={faviconUrl} className="size-8 rounded-md" />
       ) : (
         <span className="font-semibold font-serif text-3xl text-muted-foreground/70">

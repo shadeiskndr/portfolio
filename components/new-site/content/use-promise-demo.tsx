@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useState } from "react";
+import { Suspense, use, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type Profile = { name: string; team: string; commits: number };
@@ -41,10 +41,11 @@ function Spinner() {
 
 export function UsePromiseDemo() {
   const [profile, setProfile] = useState<Promise<Profile> | null>(null);
+  const handleLoadProfile = useCallback(() => setProfile(loadProfile()), []);
 
   return (
     <div className="my-6 rounded-xl border p-4">
-      <Button size="sm" variant="outline" onClick={() => setProfile(loadProfile())}>
+      <Button size="sm" variant="outline" onClick={handleLoadProfile}>
         {profile ? "Load another" : "Load profile"}
       </Button>
       <div className="mt-3 min-h-[92px]">

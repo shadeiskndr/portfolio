@@ -2,6 +2,7 @@
 
 import { ArrowUp, Check, FileDown, Loader2, Sparkles, SquarePen, X } from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
+import { useCallback } from "react";
 import "streamdown/styles.css";
 import { Button } from "@/components/ui/button";
 import { MessageResponse } from "@/components/ui/shadcn-io/ai/message";
@@ -18,11 +19,42 @@ const EXAMPLES = [
   "What should I emphasize for a senior role?",
 ];
 
+function ExampleButton({ example, onSend }: { example: string; onSend: (text: string) => void }) {
+  const handleClick = useCallback(() => onSend(example), [onSend, example]);
+
+  return (
+    <button
+      className="rounded-lg border border-foreground/10 px-3 py-2 text-left text-muted-foreground text-xs transition-colors hover:border-foreground/20 hover:text-foreground"
+      onClick={handleClick}
+      type="button"
+    >
+      {example}
+    </button>
+  );
+}
+
 export function ResumeAssistant(props: ResumeAssistantProps) {
   const { open, setOpen, messages, input, setInput, pending, scrollRef, send, reset } =
     useResumeAssistant(props);
   const isDesktop = useMediaQuery("(min-width: 1024px)", { initializeWithValue: false });
   const reduce = useReducedMotion();
+
+  const handleClose = useCallback(() => setOpen(false), [setOpen]);
+  const handleOpen = useCallback(() => setOpen(true), [setOpen]);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value),
+    [setInput]
+  );
+  const handleSend = useCallback(() => send(input), [send, input]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        send(input);
+      }
+    },
+    [send, input]
+  );
 
   return (
     <AnimatePresence initial={false}>
@@ -64,7 +96,7 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
               <button
                 aria-label="Close assistant"
                 className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 type="button"
               >
                 <X className="size-4" />
@@ -80,14 +112,7 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
                   employers, education, or references from what you tell me. Try:
                 </p>
                 {EXAMPLES.map((ex) => (
-                  <button
-                    className="rounded-lg border border-foreground/10 px-3 py-2 text-left text-muted-foreground text-xs transition-colors hover:border-foreground/20 hover:text-foreground"
-                    key={ex}
-                    onClick={() => send(ex)}
-                    type="button"
-                  >
-                    {ex}
-                  </button>
+                  <ExampleButton key={ex} example={ex} onSend={send} />
                 ))}
               </div>
             ) : (
@@ -137,13 +162,8 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
             <div className="flex items-end gap-1.5">
               <Textarea
                 className="max-h-28 min-h-9 flex-1 resize-none py-2"
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    send(input);
-                  }
-                }}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask, or tell me what to change…"
                 rows={1}
                 value={input}
@@ -152,7 +172,7 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
                 aria-label="Send"
                 className="size-9 shrink-0 rounded-full p-0"
                 disabled={pending || !input.trim()}
-                onClick={() => send(input)}
+                onClick={handleSend}
                 size="sm"
                 type="button"
               >
@@ -176,7 +196,7 @@ export function ResumeAssistant(props: ResumeAssistantProps) {
         >
           <Button
             className="translate-y-(--dock-shift) gap-1.5 rounded-full shadow-lg transition-transform duration-300 ease-out"
-            onClick={() => setOpen(true)}
+            onClick={handleOpen}
             size="sm"
             type="button"
           >

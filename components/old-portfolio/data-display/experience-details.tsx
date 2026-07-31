@@ -1,11 +1,12 @@
 "use client";
 
 import { Paperclip } from "lucide-react";
+import { useCallback } from "react";
 import { AssetImage } from "@/components/asset-image";
 import IconButton from "@/components/old-portfolio/general/icon-button";
 import Typography from "@/components/old-portfolio/general/typography";
 import Card from "@/components/old-portfolio/layout/card";
-import { useAsset } from "@/lib/assets-provider";
+import { useAsset } from "@/lib/assets-context";
 import type { ExperienceDetails as ExperienceDetailsProps } from "@/lib/types";
 
 const dateFormatOptions: Intl.DateTimeFormatOptions = {
@@ -25,6 +26,10 @@ const ExperienceDetails = ({
   attachedFileKey,
 }: ExperienceDetailsProps) => {
   const attachment = useAsset(attachedFileKey);
+  const handleOpenAttachment = useCallback(() => {
+    if (attachment) window.open(attachment.url, "_blank");
+  }, [attachment]);
+
   return (
     <Card className="relative mx-auto flex w-full max-w-4xl flex-col justify-between gap-4 border p-8 md:flex-row md:gap-8">
       <div className="max-md:order-1 md:w-1/4">
@@ -69,7 +74,7 @@ const ExperienceDetails = ({
       {attachment && (
         <IconButton
           className="top absolute right-4 md:right-4 md:bottom-4"
-          onClick={() => window.open(attachment.url, "_blank")}
+          onClick={handleOpenAttachment}
           size="md"
         >
           <Paperclip />

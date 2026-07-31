@@ -2,12 +2,53 @@
 
 import { Award, ChevronRight, ExternalLink } from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 import { CERTIFICATES, type Certificate } from "@/lib/new-site/data";
+
+function CertButton({
+  cert,
+  shouldReduceMotion,
+  morph,
+  onSelect,
+}: {
+  cert: Certificate;
+  shouldReduceMotion: boolean | null;
+  morph: NonNullable<React.ComponentProps<typeof m.button>["transition"]>;
+  onSelect: (cert: Certificate) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(cert), [onSelect, cert]);
+
+  return (
+    <m.button
+      type="button"
+      {...(shouldReduceMotion ? {} : { layoutId: `cert-${cert.name}` })}
+      onClick={handleClick}
+      {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.99 } })}
+      transition={morph}
+      className="block w-full cursor-pointer select-none rounded-2xl text-left"
+    >
+      <SpotlightCard borderColor="var(--border)" className="p-3 shadow-sm dark:shadow-xl">
+        <div className="flex items-center gap-3">
+          <m.div
+            {...(shouldReduceMotion ? {} : { layoutId: `cert-logo-${cert.name}` })}
+            style={{ flexShrink: 0 }}
+          >
+            <CertLogo cert={cert} size={40} />
+          </m.div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-sm">{cert.name}</p>
+            <p className="truncate text-muted-foreground text-xs">{cert.issuer}</p>
+          </div>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </div>
+      </SpotlightCard>
+    </m.button>
+  );
+}
 
 function CertLogo({ cert, size }: { cert: Certificate; size: number }) {
   const style = { width: size, height: size };
@@ -134,31 +175,13 @@ export default function CertificatesList() {
 
       <div className="flex flex-col gap-2.5">
         {CERTIFICATES.map((cert) => (
-          <m.button
+          <CertButton
             key={cert.name}
-            type="button"
-            {...(shouldReduceMotion ? {} : { layoutId: `cert-${cert.name}` })}
-            onClick={() => setActive(cert)}
-            {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.99 } })}
-            transition={morph}
-            className="block w-full cursor-pointer select-none rounded-2xl text-left"
-          >
-            <SpotlightCard borderColor="var(--border)" className="p-3 shadow-sm dark:shadow-xl">
-              <div className="flex items-center gap-3">
-                <m.div
-                  {...(shouldReduceMotion ? {} : { layoutId: `cert-logo-${cert.name}` })}
-                  style={{ flexShrink: 0 }}
-                >
-                  <CertLogo cert={cert} size={40} />
-                </m.div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-sm">{cert.name}</p>
-                  <p className="truncate text-muted-foreground text-xs">{cert.issuer}</p>
-                </div>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </div>
-            </SpotlightCard>
-          </m.button>
+            cert={cert}
+            shouldReduceMotion={shouldReduceMotion}
+            morph={morph}
+            onSelect={setActive}
+          />
         ))}
       </div>
     </>

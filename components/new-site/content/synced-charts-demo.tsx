@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Brush, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { useResizeObserver } from "@/hooks/use-resize-observer";
@@ -99,6 +99,7 @@ function Panel({
 
 export function SyncedChartsDemo() {
   const [synced, setSynced] = useState(true);
+  const handleToggleSync = useCallback(() => setSynced((s) => !s), []);
 
   return (
     <div className="my-6 rounded-xl border p-3">
@@ -108,7 +109,7 @@ export function SyncedChartsDemo() {
             ? "Hover any panel, or drag the navigator — all three track one x-axis."
             : "Sync off — each panel now tracks only its own cursor and window."}
         </p>
-        <Button variant="outline" size="sm" onClick={() => setSynced((s) => !s)}>
+        <Button variant="outline" size="sm" onClick={handleToggleSync}>
           {synced ? "Disable sync" : "Enable sync"}
         </Button>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -12,9 +13,28 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useColorTheme } from "@/lib/color-provider";
+import { useColorTheme } from "@/lib/color-context";
 import { DEFAULT_COLOR_THEME, PALETTE_KEYS, type ThemeOption } from "@/lib/color-themes";
 import { cn } from "@/lib/utils";
+
+function ThemeCommandItem({
+  theme,
+  checked,
+  onSelect,
+}: {
+  theme: ThemeOption;
+  checked: boolean;
+  onSelect: (id: ThemeOption["id"]) => void;
+}) {
+  const handleSelect = useCallback(() => onSelect(theme.id), [onSelect, theme.id]);
+
+  return (
+    <CommandItem value={theme.label} data-checked={checked} onSelect={handleSelect}>
+      <ThemePalette theme={theme} />
+      {theme.label}
+    </CommandItem>
+  );
+}
 
 function ThemePalette({ theme }: { theme: ThemeOption }) {
   return (
@@ -81,15 +101,12 @@ export function ColorThemeToggle() {
             <CommandEmpty>No themes found.</CommandEmpty>
             <CommandGroup heading={`Local (${localThemes.length})`}>
               {localThemes.map((t) => (
-                <CommandItem
+                <ThemeCommandItem
                   key={t.id}
-                  value={t.label}
-                  data-checked={colorTheme === t.id}
-                  onSelect={() => setColorThemeWithTransition(t.id)}
-                >
-                  <ThemePalette theme={t} />
-                  {t.label}
-                </CommandItem>
+                  theme={t}
+                  checked={colorTheme === t.id}
+                  onSelect={setColorThemeWithTransition}
+                />
               ))}
             </CommandGroup>
             {remoteThemes.length > 0 ? (
@@ -97,15 +114,12 @@ export function ColorThemeToggle() {
                 <CommandSeparator />
                 <CommandGroup heading={`Remote (${remoteThemes.length})`}>
                   {remoteThemes.map((t) => (
-                    <CommandItem
+                    <ThemeCommandItem
                       key={t.id}
-                      value={t.label}
-                      data-checked={colorTheme === t.id}
-                      onSelect={() => setColorThemeWithTransition(t.id)}
-                    >
-                      <ThemePalette theme={t} />
-                      {t.label}
-                    </CommandItem>
+                      theme={t}
+                      checked={colorTheme === t.id}
+                      onSelect={setColorThemeWithTransition}
+                    />
                   ))}
                 </CommandGroup>
               </>

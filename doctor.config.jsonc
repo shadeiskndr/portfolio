@@ -133,6 +133,7 @@
         // a single-pass reduce() trades clarity for no measurable gain at these
         // sizes — the "theoretical, no real impact" case the rule says to skip.
         "files": [
+          "components/ui/shadcn-io/ai/chatbot.tsx",
           "convex/chat.ts",
           "convex/rag.ts",
           "convex/themes.ts",
@@ -140,6 +141,17 @@
           "lib/new-site/mdx.ts"
         ],
         "rules": ["react-doctor/js-combine-iterations"]
+      },
+      {
+        // False positive in react-doctor >=0.9.13. The effect registers exactly
+        // one `document.addEventListener` and returns a top-level cleanup that
+        // calls `removeEventListener` with the same `listener` binding, options
+        // and event name — the pattern the rule's own docs list as supported.
+        // Upstream classifies this as "cleanup already present but the detector
+        // missed it", whose documented remedy is to suppress rather than
+        // restructure working code. Recheck when react-doctor next bumps.
+        "files": ["hooks/use-on-click-outside.ts"],
+        "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {
         // resume-builder is one cohesive TanStack Form. no-array-index-as-key:

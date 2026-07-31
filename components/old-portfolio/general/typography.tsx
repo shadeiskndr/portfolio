@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ interface TypographyProps
   extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>,
     VariantProps<typeof typographyVariants> {
   component?: React.ElementType;
+  ref?: React.Ref<HTMLHeadingElement | HTMLParagraphElement>;
 }
 
 const elementMapping = {
@@ -40,20 +41,23 @@ const elementMapping = {
 
 type ComponentElement = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span";
 
-const Typography = React.forwardRef<HTMLHeadingElement | HTMLParagraphElement, TypographyProps>(
-  ({ component, className = "", variant, children, ...props }: TypographyProps, ref) => {
-    const Comp = (
-      component ? component : variant ? elementMapping[variant] : "p"
-    ) as ComponentElement;
+function Typography({
+  component,
+  className = "",
+  variant,
+  children,
+  ref,
+  ...props
+}: TypographyProps) {
+  const Comp = (
+    component ? component : variant ? elementMapping[variant] : "p"
+  ) as ComponentElement;
 
-    return (
-      <Comp className={cn(typographyVariants({ variant }), className)} ref={ref} {...props}>
-        {children}
-      </Comp>
-    );
-  }
-);
-
-Typography.displayName = "Typography";
+  return (
+    <Comp className={cn(typographyVariants({ variant }), className)} ref={ref} {...props}>
+      {children}
+    </Comp>
+  );
+}
 
 export default Typography;

@@ -9,7 +9,7 @@ import {
   useViewModelInstanceColor,
 } from "@rive-app/react-webgl2";
 import type { FC, ReactNode } from "react";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -263,15 +263,43 @@ const variants = ["obsidian", "mana", "opal", "halo", "glint", "command"] as con
 
 const states: PersonaState[] = ["idle", "listening", "thinking", "speaking", "asleep"];
 
+function StateButton({
+  state,
+  isActive,
+  onSelect,
+}: {
+  state: PersonaState;
+  isActive: boolean;
+  onSelect: (state: PersonaState) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(state), [onSelect, state]);
+
+  return (
+    <Button
+      onClick={handleClick}
+      variant={isActive ? "default" : "outline"}
+      size="sm"
+      className="capitalize"
+    >
+      {state}
+    </Button>
+  );
+}
+
 export default function PersonaDemo() {
   const [state, setState] = useState<PersonaState>("thinking");
   const [variant, setVariant] = useState<(typeof variants)[number]>("glint");
+
+  const handleVariantChange = useCallback(
+    (v: unknown) => setVariant(v as (typeof variants)[number]),
+    []
+  );
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-6 p-6">
       <div className="flex flex-col items-center gap-4">
         <Persona key={variant} state={state} variant={variant} className="size-32" />
-        <Select value={variant} onValueChange={(v) => setVariant(v as typeof variant)}>
+        <Select value={variant} onValueChange={handleVariantChange}>
           <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>
@@ -286,15 +314,7 @@ export default function PersonaDemo() {
       </div>
       <div className="flex flex-wrap justify-center gap-2">
         {states.map((s) => (
-          <Button
-            key={s}
-            onClick={() => setState(s)}
-            variant={state === s ? "default" : "outline"}
-            size="sm"
-            className="capitalize"
-          >
-            {s}
-          </Button>
+          <StateButton key={s} state={s} isActive={state === s} onSelect={setState} />
         ))}
       </div>
     </div>

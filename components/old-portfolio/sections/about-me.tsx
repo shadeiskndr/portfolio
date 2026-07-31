@@ -7,6 +7,7 @@ import { EXTERNAL_LINKS } from "@/lib/data";
 
 const AboutMeSection = () => {
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: stable page-section landmark; NAV_LINKS in lib/data.tsx anchors to this exact id
     <Container id="about">
       <div className="self-center">
         <Tag label="About me" />

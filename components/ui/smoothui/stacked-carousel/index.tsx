@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { type ReactNode, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { useEventCallback } from "@/hooks/use-event-callback";
 import { useEventListener } from "@/hooks/use-event-listener";
@@ -129,6 +129,30 @@ export interface StackedCarouselProps {
   showNavigation?: boolean;
 }
 
+function CarouselDot({
+  index,
+  isActive,
+  onSelect,
+}: {
+  index: number;
+  isActive: boolean;
+  onSelect: (step: number) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(index + 1), [onSelect, index]);
+
+  return (
+    <button
+      aria-label={`Go to slide ${index + 1}`}
+      className={cn(
+        "h-2 rounded-full transition-all duration-200",
+        isActive ? "w-8 bg-primary" : "w-2 bg-primary/30 hover:bg-primary/50"
+      )}
+      onClick={handleClick}
+      type="button"
+    />
+  );
+}
+
 export default function StackedCarousel({
   items,
   className = "",
@@ -241,30 +265,24 @@ export default function StackedCarousel({
 
       {(showNavigation || showIndicators) && filteredItems.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2">
-          {showNavigation && (
+          {showNavigation ? (
             <NavigationButton direction="prev" disabled={!canGoToPrevStep} onClick={goToPrevStep} />
-          )}
-          {showIndicators && (
+          ) : null}
+          {showIndicators ? (
             <div className="flex items-center gap-2">
               {filteredItems.map((item, index) => (
-                <button
-                  aria-label={`Go to slide ${index + 1}`}
-                  className={cn(
-                    "h-2 rounded-full transition-all duration-200",
-                    index === activeIndex
-                      ? "w-8 bg-primary"
-                      : "w-2 bg-primary/30 hover:bg-primary/50"
-                  )}
+                <CarouselDot
+                  index={index}
+                  isActive={index === activeIndex}
                   key={item.id}
-                  onClick={() => setStep(index + 1)}
-                  type="button"
+                  onSelect={setStep}
                 />
               ))}
             </div>
-          )}
-          {showNavigation && (
+          ) : null}
+          {showNavigation ? (
             <NavigationButton direction="next" disabled={!canGoToNextStep} onClick={goToNextStep} />
-          )}
+          ) : null}
         </div>
       )}
     </div>

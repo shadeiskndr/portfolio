@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { Search } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
-import { useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,6 +106,15 @@ export default function ChangelogList() {
   const groups = useMemo(() => (commits ? groupByMonth(commits) : []), [commits]);
 
   const isLoading = commits === undefined;
+  const hideNoiseId = useId();
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    []
+  );
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setOpenCommit(null);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -117,16 +126,16 @@ export default function ChangelogList() {
           <Input
             placeholder="Search commits..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="h-9 pl-8"
           />
         </div>
         <label
-          htmlFor="changelog-hide-noise"
+          htmlFor={hideNoiseId}
           className="flex shrink-0 items-center gap-2 text-muted-foreground text-sm"
         >
           Hide noise
-          <Switch id="changelog-hide-noise" checked={hideNoise} onCheckedChange={setHideNoise} />
+          <Switch id={hideNoiseId} checked={hideNoise} onCheckedChange={setHideNoise} />
         </label>
       </div>
 
@@ -210,12 +219,7 @@ export default function ChangelogList() {
           })
         : null}
 
-      <CommitDiffDialog
-        commit={openCommit}
-        onOpenChange={(open) => {
-          if (!open) setOpenCommit(null);
-        }}
-      />
+      <CommitDiffDialog commit={openCommit} onOpenChange={handleDialogOpenChange} />
     </div>
   );
 }
@@ -230,10 +234,12 @@ function CommitRow({ commit, onOpen }: { commit: Commit; onOpen: (commit: Commit
 }
 
 function CommitRowAnchor({ commit, onOpen }: { commit: Commit; onOpen: (commit: Commit) => void }) {
+  const handleClick = useCallback(() => onOpen(commit), [onOpen, commit]);
+
   return (
     <button
       type="button"
-      onClick={() => onOpen(commit)}
+      onClick={handleClick}
       className="group/row relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/60 sm:gap-4"
     >
       <span
@@ -277,32 +283,55 @@ function FilterChips({
         if (filter.value !== "all" && counts && !count) return null;
         const isActive = active === filter.value;
         return (
-          <button
+          <FilterChip
             key={filter.value}
-            type="button"
-            onClick={() => onChange(filter.value)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors",
-              isActive
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-background text-foreground hover:bg-muted"
-            )}
-          >
-            {filter.value !== "all" ? (
-              <span
-                className={cn(
-                  "font-medium tabular-nums",
-                  isActive ? "text-background" : "text-muted-foreground"
-                )}
-              >
-                {count ?? "—"}
-              </span>
-            ) : null}
-            <span>{filter.label}</span>
-          </button>
+            filter={filter}
+            isActive={isActive}
+            count={count}
+            onChange={onChange}
+          />
         );
       })}
     </div>
+  );
+}
+
+function FilterChip({
+  filter,
+  isActive,
+  count,
+  onChange,
+}: {
+  filter: (typeof TYPE_FILTERS)[number];
+  isActive: boolean;
+  count: number | undefined;
+  onChange: (value: string) => void;
+}) {
+  const handleClick = useCallback(() => onChange(filter.value), [onChange, filter.value]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors",
+        isActive
+          ? "border-foreground bg-foreground text-background"
+          : "border-border bg-background text-foreground hover:bg-muted"
+      )}
+    >
+      {filter.value !== "all" ? (
+        <span
+          className={cn(
+            "font-medium tabular-nums",
+            isActive ? "text-background" : "text-muted-foreground"
+          )}
+        >
+          {count ?? "—"}
+        </span>
+      ) : null}
+      <span>{filter.label}</span>
+    </button>
   );
 }
 

@@ -58,6 +58,11 @@ export const Action = ({
   return button;
 };
 
+const logCopied = () => console.log("Copied!");
+const logRegenerating = () => console.log("Regenerating...");
+const logThumbsUp = () => console.log("Thumbs up!");
+const logThumbsDown = () => console.log("Thumbs down!");
+
 export default function ActionsDemo() {
   return (
     <div className="flex w-full flex-col gap-4 p-6">
@@ -69,16 +74,16 @@ export default function ActionsDemo() {
         </MessageContent>
 
         <Actions>
-          <Action onClick={() => console.log("Copied!")} tooltip="Copy to clipboard">
+          <Action onClick={logCopied} tooltip="Copy to clipboard">
             <CopyIcon className="size-4" />
           </Action>
-          <Action onClick={() => console.log("Regenerating...")} tooltip="Regenerate response">
+          <Action onClick={logRegenerating} tooltip="Regenerate response">
             <RefreshCcwIcon className="size-4" />
           </Action>
-          <Action onClick={() => console.log("Thumbs up!")} tooltip="Good response">
+          <Action onClick={logThumbsUp} tooltip="Good response">
             <ThumbsUpIcon className="size-4" />
           </Action>
-          <Action onClick={() => console.log("Thumbs down!")} tooltip="Bad response">
+          <Action onClick={logThumbsDown} tooltip="Bad response">
             <ThumbsDownIcon className="size-4" />
           </Action>
         </Actions>

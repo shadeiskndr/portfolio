@@ -5,6 +5,7 @@ import Container from "@/components/old-portfolio/layout/container";
 
 const EducationSection = () => {
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: stable page-section landmark; NAV_LINKS in lib/data.tsx anchors to this exact id
     <Container className="" id="education">
       <div className="self-center">
         <Tag label="Education" />

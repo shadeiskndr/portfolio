@@ -1,9 +1,11 @@
+// biome-ignore-all lint/performance/noImgElement: attachment previews render blob/data URLs from the chat runtime; next/image can't optimize them
 "use client";
 
 import type { FileUIPart, UIMessage } from "ai";
 import { ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, XIcon } from "lucide-react";
+import type React from "react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
-import { createContext, memo, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
@@ -278,6 +280,14 @@ export function MessageAttachment({ data, className, onRemove, ...props }: Messa
   const isImage = mediaType === "image";
   const attachmentLabel = filename || (isImage ? "Image" : "Attachment");
 
+  const handleRemoveClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      onRemove?.();
+    },
+    [onRemove]
+  );
+
   return (
     <div className={cn("group relative size-24 overflow-hidden rounded-lg", className)} {...props}>
       {isImage ? (
@@ -290,21 +300,18 @@ export function MessageAttachment({ data, className, onRemove, ...props }: Messa
             src={data.url}
             width={100}
           />
-          {onRemove && (
+          {onRemove ? (
             <Button
               aria-label="Remove attachment"
               className="absolute top-2 right-2 size-6 rounded-full bg-background/80 p-0 opacity-0 backdrop-blur-sm transition-opacity hover:bg-background group-hover:opacity-100 [&>svg]:size-3"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
+              onClick={handleRemoveClick}
               type="button"
               variant="ghost"
             >
               <XIcon />
               <span className="sr-only">Remove</span>
             </Button>
-          )}
+          ) : null}
         </>
       ) : (
         <>
@@ -320,21 +327,18 @@ export function MessageAttachment({ data, className, onRemove, ...props }: Messa
               <p>{attachmentLabel}</p>
             </TooltipContent>
           </Tooltip>
-          {onRemove && (
+          {onRemove ? (
             <Button
               aria-label="Remove attachment"
               className="size-6 shrink-0 rounded-full p-0 opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100 [&>svg]:size-3"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
+              onClick={handleRemoveClick}
               type="button"
               variant="ghost"
             >
               <XIcon />
               <span className="sr-only">Remove</span>
             </Button>
-          )}
+          ) : null}
         </>
       )}
     </div>

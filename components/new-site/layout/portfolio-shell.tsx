@@ -4,7 +4,7 @@ import { domMax, LazyMotion } from "motion/react";
 import BottomDock from "@/components/new-site/layout/bottom-dock";
 import { MusicPlayerProvider } from "@/components/new-site/layout/music-player-provider";
 import Sidebar from "@/components/new-site/layout/sidebar";
-import { useSidebarCollapse } from "@/components/new-site/layout/sidebar-collapse-provider";
+import { useSidebarCollapse } from "@/components/new-site/layout/sidebar-collapse-context";
 import TopNav from "@/components/new-site/layout/top-nav";
 import { cn } from "@/lib/utils";
 

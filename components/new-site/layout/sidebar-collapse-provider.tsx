@@ -1,16 +1,11 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import {
+  SidebarCollapseContext,
+  type SidebarCollapseState,
+} from "@/components/new-site/layout/sidebar-collapse-context";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-
-type SidebarCollapseState = {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-  toggle: () => void;
-  animate: boolean;
-};
-
-const SidebarCollapseContext = createContext<SidebarCollapseState | undefined>(undefined);
 
 export function SidebarCollapseProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setStoredCollapsed] = useLocalStorage<boolean>("sidebar-collapsed", false, {
@@ -40,12 +35,3 @@ export function SidebarCollapseProvider({ children }: { children: React.ReactNod
     <SidebarCollapseContext.Provider value={value}>{children}</SidebarCollapseContext.Provider>
   );
 }
-
-export const useSidebarCollapse = () => {
-  const context = useContext(SidebarCollapseContext);
-
-  if (context === undefined)
-    throw new Error("useSidebarCollapse must be used within a SidebarCollapseProvider");
-
-  return context;
-};

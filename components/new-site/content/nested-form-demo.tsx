@@ -1,7 +1,7 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { type AnyFieldApi, useForm } from "@tanstack/react-form";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,85 @@ const nextItem = (): Item => ({ id: `item-${idCounter++}`, label: "", weight: 0 
 const inputClass =
   "w-full rounded-md border bg-transparent px-2 py-1 text-sm outline-none focus:border-primary";
 
+const formSelector = (s: { canSubmit: boolean; isValid: boolean; values: Model }) => ({
+  canSubmit: s.canSubmit,
+  isValid: s.isValid,
+  values: s.values,
+});
+
+function TextInput({ field, label }: { field: AnyFieldApi; label: string }) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value),
+    [field]
+  );
+
+  return (
+    <input
+      value={field.state.value}
+      onChange={handleChange}
+      onBlur={field.handleBlur}
+      placeholder="label"
+      className={inputClass}
+      aria-label={label}
+    />
+  );
+}
+
+function NumberInput({ field, label }: { field: AnyFieldApi; label: string }) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      const next = raw === "" ? field.state.value : Number(raw);
+      if (Number.isNaN(next)) return;
+      field.handleChange(next);
+    },
+    [field]
+  );
+
+  return (
+    <input
+      type="number"
+      value={field.state.value}
+      onChange={handleChange}
+      onBlur={field.handleBlur}
+      className={inputClass}
+      aria-label={label}
+    />
+  );
+}
+
+function AddItemButton({ onAdd }: { onAdd: (item: Item) => void }) {
+  const handleClick = useCallback(() => onAdd(nextItem()), [onAdd]);
+
+  return (
+    <Button type="button" size="sm" variant="outline" onClick={handleClick}>
+      + Add item
+    </Button>
+  );
+}
+
+function RemoveItemButton({
+  index,
+  onRemove,
+}: {
+  index: number;
+  onRemove: (index: number) => void;
+}) {
+  const handleClick = useCallback(() => onRemove(index), [onRemove, index]);
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      onClick={handleClick}
+      aria-label={`Remove item ${index + 1}`}
+    >
+      ×
+    </Button>
+  );
+}
+
 function FieldError({ errors, isTouched }: { errors: unknown[]; isTouched: boolean }) {
   if (!isTouched || errors.length === 0) return null;
   return <p className="mt-1 text-red-600 text-xs dark:text-red-400">{String(errors[0])}</p>;
@@ -37,16 +116,18 @@ export function NestedFormDemo() {
     },
   });
 
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      form.handleSubmit();
+    },
+    [form]
+  );
+
   return (
     <div className="my-6 rounded-xl border p-4">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4">
         <form.Field
           name="name"
           validators={{
@@ -59,13 +140,7 @@ export function NestedFormDemo() {
               <span className="mb-1 block font-medium text-muted-foreground text-xs uppercase tracking-wide">
                 Set name
               </span>
-              <input
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                className={inputClass}
-                aria-label="Set name"
-              />
+              <TextInput field={field} label="Set name" />
               <FieldError errors={field.state.meta.errors} isTouched={field.state.meta.isTouched} />
             </div>
           )}
@@ -78,14 +153,7 @@ export function NestedFormDemo() {
                 <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                   Items
                 </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => itemsField.pushValue(nextItem())}
-                >
-                  + Add item
-                </Button>
+                <AddItemButton onAdd={itemsField.pushValue} />
               </div>
               {itemsField.state.value.map((item, i) => (
                 <div key={item.id} className="flex items-start gap-2 rounded-lg border p-3">
@@ -98,14 +166,7 @@ export function NestedFormDemo() {
                   >
                     {(f) => (
                       <div className="flex-1">
-                        <input
-                          value={f.state.value}
-                          onChange={(e) => f.handleChange(e.target.value)}
-                          onBlur={f.handleBlur}
-                          placeholder="label"
-                          className={inputClass}
-                          aria-label={`Item ${i + 1} label`}
-                        />
+                        <TextInput field={f} label={`Item ${i + 1} label`} />
                         <FieldError
                           errors={f.state.meta.errors}
                           isTouched={f.state.meta.isTouched}
@@ -128,19 +189,7 @@ export function NestedFormDemo() {
                   >
                     {(f) => (
                       <div className="w-24">
-                        <input
-                          type="number"
-                          value={f.state.value}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            const next = raw === "" ? f.state.value : Number(raw);
-                            if (Number.isNaN(next)) return;
-                            f.handleChange(next);
-                          }}
-                          onBlur={f.handleBlur}
-                          className={inputClass}
-                          aria-label={`Item ${i + 1} weight`}
-                        />
+                        <NumberInput field={f} label={`Item ${i + 1} weight`} />
                         <FieldError
                           errors={f.state.meta.errors}
                           isTouched={f.state.meta.isTouched}
@@ -148,24 +197,14 @@ export function NestedFormDemo() {
                       </div>
                     )}
                   </form.Field>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => itemsField.removeValue(i)}
-                    aria-label={`Remove item ${i + 1}`}
-                  >
-                    ×
-                  </Button>
+                  <RemoveItemButton index={i} onRemove={itemsField.removeValue} />
                 </div>
               ))}
             </div>
           )}
         </form.Field>
 
-        <form.Subscribe
-          selector={(s) => ({ canSubmit: s.canSubmit, isValid: s.isValid, values: s.values })}
-        >
+        <form.Subscribe selector={formSelector}>
           {({ canSubmit, isValid, values }) => (
             <div className="space-y-2">
               <div className="flex items-center gap-3">

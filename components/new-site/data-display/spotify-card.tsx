@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { AnimatePresence, m } from "motion/react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
 import { Marquee, MarqueeContent, MarqueeEdge, MarqueeItem } from "@/components/ui/diceui/marquee";
@@ -21,6 +21,9 @@ export default function SpotifyCard() {
 
   const spinStyle = isPlaying ? { animationDuration: "4s" } : undefined;
 
+  const handleHoverStart = useCallback(() => setHovered(true), []);
+  const handleHoverEnd = useCallback(() => setHovered(false), []);
+
   const statusText = hasTrack ? (
     <>
       {PERSONAL.name} {isPlaying ? "is currently listening to" : "last listened to"}{" "}
@@ -33,11 +36,7 @@ export default function SpotifyCard() {
   );
 
   const wrapper = (
-    <m.div
-      className="relative"
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-    >
+    <m.div className="relative" onHoverStart={handleHoverStart} onHoverEnd={handleHoverEnd}>
       <div className="overflow-hidden rounded-lg border bg-muted/30">
         <div className="flex items-center gap-3 px-3 py-2.5">
           <SpotifyIcon
@@ -57,7 +56,7 @@ export default function SpotifyCard() {
       </div>
 
       <AnimatePresence>
-        {expanded && (
+        {expanded ? (
           <m.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -83,7 +82,7 @@ export default function SpotifyCard() {
               </div>
             </div>
           </m.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </m.div>
   );

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <fieldset> carries UA border/padding and the flex min-width:min-content bug; this is a layout-critical styled container, not a form grouping
     <div
       data-slot="input-group"
       role="group"
@@ -40,23 +41,27 @@ const inputGroupAddonVariants = cva(
   }
 );
 
+const focusAdjacentInput = (e: React.MouseEvent<HTMLDivElement>) => {
+  if ((e.target as HTMLElement).closest("button")) {
+    return;
+  }
+  e.currentTarget.parentElement?.querySelector("input")?.focus();
+};
+
 function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: click only forwards focus to the adjacent input, which keyboard users reach by tabbing directly
+    // biome-ignore lint/a11y/useSemanticElements: <fieldset> carries UA border/padding and the flex min-width:min-content bug; this is a layout-critical styled container, not a form grouping
     <div
       role="group"
       data-slot="input-group-addon"
       data-align={align}
       className={cn(inputGroupAddonVariants({ align }), className)}
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) {
-          return;
-        }
-        e.currentTarget.parentElement?.querySelector("input")?.focus();
-      }}
+      onClick={focusAdjacentInput}
       {...props}
     />
   );

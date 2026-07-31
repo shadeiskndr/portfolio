@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import PostList from "@/components/new-site/content/post-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,14 +49,14 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
   const safePage = Math.min(page, pageCount);
   const pagePosts = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  const onSearch = (value: string) => {
+  const onSearch = useCallback((value: string) => {
     setSearch(value);
     setPage(1);
-  };
-  const onTag = (tag: string) => {
+  }, []);
+  const onTag = useCallback((tag: string) => {
     setActiveTag(tag);
     setPage(1);
-  };
+  }, []);
 
   const moreCount = Math.max(0, facets.length - VISIBLE_TAGS);
   const visibleFacets = useMemo(() => {
@@ -69,6 +69,12 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
     return top;
   }, [facets, showAllTags, activeTag]);
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onSearch(e.target.value),
+    [onSearch]
+  );
+  const handleToggleTags = useCallback(() => setShowAllTags((v) => !v), []);
+
   return (
     <div className="space-y-5">
       <div className="relative">
@@ -76,27 +82,28 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
         <Input
           placeholder="Search posts..."
           value={search}
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="h-9 pl-8"
         />
       </div>
 
       {facets.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
-          <TagChip label="All" active={activeTag === "all"} onClick={() => onTag("all")} />
+          <TagChip label="All" value="all" active={activeTag === "all"} onSelect={onTag} />
           {visibleFacets.map(({ tag, count }) => (
             <TagChip
               key={tag}
               label={tag}
+              value={activeTag === tag ? "all" : tag}
               count={count}
               active={activeTag === tag}
-              onClick={() => onTag(activeTag === tag ? "all" : tag)}
+              onSelect={onTag}
             />
           ))}
           {moreCount > 0 ? (
             <button
               type="button"
-              onClick={() => setShowAllTags((v) => !v)}
+              onClick={handleToggleTags}
               className="inline-flex items-center rounded-full px-2.5 py-1 text-muted-foreground text-xs transition-colors hover:text-foreground"
             >
               {showAllTags ? "Show less" : `+${moreCount} more`}
@@ -128,21 +135,49 @@ export default function TilIndex({ posts, basePath }: { posts: PostMeta[]; baseP
   );
 }
 
+function PageButton({
+  value,
+  isCurrent,
+  onPage,
+}: {
+  value: number;
+  isCurrent: boolean;
+  onPage: (p: number) => void;
+}) {
+  const handleClick = useCallback(() => onPage(value), [onPage, value]);
+
+  return (
+    <Button
+      variant={isCurrent ? "outline" : "ghost"}
+      size="icon-sm"
+      aria-current={isCurrent ? "page" : undefined}
+      aria-label={`Page ${value}`}
+      onClick={handleClick}
+    >
+      {value}
+    </Button>
+  );
+}
+
 function TagChip({
   label,
+  value,
   count,
   active,
-  onClick,
+  onSelect,
 }: {
   label: string;
+  value: string;
   count?: number;
   active: boolean;
-  onClick: () => void;
+  onSelect: (value: string) => void;
 }) {
+  const handleClick = useCallback(() => onSelect(value), [onSelect, value]);
+
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors",
         active
@@ -193,13 +228,16 @@ function Pager({
   pageCount: number;
   onPage: (p: number) => void;
 }) {
+  const handlePrev = useCallback(() => onPage(page - 1), [onPage, page]);
+  const handleNext = useCallback(() => onPage(page + 1), [onPage, page]);
+
   return (
     <nav aria-label="pagination" className="flex items-center justify-center gap-1 pt-2">
       <Button
         variant="ghost"
         size="sm"
         disabled={page <= 1}
-        onClick={() => onPage(page - 1)}
+        onClick={handlePrev}
         aria-label="Previous page"
       >
         <ChevronLeft className="size-4" />
@@ -210,23 +248,19 @@ function Pager({
             …
           </span>
         ) : (
-          <Button
+          <PageButton
             key={item.value}
-            variant={item.value === page ? "outline" : "ghost"}
-            size="icon-sm"
-            aria-current={item.value === page ? "page" : undefined}
-            aria-label={`Page ${item.value}`}
-            onClick={() => onPage(item.value)}
-          >
-            {item.value}
-          </Button>
+            value={item.value}
+            isCurrent={item.value === page}
+            onPage={onPage}
+          />
         )
       )}
       <Button
         variant="ghost"
         size="sm"
         disabled={page >= pageCount}
-        onClick={() => onPage(page + 1)}
+        onClick={handleNext}
         aria-label="Next page"
       >
         <ChevronRight className="size-4" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AssetImage } from "@/components/asset-image";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +15,14 @@ export default function FlipAvatar({
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
+  const handleFlip = useCallback(() => setIsFlipped((f) => !f), []);
+
   return (
     <button
       aria-label={isFlipped ? "Show front of avatar" : "Show back of avatar"}
       aria-pressed={isFlipped}
       className="group perspective-distant relative mx-auto block aspect-square w-full max-w-44 cursor-pointer"
-      onClick={() => setIsFlipped((f) => !f)}
+      onClick={handleFlip}
       type="button"
     >
       <div

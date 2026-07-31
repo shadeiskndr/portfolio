@@ -3,6 +3,7 @@
 import { CircleUserRound } from "lucide-react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback } from "react";
 import { playClick } from "@/hooks/use-sound";
 import { NAV_LINKS } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
@@ -17,14 +18,21 @@ export default function DrawerNav({
   const pathname = usePathname();
   const oddCount = NAV_LINKS.length % 2 === 1;
 
+  const handleOpenProfile = useCallback(() => {
+    playClick();
+    onOpenProfile();
+  }, [onOpenProfile]);
+
+  const handleNavigate = useCallback(() => {
+    playClick();
+    onNavigate();
+  }, [onNavigate]);
+
   return (
     <nav aria-label="Primary" className="px-3 pt-3">
       <button
         type="button"
-        onClick={() => {
-          playClick();
-          onOpenProfile();
-        }}
+        onClick={handleOpenProfile}
         className="mb-2 flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-[0.9375rem] text-muted-foreground transition-colors active:bg-muted/60"
       >
         <CircleUserRound className="size-4 shrink-0" />
@@ -41,10 +49,7 @@ export default function DrawerNav({
               <NextLink
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  playClick();
-                  onNavigate();
-                }}
+                onClick={handleNavigate}
                 className={cn(
                   "flex min-h-11 items-center rounded-lg px-3 text-[0.9375rem] transition-colors",
                   active

@@ -20,5 +20,5 @@ export function useEventCallback<Args extends unknown[], R>(
     ref.current = fn;
   });
 
-  return useCallback((...args: Args) => ref.current?.(...args), [ref]) as (...args: Args) => R;
+  return useCallback((...args: Args) => ref.current?.(...args), []) as (...args: Args) => R;
 }

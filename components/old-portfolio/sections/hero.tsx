@@ -7,6 +7,7 @@ import Container from "@/components/old-portfolio/layout/container";
 
 const HeroSection = () => {
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: stable page-section landmark; NAV_LINKS in lib/data.tsx anchors to this exact id
     <Container id="hero">
       <div className="flex flex-col gap-12 md:flex-row">
         <div className="flex items-center justify-center md:order-last md:grow md:justify-end">

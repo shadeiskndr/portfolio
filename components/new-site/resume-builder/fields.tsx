@@ -2,6 +2,7 @@
 
 import type { AnyFieldApi } from "@tanstack/react-form";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,11 @@ export function TextField({
   placeholder?: string;
   className?: string;
 }) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value),
+    [field]
+  );
+
   return (
     <Field className={className}>
       {label ? (
@@ -32,7 +38,7 @@ export function TextField({
         id={field.name}
         name={field.name}
         onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
+        onChange={handleChange}
         placeholder={placeholder}
         value={field.state.value ?? ""}
       />
@@ -53,6 +59,11 @@ export function TextAreaField({
   rows?: number;
   className?: string;
 }) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => field.handleChange(e.target.value),
+    [field]
+  );
+
   return (
     <Field className={className}>
       {label ? (
@@ -64,7 +75,7 @@ export function TextAreaField({
         id={field.name}
         name={field.name}
         onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
+        onChange={handleChange}
         placeholder={placeholder}
         rows={rows}
         value={field.state.value ?? ""}
@@ -75,21 +86,25 @@ export function TextAreaField({
 
 export function ItemCard({
   title,
+  index,
   onRemove,
-  onMoveUp,
-  onMoveDown,
+  onMove,
   canMoveUp,
   canMoveDown,
   children,
 }: {
   title: string;
-  onRemove: () => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
+  index: number;
+  onRemove: (index: number) => void;
+  onMove?: (from: number, to: number) => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   children: React.ReactNode;
 }) {
+  const handleRemove = useCallback(() => onRemove(index), [onRemove, index]);
+  const handleMoveUp = useCallback(() => onMove?.(index, index - 1), [onMove, index]);
+  const handleMoveDown = useCallback(() => onMove?.(index, index + 1), [onMove, index]);
+
   return (
     <div className="rounded-lg border border-foreground/10 bg-background p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -97,20 +112,20 @@ export function ItemCard({
           {title}
         </span>
         <div className="flex shrink-0 items-center gap-0.5">
-          {onMoveUp ? (
-            <IconBtn aria-label="Move up" disabled={!canMoveUp} onClick={onMoveUp}>
-              <ChevronUp className="size-3.5" />
-            </IconBtn>
-          ) : null}
-          {onMoveDown ? (
-            <IconBtn aria-label="Move down" disabled={!canMoveDown} onClick={onMoveDown}>
-              <ChevronDown className="size-3.5" />
-            </IconBtn>
+          {onMove ? (
+            <>
+              <IconBtn aria-label="Move up" disabled={!canMoveUp} onClick={handleMoveUp}>
+                <ChevronUp className="size-3.5" />
+              </IconBtn>
+              <IconBtn aria-label="Move down" disabled={!canMoveDown} onClick={handleMoveDown}>
+                <ChevronDown className="size-3.5" />
+              </IconBtn>
+            </>
           ) : null}
           <IconBtn
             aria-label="Remove"
             className="text-muted-foreground hover:text-destructive"
-            onClick={onRemove}
+            onClick={handleRemove}
           >
             <Trash2 className="size-3.5" />
           </IconBtn>
@@ -135,34 +150,42 @@ function IconBtn({ className, ...props }: React.ComponentProps<"button">) {
 }
 
 export function RemoveButton({
-  onClick,
+  index,
+  onRemove,
   label = "Remove",
 }: {
-  onClick: () => void;
+  index: number;
+  onRemove: (index: number) => void;
   label?: string;
 }) {
+  const handleClick = useCallback(() => onRemove(index), [onRemove, index]);
+
   return (
     <IconBtn
       aria-label={label}
       className="text-muted-foreground hover:text-destructive"
-      onClick={onClick}
+      onClick={handleClick}
     >
       <Trash2 className="size-3.5" />
     </IconBtn>
   );
 }
 
-export function AddButton({
+export function AddButton<T>({
   children,
-  onClick,
+  onAdd,
+  makeValue,
 }: {
   children: React.ReactNode;
-  onClick: () => void;
+  onAdd: (value: T) => void;
+  makeValue: () => T;
 }) {
+  const handleClick = useCallback(() => onAdd(makeValue()), [onAdd, makeValue]);
+
   return (
     <Button
       className="w-full border-dashed"
-      onClick={onClick}
+      onClick={handleClick}
       size="sm"
       type="button"
       variant="outline"

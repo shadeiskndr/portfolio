@@ -13,9 +13,9 @@ import {
   ReactFlow,
   ReactFlowProvider,
 } from "@xyflow/react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/lib/light-dark-providers";
+import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 type StepNodeType = Node<{ label: string; ghost?: boolean }, "step">;
@@ -116,17 +116,20 @@ export function GraphOrphanEdgesDemo() {
   const [guard, setGuard] = useState(false);
   const orphans = hide && !guard ? BASE_EDGES.filter(touchesHidden).length : 0;
 
+  const handleToggleHide = useCallback(() => setHide((h) => !h), []);
+  const handleToggleGuard = useCallback(() => setGuard((g) => !g), []);
+
   return (
     <div className="my-6 rounded-xl border p-3">
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Button size="sm" variant={hide ? "default" : "outline"} onClick={() => setHide((h) => !h)}>
+        <Button size="sm" variant={hide ? "default" : "outline"} onClick={handleToggleHide}>
           {hide ? "Filter node: hidden" : "Filter node: shown"}
         </Button>
         <Button
           size="sm"
           variant={guard ? "default" : "outline"}
           disabled={!hide}
-          onClick={() => setGuard((g) => !g)}
+          onClick={handleToggleGuard}
         >
           {guard ? "Cascade to edges: on" : "Cascade to edges: off"}
         </Button>

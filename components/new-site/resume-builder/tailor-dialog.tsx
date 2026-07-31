@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles, Target } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,7 @@ export function TailorDialog({ onSubmit }: { onSubmit: (jobDescription: string) 
   const [open, setOpen] = useState(false);
   const [jd, setJd] = useState("");
 
-  function run() {
+  const run = useCallback(() => {
     if (!jd.trim()) {
       toast.error("Paste a job description first.");
       return;
@@ -26,7 +26,13 @@ export function TailorDialog({ onSubmit }: { onSubmit: (jobDescription: string) 
     onSubmit(jd);
     setOpen(false);
     setJd("");
-  }
+  }, [jd, onSubmit]);
+
+  const handleJdChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setJd(e.target.value),
+    []
+  );
+  const handleCancel = useCallback(() => setOpen(false), []);
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
@@ -50,13 +56,13 @@ export function TailorDialog({ onSubmit }: { onSubmit: (jobDescription: string) 
         <div className="min-h-0 flex-1 overflow-y-auto px-5">
           <Textarea
             className="min-h-52"
-            onChange={(e) => setJd(e.target.value)}
+            onChange={handleJdChange}
             placeholder="Paste the job description here…"
             value={jd}
           />
         </div>
         <div className="flex items-center justify-end gap-2 px-5 py-4">
-          <Button onClick={() => setOpen(false)} size="sm" type="button" variant="ghost">
+          <Button onClick={handleCancel} size="sm" type="button" variant="ghost">
             Cancel
           </Button>
           <Button disabled={!jd.trim()} onClick={run} size="sm" type="button">

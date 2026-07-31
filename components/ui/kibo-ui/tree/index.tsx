@@ -237,6 +237,15 @@ export const TreeNodeTrigger = ({
   const { nodeId, level } = useTreeNode();
   const isSelected = selectedIds.includes(nodeId);
 
+  const handleClick = useCallback<NonNullable<TreeNodeTriggerProps["onClick"]>>(
+    (e) => {
+      toggleExpanded(nodeId);
+      handleSelection(nodeId, e.ctrlKey || e.metaKey);
+      onClick?.(e);
+    },
+    [toggleExpanded, handleSelection, nodeId, onClick]
+  );
+
   return (
     <motion.div
       className={cn(
@@ -245,11 +254,7 @@ export const TreeNodeTrigger = ({
         isSelected && "bg-accent/80",
         className
       )}
-      onClick={(e) => {
-        toggleExpanded(nodeId);
-        handleSelection(nodeId, e.ctrlKey || e.metaKey);
-        onClick?.(e);
-      }}
+      onClick={handleClick}
       style={{ paddingLeft: level * (indent ?? 0) + 8 }}
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       {...props}
@@ -297,7 +302,7 @@ export const TreeLines = () => {
         }}
       />
 
-      {isLast && (
+      {isLast ? (
         <div
           className="absolute top-0 border-border/40 border-l"
           style={{
@@ -305,7 +310,7 @@ export const TreeLines = () => {
             height: "50%",
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 };
@@ -326,7 +331,7 @@ export const TreeNodeContent = ({
 
   return (
     <AnimatePresence>
-      {hasChildren && isExpanded && (
+      {hasChildren && isExpanded ? (
         <motion.div
           animate={{ height: "auto", opacity: 1 }}
           className="overflow-hidden"
@@ -351,7 +356,7 @@ export const TreeNodeContent = ({
             {children}
           </motion.div>
         </motion.div>
-      )}
+      ) : null}
     </AnimatePresence>
   );
 };
@@ -370,6 +375,15 @@ export const TreeExpander = ({
   const { nodeId } = useTreeNode();
   const isExpanded = expandedIds.has(nodeId);
 
+  const handleClick = useCallback<NonNullable<TreeExpanderProps["onClick"]>>(
+    (e) => {
+      e.stopPropagation();
+      toggleExpanded(nodeId);
+      onClick?.(e);
+    },
+    [toggleExpanded, nodeId, onClick]
+  );
+
   if (!hasChildren) {
     return <div className="mr-1 h-4 w-4" />;
   }
@@ -378,11 +392,7 @@ export const TreeExpander = ({
     <motion.div
       animate={{ rotate: isExpanded ? 90 : 0 }}
       className={cn("mr-1 flex h-4 w-4 cursor-pointer items-center justify-center", className)}
-      onClick={(e) => {
-        e.stopPropagation();
-        toggleExpanded(nodeId);
-        onClick?.(e);
-      }}
+      onClick={handleClick}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       {...props}
     >

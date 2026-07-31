@@ -87,19 +87,19 @@ export function TypstPreview({ source, className }: TypstPreviewProps) {
 
   return (
     <div className={cn("relative p-4 sm:p-6", className)}>
-      {busy && (
+      {busy ? (
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-background/80 px-2.5 py-1 text-muted-foreground text-xs shadow-sm backdrop-blur">
           <Loader2 className="h-3 w-3 animate-spin" /> Rendering…
         </div>
-      )}
-      {error && (
+      ) : null}
+      {error ? (
         <div className="mx-auto max-w-md rounded-md border border-destructive/30 bg-destructive/5 p-4 text-destructive text-sm">
           <p className="mb-1 font-medium">Couldn't render the résumé.</p>
           <pre className="wrap-break-word whitespace-pre-wrap font-mono text-xs opacity-80">
             {error}
           </pre>
         </div>
-      )}
+      ) : null}
       <div ref={hostRef} className={cn("mx-auto max-w-3xl", error && "hidden")} />
     </div>
   );

@@ -11,7 +11,7 @@
  */
 
 import { ArrowRight, Repeat2 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export interface CardFlipProps {
@@ -29,11 +29,17 @@ export default function CardFlip({
 }: CardFlipProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
+  const handleMouseEnter = useCallback(() => setIsFlipped(true), []);
+  const handleMouseLeave = useCallback(() => setIsFlipped(false), []);
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: hover/focus only drives the 3D flip; both faces stay in the DOM, so assistive tech reads all of the content regardless
     <div
       className="group relative h-[320px] w-full max-w-[280px] [perspective:2000px]"
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
+      onBlur={handleMouseLeave}
+      onFocus={handleMouseEnter}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div
         className={cn(
@@ -175,26 +181,6 @@ export default function CardFlip({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-                @keyframes scale {
-                    0% {
-                        transform: scale(2);
-                        opacity: 0;
-                        box-shadow: 0px 0px 50px rgba(255, 165, 0, 0.5);
-                    }
-                    50% {
-                        transform: translate(0px, -5px) scale(1);
-                        opacity: 1;
-                        box-shadow: 0px 8px 20px rgba(255, 165, 0, 0.5);
-                    }
-                    100% {
-                        transform: translate(0px, 5px) scale(0.1);
-                        opacity: 0;
-                        box-shadow: 0px 10px 20px rgba(255, 165, 0, 0);
-                    }
-                }
-            `}</style>
     </div>
   );
 }

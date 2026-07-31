@@ -1,10 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTimeout } from "@/hooks/use-timeout";
-
-type Theme = "dark" | "light" | "system";
+import { type Theme, ThemeProviderContext, type ThemeProviderState } from "@/lib/theme-context";
 
 const EMPTY_STORAGE_OPTIONS = {};
 
@@ -13,22 +12,6 @@ type ThemeProviderProps = {
   defaultTheme?: Theme;
   storageKey?: string;
 };
-
-type ThemeProviderState = {
-  theme: Theme;
-  resolvedTheme: string;
-  setTheme: (theme: Theme) => void;
-  setThemeWithTransition: (theme: Theme) => void;
-};
-
-const initialState: ThemeProviderState = {
-  theme: "system",
-  resolvedTheme: "light",
-  setTheme: () => null,
-  setThemeWithTransition: () => null,
-};
-
-const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function Providers({
   children,
@@ -136,11 +119,3 @@ export function Providers({
     </ThemeProviderContext.Provider>
   );
 }
-
-export const useTheme = () => {
-  const context = useContext(ThemeProviderContext);
-
-  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
-
-  return context;
-};

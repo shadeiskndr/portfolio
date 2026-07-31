@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -49,29 +49,54 @@ const ROLE_SWATCHES = [
   "outline",
 ] as const;
 
+function SeedButton({
+  seed,
+  active,
+  onSelect,
+}: {
+  seed: (typeof SEEDS)[number];
+  active: boolean;
+  onSelect: (hue: number) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(seed.hue), [onSelect, seed.hue]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "size-6 rounded-full border-2 transition-transform hover:scale-110",
+        active ? "border-foreground" : "border-transparent"
+      )}
+      style={{ backgroundColor: `oklch(0.6 0.16 ${seed.hue})` }}
+      aria-label={`Seed ${seed.label}`}
+    />
+  );
+}
+
 export function RuntimeThemeDemo() {
   const [hue, setHue] = useState(292);
   const [chroma, setChroma] = useState(0.15);
   const [dark, setDark] = useState(false);
   const r = scheme(hue, chroma, dark);
 
+  const handleToggleDark = useCallback(() => setDark((d) => !d), []);
+  const handleHueChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setHue(Number(e.target.value)),
+    []
+  );
+  const handleChromaChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setChroma(Number(e.target.value)),
+    []
+  );
+
   return (
     <div className="my-6 rounded-xl border p-4">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {SEEDS.map((s) => (
-          <button
-            key={s.label}
-            type="button"
-            onClick={() => setHue(s.hue)}
-            className={cn(
-              "size-6 rounded-full border-2 transition-transform hover:scale-110",
-              Math.abs(hue - s.hue) < 3 ? "border-foreground" : "border-transparent"
-            )}
-            style={{ backgroundColor: `oklch(0.6 0.16 ${s.hue})` }}
-            aria-label={`Seed ${s.label}`}
-          />
+          <SeedButton key={s.label} seed={s} active={Math.abs(hue - s.hue) < 3} onSelect={setHue} />
         ))}
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setDark((d) => !d)}>
+        <Button size="sm" variant="ghost" className="ml-auto" onClick={handleToggleDark}>
           {dark ? "Dark scheme" : "Light scheme"}
         </Button>
       </div>
@@ -84,7 +109,7 @@ export function RuntimeThemeDemo() {
             min={0}
             max={360}
             value={hue}
-            onChange={(e) => setHue(Number(e.target.value))}
+            onChange={handleHueChange}
             className="h-1 flex-1 cursor-pointer accent-primary"
             aria-label="Seed hue"
           />
@@ -97,7 +122,7 @@ export function RuntimeThemeDemo() {
             max={0.3}
             step={0.01}
             value={chroma}
-            onChange={(e) => setChroma(Number(e.target.value))}
+            onChange={handleChromaChange}
             className="h-1 flex-1 cursor-pointer accent-primary"
             aria-label="Seed chroma"
           />

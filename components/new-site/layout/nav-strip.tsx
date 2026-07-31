@@ -3,7 +3,7 @@
 import { LayoutGroup, m } from "motion/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useHorizontalScrollState } from "@/hooks/use-horizontal-scroll-state";
 import { playClick } from "@/hooks/use-sound";
 import { NAV_LINKS } from "@/lib/new-site/data";
@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 import NavScrollButton from "./nav-scroll-button";
 
 export default function NavStrip({
-  id,
+  groupId,
   showArrows = false,
   className,
 }: {
-  id: string;
+  groupId: string;
   showArrows?: boolean;
   className?: string;
 }) {
@@ -23,6 +23,10 @@ export default function NavStrip({
   const { ref, canScrollLeft, canScrollRight, scrollBy } =
     useHorizontalScrollState<HTMLUListElement>();
   const hasCentered = useRef(false);
+
+  const handleScrollLeft = useCallback(() => scrollBy("left"), [scrollBy]);
+  const handleScrollRight = useCallback(() => scrollBy("right"), [scrollBy]);
+  const handleLinkClick = useCallback(() => playClick(), []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: route-change trigger
   useEffect(() => {
@@ -50,7 +54,7 @@ export default function NavStrip({
         <NavScrollButton
           direction="left"
           disabled={!canScrollLeft}
-          onClick={() => scrollBy("left")}
+          onClick={handleScrollLeft}
           className="hidden lg:inline-flex"
         />
       ) : null}
@@ -64,7 +68,7 @@ export default function NavStrip({
         }
         className="hide-scrollbar nav-scroller flex flex-1 items-center gap-0.5 overflow-x-auto scroll-smooth sm:gap-1"
       >
-        <LayoutGroup id={id}>
+        <LayoutGroup id={groupId}>
           {NAV_LINKS.map((link) => {
             const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
@@ -72,7 +76,7 @@ export default function NavStrip({
                 <NextLink
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  onClick={() => playClick()}
+                  onClick={handleLinkClick}
                   className={cn(
                     "relative inline-flex min-h-9 items-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm transition-colors lg:min-h-0",
                     active
@@ -80,13 +84,13 @@ export default function NavStrip({
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  {active && (
+                  {active ? (
                     <m.span
-                      layoutId={`${id}-active`}
+                      layoutId={`${groupId}-active`}
                       className="absolute inset-0 rounded-md bg-muted"
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
-                  )}
+                  ) : null}
                   <span className="relative z-10 grid">
                     <span aria-hidden className="invisible col-start-1 row-start-1 font-medium">
                       {link.label}
@@ -103,7 +107,7 @@ export default function NavStrip({
         <NavScrollButton
           direction="right"
           disabled={!canScrollRight}
-          onClick={() => scrollBy("right")}
+          onClick={handleScrollRight}
           className="hidden lg:inline-flex"
         />
       ) : null}

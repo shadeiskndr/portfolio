@@ -1,17 +1,9 @@
 "use client";
 
 import { type Preloaded, usePreloadedQuery } from "convex/react";
-import { createContext, useContext, useMemo } from "react";
+import { useMemo } from "react";
 import type { api } from "@/convex/_generated/api";
-
-export type ResolvedAsset = {
-  url: string;
-  width: number | null;
-  height: number | null;
-  title: string;
-};
-
-const AssetsContext = createContext<Map<string, ResolvedAsset>>(new Map());
+import { AssetsContext, type ResolvedAsset } from "@/lib/assets-context";
 
 export function AssetsProvider({
   preloaded,
@@ -32,9 +24,4 @@ export function AssetsProvider({
   }, [assets]);
 
   return <AssetsContext.Provider value={map}>{children}</AssetsContext.Provider>;
-}
-
-export function useAsset(key: string | undefined): ResolvedAsset | undefined {
-  const map = useContext(AssetsContext);
-  return key ? map.get(key) : undefined;
 }

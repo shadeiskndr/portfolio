@@ -2,7 +2,7 @@
 
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";
 import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
-const Combobox = ComboboxPrimitive.Root;
+function Combobox<Value, Multiple extends boolean | undefined = false>(
+  props: ComboboxPrimitive.Root.Props<Value, Multiple>
+) {
+  return <ComboboxPrimitive.Root {...props} />;
+}
 
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />;
@@ -59,7 +63,7 @@ function ComboboxInput({
     <InputGroup className={cn("w-auto", className)}>
       <ComboboxPrimitive.Input render={<InputGroupInput disabled={disabled} />} {...props} />
       <InputGroupAddon align="inline-end">
-        {showTrigger && (
+        {showTrigger ? (
           <InputGroupButton
             size="icon-xs"
             variant="ghost"
@@ -68,8 +72,8 @@ function ComboboxInput({
             className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
             disabled={disabled}
           />
-        )}
-        {showClear && <ComboboxClear disabled={disabled} />}
+        ) : null}
+        {showClear ? <ComboboxClear disabled={disabled} /> : null}
       </InputGroupAddon>
       {children}
     </InputGroup>
@@ -225,7 +229,7 @@ function ComboboxChip({
       {...props}
     >
       {children}
-      {showRemove && (
+      {showRemove ? (
         <ComboboxPrimitive.ChipRemove
           render={<Button variant="ghost" size="icon-xs" />}
           className="-ml-1 opacity-50 hover:opacity-100"
@@ -233,7 +237,7 @@ function ComboboxChip({
         >
           <XIcon className="pointer-events-none" />
         </ComboboxPrimitive.ChipRemove>
-      )}
+      ) : null}
     </ComboboxPrimitive.Chip>
   );
 }
@@ -246,10 +250,6 @@ function ComboboxChipsInput({ className, ...props }: ComboboxPrimitive.Input.Pro
       {...props}
     />
   );
-}
-
-function useComboboxAnchor() {
-  return React.useRef<HTMLDivElement | null>(null);
 }
 
 export {
@@ -268,5 +268,4 @@ export {
   ComboboxSeparator,
   ComboboxTrigger,
   ComboboxValue,
-  useComboboxAnchor,
 };

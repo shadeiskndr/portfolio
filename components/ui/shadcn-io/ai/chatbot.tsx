@@ -5,6 +5,7 @@ import { CheckIcon, GlobeIcon, MicIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { usePromptInputAttachments } from "@/components/ui/shadcn-io/ai/prompt-input-context";
 import { Attachment, AttachmentPreview, AttachmentRemove, Attachments } from "./attachments";
 import { Conversation, ConversationContent, ConversationScrollButton } from "./conversation";
 import {
@@ -45,7 +46,6 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
-  usePromptInputAttachments,
 } from "./prompt-input";
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "./reasoning";
 import { Source, Sources, SourcesContent, SourcesTrigger } from "./sources";
@@ -283,6 +283,23 @@ const mockResponses = [
   "That's definitely worth exploring. From what I can see, the best way to handle this is to consider both the theoretical aspects and practical implementation details.",
 ];
 
+const InlineAttachment = ({
+  attachment,
+  onRemove,
+}: {
+  attachment: { id: string };
+  onRemove: (id: string) => void;
+}) => {
+  const handleRemove = useCallback(() => onRemove(attachment.id), [onRemove, attachment.id]);
+
+  return (
+    <Attachment data={attachment as never} onRemove={handleRemove}>
+      <AttachmentPreview />
+      <AttachmentRemove />
+    </Attachment>
+  );
+};
+
 const PromptInputAttachmentsDisplay = () => {
   const attachments = usePromptInputAttachments();
 
@@ -293,16 +310,45 @@ const PromptInputAttachmentsDisplay = () => {
   return (
     <Attachments variant="inline">
       {attachments.files.map((attachment) => (
-        <Attachment
-          data={attachment}
+        <InlineAttachment
+          attachment={attachment}
           key={attachment.id}
-          onRemove={() => attachments.remove(attachment.id)}
-        >
-          <AttachmentPreview />
-          <AttachmentRemove />
-        </Attachment>
+          onRemove={attachments.remove}
+        />
       ))}
     </Attachments>
+  );
+};
+
+const SuggestionItem = ({
+  suggestion,
+  onSelect,
+}: {
+  suggestion: string;
+  onSelect: (suggestion: string) => void;
+}) => {
+  const handleClick = useCallback(() => onSelect(suggestion), [onSelect, suggestion]);
+
+  return <Suggestion onClick={handleClick} suggestion={suggestion} />;
+};
+
+const ModelOption = ({
+  model,
+  onSelect,
+  children,
+}: {
+  model: (typeof models)[number];
+  onSelect: (id: string) => void;
+  children: React.ReactNode;
+}) => {
+  const handleSelect = useCallback(() => onSelect(model.id), [onSelect, model.id]);
+
+  return (
+    <ModelSelectorItem onSelect={handleSelect} value={model.id}>
+      <ModelSelectorLogo provider={model.chefSlug} />
+      <ModelSelectorName>{model.name}</ModelSelectorName>
+      {children}
+    </ModelSelectorItem>
   );
 };
 
@@ -387,30 +433,47 @@ export function ChatbotDemo() {
     [streamResponse]
   );
 
-  const handleSubmit = (message: PromptInputMessage) => {
-    const hasText = Boolean(message.text);
-    const hasAttachments = Boolean(message.files?.length);
+  const handleSubmit = useCallback(
+    (message: PromptInputMessage) => {
+      const hasText = Boolean(message.text);
+      const hasAttachments = Boolean(message.files?.length);
 
-    if (!(hasText || hasAttachments)) {
-      return;
-    }
+      if (!(hasText || hasAttachments)) {
+        return;
+      }
 
-    setStatus("submitted");
+      setStatus("submitted");
 
-    if (message.files?.length) {
-      toast.success("Files attached", {
-        description: `${message.files.length} file(s) attached to message`,
-      });
-    }
+      if (message.files?.length) {
+        toast.success("Files attached", {
+          description: `${message.files.length} file(s) attached to message`,
+        });
+      }
 
-    addUserMessage(message.text || "Sent with attachments");
-    setText("");
-  };
+      addUserMessage(message.text || "Sent with attachments");
+      setText("");
+    },
+    [addUserMessage]
+  );
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setStatus("submitted");
-    addUserMessage(suggestion);
-  };
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      setStatus("submitted");
+      addUserMessage(suggestion);
+    },
+    [addUserMessage]
+  );
+
+  const handleTextChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => setText(event.target.value),
+    []
+  );
+  const handleToggleMicrophone = useCallback(() => setUseMicrophone((v) => !v), []);
+  const handleToggleWebSearch = useCallback(() => setUseWebSearch((v) => !v), []);
+  const handleSelectModel = useCallback((id: string) => {
+    setModel(id);
+    setModelSelectorOpen(false);
+  }, []);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden">
@@ -432,12 +495,12 @@ export function ChatbotDemo() {
                           </SourcesContent>
                         </Sources>
                       )}
-                      {message.reasoning && (
+                      {message.reasoning ? (
                         <Reasoning duration={message.reasoning.duration}>
                           <ReasoningTrigger />
                           <ReasoningContent>{message.reasoning.content}</ReasoningContent>
                         </Reasoning>
-                      )}
+                      ) : null}
                       <MessageContent>
                         <MessageResponse>{version.content}</MessageResponse>
                       </MessageContent>
@@ -460,9 +523,9 @@ export function ChatbotDemo() {
       <div className="shrink-0 space-y-4 pt-4">
         <Suggestions className="px-4">
           {suggestions.map((suggestion) => (
-            <Suggestion
+            <SuggestionItem
               key={suggestion}
-              onClick={() => handleSuggestionClick(suggestion)}
+              onSelect={handleSuggestionClick}
               suggestion={suggestion}
             />
           ))}
@@ -473,7 +536,7 @@ export function ChatbotDemo() {
               <PromptInputAttachmentsDisplay />
             </PromptInputHeader>
             <PromptInputBody>
-              <PromptInputTextarea onChange={(event) => setText(event.target.value)} value={text} />
+              <PromptInputTextarea onChange={handleTextChange} value={text} />
             </PromptInputBody>
             <PromptInputFooter>
               <PromptInputTools>
@@ -484,14 +547,14 @@ export function ChatbotDemo() {
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
                 <PromptInputButton
-                  onClick={() => setUseMicrophone(!useMicrophone)}
+                  onClick={handleToggleMicrophone}
                   variant={useMicrophone ? "default" : "ghost"}
                 >
                   <MicIcon size={16} />
                   <span className="sr-only">Microphone</span>
                 </PromptInputButton>
                 <PromptInputButton
-                  onClick={() => setUseWebSearch(!useWebSearch)}
+                  onClick={handleToggleWebSearch}
                   variant={useWebSearch ? "default" : "ghost"}
                 >
                   <GlobeIcon size={16} />
@@ -499,12 +562,12 @@ export function ChatbotDemo() {
                 </PromptInputButton>
                 <ModelSelector onOpenChange={setModelSelectorOpen} open={modelSelectorOpen}>
                   <ModelSelectorTrigger render={<PromptInputButton />}>
-                    {selectedModelData?.chefSlug && (
+                    {selectedModelData?.chefSlug ? (
                       <ModelSelectorLogo provider={selectedModelData.chefSlug} />
-                    )}
-                    {selectedModelData?.name && (
+                    ) : null}
+                    {selectedModelData?.name ? (
                       <ModelSelectorName>{selectedModelData.name}</ModelSelectorName>
-                    )}
+                    ) : null}
                   </ModelSelectorTrigger>
                   <ModelSelectorContent>
                     <ModelSelectorInput placeholder="Search models..." />
@@ -515,16 +578,7 @@ export function ChatbotDemo() {
                           {models
                             .filter((m) => m.chef === chef)
                             .map((m) => (
-                              <ModelSelectorItem
-                                key={m.id}
-                                onSelect={() => {
-                                  setModel(m.id);
-                                  setModelSelectorOpen(false);
-                                }}
-                                value={m.id}
-                              >
-                                <ModelSelectorLogo provider={m.chefSlug} />
-                                <ModelSelectorName>{m.name}</ModelSelectorName>
+                              <ModelOption key={m.id} model={m} onSelect={handleSelectModel}>
                                 <ModelSelectorLogoGroup>
                                   {m.providers.map((provider) => (
                                     <ModelSelectorLogo key={provider} provider={provider} />
@@ -535,7 +589,7 @@ export function ChatbotDemo() {
                                 ) : (
                                   <div className="ml-auto size-4" />
                                 )}
-                              </ModelSelectorItem>
+                              </ModelOption>
                             ))}
                         </ModelSelectorGroup>
                       ))}
@@ -554,5 +608,3 @@ export function ChatbotDemo() {
     </div>
   );
 }
-
-export default ChatbotDemo;

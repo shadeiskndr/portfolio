@@ -2,7 +2,7 @@
 
 import { CheckIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -146,6 +146,7 @@ export type ModelSelectorLogoProps = Omit<ComponentProps<"img">, "src" | "alt"> 
 };
 
 export const ModelSelectorLogo = ({ provider, className, ...props }: ModelSelectorLogoProps) => (
+  // biome-ignore lint/performance/noImgElement: provider logos are tiny remote SVGs; next/image doesn't optimize SVGs
   <img
     {...props}
     alt={`${provider} logo`}
@@ -205,9 +206,39 @@ const models = [
   },
 ];
 
+function ModelOption({
+  model,
+  isSelected,
+  onSelect,
+}: {
+  model: (typeof models)[number];
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const handleSelect = useCallback(() => onSelect(model.id), [onSelect, model.id]);
+
+  return (
+    <ModelSelectorItem onSelect={handleSelect} value={model.id}>
+      <ModelSelectorLogo provider={model.chefSlug} />
+      <ModelSelectorName>{model.name}</ModelSelectorName>
+      <ModelSelectorLogoGroup>
+        {model.providers.map((provider) => (
+          <ModelSelectorLogo key={provider} provider={provider} />
+        ))}
+      </ModelSelectorLogoGroup>
+      {isSelected ? <CheckIcon className="ml-auto size-4" /> : <div className="ml-auto size-4" />}
+    </ModelSelectorItem>
+  );
+}
+
 export default function ModelSelectorDemo() {
   const [open, setOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("gpt-4o");
+
+  const handleSelectModel = useCallback((id: string) => {
+    setSelectedModel(id);
+    setOpen(false);
+  }, []);
 
   const selectedModelData = models.find((model) => model.id === selectedModel);
   const chefs = Array.from(new Set(models.map((model) => model.chef)));
@@ -218,12 +249,12 @@ export default function ModelSelectorDemo() {
         <ModelSelectorTrigger
           render={<Button className="w-50 justify-between" variant="outline" />}
         >
-          {selectedModelData?.chefSlug && (
+          {selectedModelData?.chefSlug ? (
             <ModelSelectorLogo provider={selectedModelData.chefSlug} />
-          )}
-          {selectedModelData?.name && (
+          ) : null}
+          {selectedModelData?.name ? (
             <ModelSelectorName>{selectedModelData.name}</ModelSelectorName>
-          )}
+          ) : null}
         </ModelSelectorTrigger>
         <ModelSelectorContent>
           <ModelSelectorInput placeholder="Search models..." />
@@ -234,27 +265,12 @@ export default function ModelSelectorDemo() {
                 {models
                   .filter((model) => model.chef === chef)
                   .map((model) => (
-                    <ModelSelectorItem
+                    <ModelOption
+                      isSelected={selectedModel === model.id}
                       key={model.id}
-                      onSelect={() => {
-                        setSelectedModel(model.id);
-                        setOpen(false);
-                      }}
-                      value={model.id}
-                    >
-                      <ModelSelectorLogo provider={model.chefSlug} />
-                      <ModelSelectorName>{model.name}</ModelSelectorName>
-                      <ModelSelectorLogoGroup>
-                        {model.providers.map((provider) => (
-                          <ModelSelectorLogo key={provider} provider={provider} />
-                        ))}
-                      </ModelSelectorLogoGroup>
-                      {selectedModel === model.id ? (
-                        <CheckIcon className="ml-auto size-4" />
-                      ) : (
-                        <div className="ml-auto size-4" />
-                      )}
-                    </ModelSelectorItem>
+                      model={model}
+                      onSelect={handleSelectModel}
+                    />
                   ))}
               </ModelSelectorGroup>
             ))}

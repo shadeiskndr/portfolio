@@ -15,6 +15,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  SidebarContext,
+  type SidebarContextProps,
+  useSidebar,
+} from "@/components/ui/sidebar-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,27 +31,6 @@ const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
-
-type SidebarContextProps = {
-  state: "expanded" | "collapsed";
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  openMobile: boolean;
-  setOpenMobile: (open: boolean) => void;
-  isMobile: boolean;
-  toggleSidebar: () => void;
-};
-
-const SidebarContext = React.createContext<SidebarContextProps | null>(null);
-
-function useSidebar() {
-  const context = React.useContext(SidebarContext);
-  if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
-  }
-
-  return context;
-}
 
 function SidebarProvider({
   defaultOpen = true,
@@ -75,6 +59,7 @@ function SidebarProvider({
         _setOpen(openState);
       }
 
+      // biome-ignore lint/suspicious/noDocumentCookie: the suggested Cookie Store API is unsupported in Firefox and Safari, and a fallback would need this same write
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
     [setOpenProp, open]
@@ -82,7 +67,7 @@ function SidebarProvider({
 
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen, setOpenMobile]);
+  }, [isMobile, setOpen]);
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -108,7 +93,7 @@ function SidebarProvider({
       setOpenMobile,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, toggleSidebar]
   );
 
   return (
@@ -237,6 +222,16 @@ function Sidebar({
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar();
 
+  const handleClick = React.useCallback<
+    NonNullable<React.ComponentProps<typeof Button>["onClick"]>
+  >(
+    (event) => {
+      onClick?.(event);
+      toggleSidebar();
+    },
+    [onClick, toggleSidebar]
+  );
+
   return (
     <Button
       data-sidebar="trigger"
@@ -244,10 +239,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       variant="ghost"
       size="icon-sm"
       className={cn(className)}
-      onClick={(event) => {
-        onClick?.(event);
-        toggleSidebar();
-      }}
+      onClick={handleClick}
       {...props}
     >
       <PanelLeftIcon />
@@ -582,7 +574,9 @@ function SidebarMenuSkeleton({
       className={cn("flex h-8 items-center gap-2 rounded-md px-2", className)}
       {...props}
     >
-      {showIcon && <Skeleton className="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />}
+      {showIcon ? (
+        <Skeleton className="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />
+      ) : null}
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
@@ -677,5 +671,4 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
 };

@@ -64,7 +64,7 @@ import {
   WrapText,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import CodeMirrorMerge from "react-codemirror-merge";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,7 +105,7 @@ import type { Doc } from "@/convex/_generated/dataModel";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useMountEffect } from "@/hooks/use-mount-effect";
-import { useTheme } from "@/lib/light-dark-providers";
+import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 type Commit = Doc<"commits">;
@@ -409,6 +409,15 @@ export function CommitDiffBody({ commit }: { commit: Commit }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
+  const handleToggleViewMode = useCallback(
+    () => setViewMode(viewMode === "split" ? "unified" : "split"),
+    [setViewMode, viewMode]
+  );
+  const handleToggleWrap = useCallback(
+    () => setWrapEnabled(!wrapEnabled),
+    [setWrapEnabled, wrapEnabled]
+  );
+
   const cmTheme = useMemo<Extension>(() => {
     const t = THEME_BY_KEY.get(themeKey) ?? THEME_BY_KEY.get(DEFAULT_THEME_KEY);
     if (!t) return githubLight;
@@ -455,7 +464,7 @@ export function CommitDiffBody({ commit }: { commit: Commit }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => setViewMode(viewMode === "split" ? "unified" : "split")}
+                    onClick={handleToggleViewMode}
                     aria-pressed={viewMode === "split"}
                     aria-label={
                       viewMode === "split" ? "Switch to unified view" : "Switch to split view"
@@ -475,7 +484,7 @@ export function CommitDiffBody({ commit }: { commit: Commit }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => setWrapEnabled(!wrapEnabled)}
+                    onClick={handleToggleWrap}
                     aria-pressed={wrapEnabled}
                     aria-label={wrapEnabled ? "Disable text wrapping" : "Enable text wrapping"}
                     className={cn(wrapEnabled && "bg-muted text-foreground")}
@@ -723,16 +732,20 @@ function FileTreeSidebar({
   const [filterQuery, setFilterQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useDebounceValue("", 500);
 
-  const onFilterChange = (value: string) => {
-    setFilterQuery(value);
-    setDebouncedQuery(value);
-    if (value === "") setDebouncedQuery.flush();
-  };
-  const onClear = () => {
+  const onFilterChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setFilterQuery(value);
+      setDebouncedQuery(value);
+      if (value === "") setDebouncedQuery.flush();
+    },
+    [setDebouncedQuery]
+  );
+  const onClear = useCallback(() => {
     setFilterQuery("");
     setDebouncedQuery("");
     setDebouncedQuery.flush();
-  };
+  }, [setDebouncedQuery]);
 
   const trimmedQuery = debouncedQuery.trim().toLowerCase();
   const filteredFiles = useMemo(() => {
@@ -751,7 +764,7 @@ function FileTreeSidebar({
           </InputGroupAddon>
           <InputGroupInput
             aria-label="Filter files"
-            onChange={(e) => onFilterChange(e.target.value)}
+            onChange={onFilterChange}
             placeholder="Filter files…"
             value={filterQuery}
           />
@@ -808,62 +821,88 @@ function FileTreeNodes({
 }) {
   return (
     <>
-      {items.map((item, idx) => {
-        const isLast = idx === items.length - 1;
-        const isSelected = item.type === "file" && item.path === effectivePath;
-        const hasChildren = item.type === "folder";
-        return (
-          <TreeNode
-            key={item.path}
-            isLast={isLast}
-            level={level}
-            nodeId={item.path}
-            parentPath={parentPath}
-          >
-            <TreeNodeTrigger
-              className={cn("py-1", isSelected && "bg-muted text-foreground hover:bg-muted")}
-              onClick={() => {
-                if (item.type === "file") onSelect(item.path);
-              }}
-              title={item.path}
-            >
-              <TreeExpander hasChildren={hasChildren} />
-              {item.type === "file" ? (
-                <FileIcon
-                  aria-hidden
-                  className={cn(
-                    "mr-2 size-3.5 shrink-0",
-                    STATUS_COLOR[item.file.status] ?? "text-muted-foreground"
-                  )}
-                />
-              ) : (
-                <TreeIcon hasChildren />
-              )}
-              <TreeLabel className="font-mono text-xs">{item.name}</TreeLabel>
-              {item.type === "file" ? (
-                <span className="ml-2 hidden shrink-0 font-mono text-[10px] text-muted-foreground md:inline">
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    +{item.file.additions}
-                  </span>{" "}
-                  <span className="text-red-600 dark:text-red-400">-{item.file.deletions}</span>
-                </span>
-              ) : null}
-            </TreeNodeTrigger>
-            {item.type === "folder" ? (
-              <TreeNodeContent hasChildren>
-                <FileTreeNodes
-                  effectivePath={effectivePath}
-                  items={item.children}
-                  level={level + 1}
-                  onSelect={onSelect}
-                  parentPath={nextParentPath(level, parentPath, isLast)}
-                />
-              </TreeNodeContent>
-            ) : null}
-          </TreeNode>
-        );
-      })}
+      {items.map((item, idx) => (
+        <FileTreeNode
+          key={item.path}
+          item={item}
+          isLast={idx === items.length - 1}
+          level={level}
+          parentPath={parentPath}
+          effectivePath={effectivePath}
+          onSelect={onSelect}
+        />
+      ))}
     </>
+  );
+}
+
+function FileTreeNode({
+  item,
+  isLast,
+  level,
+  parentPath,
+  effectivePath,
+  onSelect,
+}: {
+  item: TreeItem;
+  isLast: boolean;
+  level: number;
+  parentPath: boolean[];
+  effectivePath: string | null;
+  onSelect: (path: string) => void;
+}) {
+  const isSelected = item.type === "file" && item.path === effectivePath;
+  const hasChildren = item.type === "folder";
+
+  const handleClick = useCallback(() => {
+    if (item.type === "file") onSelect(item.path);
+  }, [item, onSelect]);
+
+  return (
+    <TreeNode
+      key={item.path}
+      isLast={isLast}
+      level={level}
+      nodeId={item.path}
+      parentPath={parentPath}
+    >
+      <TreeNodeTrigger
+        className={cn("py-1", isSelected && "bg-muted text-foreground hover:bg-muted")}
+        onClick={handleClick}
+        title={item.path}
+      >
+        <TreeExpander hasChildren={hasChildren} />
+        {item.type === "file" ? (
+          <FileIcon
+            aria-hidden
+            className={cn(
+              "mr-2 size-3.5 shrink-0",
+              STATUS_COLOR[item.file.status] ?? "text-muted-foreground"
+            )}
+          />
+        ) : (
+          <TreeIcon hasChildren />
+        )}
+        <TreeLabel className="font-mono text-xs">{item.name}</TreeLabel>
+        {item.type === "file" ? (
+          <span className="ml-2 hidden shrink-0 font-mono text-[10px] text-muted-foreground md:inline">
+            <span className="text-emerald-600 dark:text-emerald-400">+{item.file.additions}</span>{" "}
+            <span className="text-red-600 dark:text-red-400">-{item.file.deletions}</span>
+          </span>
+        ) : null}
+      </TreeNodeTrigger>
+      {item.type === "folder" ? (
+        <TreeNodeContent hasChildren>
+          <FileTreeNodes
+            effectivePath={effectivePath}
+            items={item.children}
+            level={level + 1}
+            onSelect={onSelect}
+            parentPath={nextParentPath(level, parentPath, isLast)}
+          />
+        </TreeNodeContent>
+      ) : null}
+    </TreeNode>
   );
 }
 
@@ -893,6 +932,25 @@ function ThemePalette({ theme }: { theme: ThemeOption }) {
         />
       ))}
     </div>
+  );
+}
+
+function CmThemeItem({
+  theme,
+  checked,
+  onSelect,
+}: {
+  theme: (typeof THEMES)[number];
+  checked: boolean;
+  onSelect: (key: (typeof THEMES)[number]["key"]) => void;
+}) {
+  const handleSelect = useCallback(() => onSelect(theme.key), [onSelect, theme.key]);
+
+  return (
+    <CommandItem value={theme.label} data-checked={checked} onSelect={handleSelect}>
+      <ThemePalette theme={theme} />
+      {theme.label}
+    </CommandItem>
   );
 }
 
@@ -948,15 +1006,12 @@ function CmThemePicker({
             <CommandEmpty>No themes found.</CommandEmpty>
             <CommandGroup heading={`Themes (${THEMES.length})`}>
               {THEMES.map((t) => (
-                <CommandItem
+                <CmThemeItem
                   key={t.key}
-                  value={t.label}
-                  data-checked={themeKey === t.key}
-                  onSelect={() => onChange(t.key)}
-                >
-                  <ThemePalette theme={t} />
-                  {t.label}
-                </CommandItem>
+                  theme={t}
+                  checked={themeKey === t.key}
+                  onSelect={onChange}
+                />
               ))}
             </CommandGroup>
           </CommandList>

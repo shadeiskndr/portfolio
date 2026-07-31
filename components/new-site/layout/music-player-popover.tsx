@@ -2,9 +2,9 @@
 
 import { ListMusic, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { AnimatePresence, m, type Variants } from "motion/react";
-import { useState } from "react";
+import { useCallback, useId, useState } from "react";
 import MobileSheet from "@/components/new-site/layout/mobile-sheet";
-import { type Track, useMusicPlayer } from "@/components/new-site/layout/music-player-provider";
+import { type Track, useMusicPlayer } from "@/components/new-site/layout/music-player-context";
 import { Button } from "@/components/ui/button";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
 import { Slider } from "@/components/ui/slider";
@@ -172,6 +172,22 @@ function MusicSheetPanel(p: PlayerApi) {
     selectTrack,
     applyVolume,
   } = p;
+
+  const handleOpenClick = useCallback(() => {
+    playClick("icon");
+    setIsOpen(true);
+  }, [setIsOpen]);
+  const handleSheetOpenChange = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      if (!next) setView("controls");
+    },
+    [setIsOpen, setView]
+  );
+  const handleShowPlaylist = useCallback(() => setView("playlist"), [setView]);
+  const handleBackToControls = useCallback(() => setView("controls"), [setView]);
+  const handleToggleMute = useCallback(() => applyVolume(isMuted ? 10 : 0), [applyVolume, isMuted]);
+
   return (
     <>
       <Button
@@ -179,20 +195,14 @@ function MusicSheetPanel(p: PlayerApi) {
         size="icon"
         aria-label={isOpen ? "Close music player" : "Open music player"}
         aria-expanded={isOpen}
-        onClick={() => {
-          playClick("icon");
-          setIsOpen(true);
-        }}
+        onClick={handleOpenClick}
         className="size-10 rounded-full text-muted-foreground"
       >
         <Play className="h-4 w-4" />
       </Button>
       <MobileSheet
         open={isOpen}
-        onOpenChange={(next) => {
-          setIsOpen(next);
-          if (!next) setView("controls");
-        }}
+        onOpenChange={handleSheetOpenChange}
         title="Music"
         description={currentTrack.title}
       >
@@ -214,8 +224,8 @@ function MusicSheetPanel(p: PlayerApi) {
             onTogglePlay={togglePlay}
             onPrev={prevTrack}
             onNext={nextTrack}
-            onShowPlaylist={() => setView("playlist")}
-            onToggleMute={() => applyVolume(isMuted ? 10 : 0)}
+            onShowPlaylist={handleShowPlaylist}
+            onToggleMute={handleToggleMute}
             onVolumeChange={applyVolume}
           />
         ) : (
@@ -224,7 +234,7 @@ function MusicSheetPanel(p: PlayerApi) {
             trackIndex={trackIndex}
             isPlaying={isPlaying}
             onSelect={selectTrack}
-            onBack={() => setView("controls")}
+            onBack={handleBackToControls}
           />
         )}
       </MobileSheet>
@@ -233,6 +243,7 @@ function MusicSheetPanel(p: PlayerApi) {
 }
 
 function MusicBlobPanel(p: PlayerApi) {
+  const gooId = useId();
   const {
     isOpen,
     setIsOpen,
@@ -257,25 +268,34 @@ function MusicBlobPanel(p: PlayerApi) {
     selectTrack,
     applyVolume,
   } = p;
+
+  const handleScrimClick = useCallback(() => setIsOpen(false), [setIsOpen]);
+  const handleToggleOpen = useCallback(() => {
+    playClick("icon");
+    setIsOpen((v) => !v);
+    if (isOpen) setView("controls");
+  }, [setIsOpen, isOpen, setView]);
+  const handleShowPlaylist = useCallback(() => setView("playlist"), [setView]);
+  const handleBackToControls = useCallback(() => setView("controls"), [setView]);
+  const handleToggleMute = useCallback(() => applyVolume(isMuted ? 10 : 0), [applyVolume, isMuted]);
   return (
     <>
-      {isOpen && (
+      {isOpen ? (
         <button
           type="button"
           aria-label="Close music player"
-          onClick={() => setIsOpen(false)}
+          onClick={handleScrimClick}
           className="fixed inset-0 z-10 cursor-default"
         />
-      )}
+      ) : null}
 
-      {/* biome-ignore lint/a11y/noSvgWithoutTitle: filter-only svg, decorative and hidden */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden
         className="pointer-events-none absolute h-0 w-0"
       >
         <defs>
-          <filter id="music-goo">
+          <filter id={gooId}>
             <feGaussianBlur in="SourceGraphic" stdDeviation="4.4" result="blur" />
             <feColorMatrix
               in="blur"
@@ -288,18 +308,14 @@ function MusicBlobPanel(p: PlayerApi) {
         </defs>
       </svg>
 
-      <div style={{ filter: "url(#music-goo)" }} className="relative z-20">
+      <div style={{ filter: `url(#${gooId})` }} className="relative z-20">
         <Tooltip disableHoverablePopup>
           <TooltipTrigger
             render={
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  playClick("icon");
-                  setIsOpen((v) => !v);
-                  if (isOpen) setView("controls");
-                }}
+                onClick={handleToggleOpen}
                 aria-label={isOpen ? "Close music player" : "Open music player"}
                 aria-expanded={isOpen}
                 className="relative z-20 rounded-full text-muted-foreground"
@@ -312,7 +328,7 @@ function MusicBlobPanel(p: PlayerApi) {
         </Tooltip>
 
         <AnimatePresence>
-          {isOpen && (
+          {isOpen ? (
             <m.div
               key="music-blob"
               variants={blobVariants}
@@ -356,8 +372,8 @@ function MusicBlobPanel(p: PlayerApi) {
                         onTogglePlay={togglePlay}
                         onPrev={prevTrack}
                         onNext={nextTrack}
-                        onShowPlaylist={() => setView("playlist")}
-                        onToggleMute={() => applyVolume(isMuted ? 10 : 0)}
+                        onShowPlaylist={handleShowPlaylist}
+                        onToggleMute={handleToggleMute}
                         onVolumeChange={applyVolume}
                       />
                     </m.div>
@@ -375,14 +391,14 @@ function MusicBlobPanel(p: PlayerApi) {
                         trackIndex={trackIndex}
                         isPlaying={isPlaying}
                         onSelect={selectTrack}
-                        onBack={() => setView("controls")}
+                        onBack={handleBackToControls}
                       />
                     </m.div>
                   )}
                 </AnimatePresence>
               </m.div>
             </m.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
     </>
@@ -431,6 +447,28 @@ function ControlsView({
   onToggleMute: () => void;
   onVolumeChange: (volume: number) => void;
 }) {
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      onHoverTime(pct * duration);
+    },
+    [duration, onHoverTime]
+  );
+  const handleScrub = useCallback(
+    (v: number | readonly number[]) => onScrub(Array.isArray(v) ? v[0] : (v as number)),
+    [onScrub]
+  );
+  const handleCommitScrub = useCallback(
+    (v: number | readonly number[]) => onCommitScrub(Array.isArray(v) ? v[0] : (v as number)),
+    [onCommitScrub]
+  );
+  const handleVolumeChange = useCallback(
+    (v: number | readonly number[]) => onVolumeChange(Array.isArray(v) ? v[0] : (v as number)),
+    [onVolumeChange]
+  );
+
   return (
     <>
       <div className="flex items-center gap-3">
@@ -451,18 +489,11 @@ function ControlsView({
           <Tooltip trackCursorAxis="x">
             <TooltipTrigger
               render={
-                <div
-                  onPointerMove={(e) => {
-                    if (!duration) return;
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                    onHoverTime(pct * duration);
-                  }}
-                >
+                <div onPointerMove={handlePointerMove}>
                   <Slider
                     value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
-                    onValueChange={(v) => onScrub(Array.isArray(v) ? v[0] : v)}
-                    onValueCommitted={(v) => onCommitScrub(Array.isArray(v) ? v[0] : v)}
+                    onValueChange={handleScrub}
+                    onValueCommitted={handleCommitScrub}
                     min={0}
                     max={100}
                     step={0.1}
@@ -536,7 +567,7 @@ function ControlsView({
           </Button>
           <Slider
             value={[volume]}
-            onValueChange={(v) => onVolumeChange(Array.isArray(v) ? v[0] : v)}
+            onValueChange={handleVolumeChange}
             min={0}
             max={100}
             step={1}
@@ -549,6 +580,88 @@ function ControlsView({
         </div>
       </div>
     </>
+  );
+}
+
+function PlaylistRow({
+  track,
+  index,
+  isActive,
+  isPlaying,
+  onSelect,
+}: {
+  track: Track;
+  index: number;
+  isActive: boolean;
+  isPlaying: boolean;
+  onSelect: (index: number) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(index), [onSelect, index]);
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={handleClick}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-background/60",
+          isActive && "bg-background/60"
+        )}
+      >
+        <span
+          className={cn(
+            "w-4 text-right text-muted-foreground text-xs tabular-nums",
+            isActive && "text-foreground"
+          )}
+        >
+          {index + 1}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span
+            className={cn(
+              "block truncate text-sm",
+              isActive ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
+            {track.title}
+          </span>
+          <span className="block truncate text-muted-foreground text-xs">{track.artist}</span>
+        </span>
+        {isActive && isPlaying ? (
+          <span aria-hidden className="ml-2 inline-flex h-3 items-end gap-0.5">
+            <m.span
+              className="h-full w-0.5 origin-bottom bg-foreground"
+              animate={{ scaleY: [0.2, 1, 0.4] }}
+              transition={{
+                duration: 0.9,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
+            />
+            <m.span
+              className="h-full w-0.5 origin-bottom bg-foreground"
+              animate={{ scaleY: [0.8, 0.3, 0.9] }}
+              transition={{
+                duration: 0.9,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+                delay: 0.15,
+              }}
+            />
+            <m.span
+              className="h-full w-0.5 origin-bottom bg-foreground"
+              animate={{ scaleY: [0.5, 1, 0.2] }}
+              transition={{
+                duration: 0.9,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+                delay: 0.3,
+              }}
+            />
+          </span>
+        ) : null}
+      </button>
+    </li>
   );
 }
 
@@ -578,76 +691,16 @@ function PlaylistView({
         </button>
       </div>
       <ul className="-mx-1 flex max-h-64 flex-col overflow-y-auto">
-        {playlist.map((track, index) => {
-          const isActive = index === trackIndex;
-          return (
-            <li key={track.src}>
-              <button
-                type="button"
-                onClick={() => onSelect(index)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-background/60",
-                  isActive && "bg-background/60"
-                )}
-              >
-                <span
-                  className={cn(
-                    "w-4 text-right text-muted-foreground text-xs tabular-nums",
-                    isActive && "text-foreground"
-                  )}
-                >
-                  {index + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span
-                    className={cn(
-                      "block truncate text-sm",
-                      isActive ? "text-foreground" : "text-muted-foreground"
-                    )}
-                  >
-                    {track.title}
-                  </span>
-                  <span className="block truncate text-muted-foreground text-xs">
-                    {track.artist}
-                  </span>
-                </span>
-                {isActive && isPlaying && (
-                  <span aria-hidden className="ml-2 inline-flex h-3 items-end gap-0.5">
-                    <m.span
-                      className="h-full w-0.5 origin-bottom bg-foreground"
-                      animate={{ scaleY: [0.2, 1, 0.4] }}
-                      transition={{
-                        duration: 0.9,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    />
-                    <m.span
-                      className="h-full w-0.5 origin-bottom bg-foreground"
-                      animate={{ scaleY: [0.8, 0.3, 0.9] }}
-                      transition={{
-                        duration: 0.9,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                        delay: 0.15,
-                      }}
-                    />
-                    <m.span
-                      className="h-full w-0.5 origin-bottom bg-foreground"
-                      animate={{ scaleY: [0.5, 1, 0.2] }}
-                      transition={{
-                        duration: 0.9,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                        delay: 0.3,
-                      }}
-                    />
-                  </span>
-                )}
-              </button>
-            </li>
-          );
-        })}
+        {playlist.map((track, index) => (
+          <PlaylistRow
+            key={track.src}
+            track={track}
+            index={index}
+            isActive={index === trackIndex}
+            isPlaying={isPlaying}
+            onSelect={onSelect}
+          />
+        ))}
       </ul>
     </>
   );

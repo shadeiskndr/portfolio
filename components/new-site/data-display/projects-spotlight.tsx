@@ -1,7 +1,7 @@
 "use client";
 
 import { m, useMotionValue, useSpring, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AssetImage } from "@/components/asset-image";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { PROJECTS, type Project } from "@/lib/new-site/data";
@@ -14,11 +14,10 @@ const GLOW_SPRING = { stiffness: 180, damping: 22 } as const;
 interface CardProps {
   project: Project;
   dimmed: boolean;
-  onHoverStart: () => void;
-  onHoverEnd: () => void;
+  onHoverChange: (title: string | null) => void;
 }
 
-function Card({ project, dimmed, onHoverStart, onHoverEnd }: CardProps) {
+function Card({ project, dimmed, onHoverChange }: CardProps) {
   const cardRef = useRef<HTMLAnchorElement>(null);
 
   const normX = useMotionValue(0.5);
@@ -31,25 +30,28 @@ function Card({ project, dimmed, onHoverStart, onHoverEnd }: CardProps) {
   const rotateY = useSpring(rawRotateY, TILT_SPRING);
   const glowOpacity = useSpring(0, GLOW_SPRING);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const el = cardRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    normX.set((e.clientX - rect.left) / rect.width);
-    normY.set((e.clientY - rect.top) / rect.height);
-  };
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      const el = cardRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      normX.set((e.clientX - rect.left) / rect.width);
+      normY.set((e.clientY - rect.top) / rect.height);
+    },
+    [normX, normY]
+  );
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     glowOpacity.set(1);
-    onHoverStart();
-  };
+    onHoverChange(project.title);
+  }, [glowOpacity, onHoverChange, project.title]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     normX.set(0.5);
     normY.set(0.5);
     glowOpacity.set(0);
-    onHoverEnd();
-  };
+    onHoverChange(null);
+  }, [normX, normY, glowOpacity, onHoverChange]);
 
   return (
     <m.a
@@ -150,8 +152,7 @@ export default function ProjectsSpotlight({ projects = PROJECTS }: { projects?: 
           <Card
             project={project}
             dimmed={hoveredTitle !== null && hoveredTitle !== project.title}
-            onHoverStart={() => setHoveredTitle(project.title)}
-            onHoverEnd={() => setHoveredTitle(null)}
+            onHoverChange={setHoveredTitle}
           />
         </BlurFade>
       ))}

@@ -1,43 +1,17 @@
 "use client";
 
-import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
+import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import {
+  type CarouselApi,
+  CarouselContext,
+  type CarouselContextProps,
+  type CarouselProps,
+  useCarousel,
+} from "@/components/ui/carousel-context";
 import { cn } from "@/lib/utils";
-
-type CarouselApi = UseEmblaCarouselType[1];
-type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
-type CarouselOptions = UseCarouselParameters[0];
-type CarouselPlugin = UseCarouselParameters[1];
-
-type CarouselProps = {
-  opts?: CarouselOptions;
-  plugins?: CarouselPlugin;
-  orientation?: "horizontal" | "vertical";
-  setApi?: (api: CarouselApi) => void;
-};
-
-type CarouselContextProps = {
-  carouselRef: ReturnType<typeof useEmblaCarousel>[0];
-  api: ReturnType<typeof useEmblaCarousel>[1];
-  scrollPrev: () => void;
-  scrollNext: () => void;
-  canScrollPrev: boolean;
-  canScrollNext: boolean;
-} & CarouselProps;
-
-const CarouselContext = React.createContext<CarouselContextProps | null>(null);
-
-function useCarousel() {
-  const context = React.useContext(CarouselContext);
-
-  if (!context) {
-    throw new Error("useCarousel must be used within a <Carousel />");
-  }
-
-  return context;
-}
 
 function Carousel({
   orientation = "horizontal",
@@ -119,16 +93,16 @@ function Carousel({
 
   return (
     <CarouselContext.Provider value={contextValue}>
-      <div
+      <section
         onKeyDownCapture={handleKeyDown}
         className={cn("relative", className)}
-        role="region"
+        aria-label="Carousel"
         aria-roledescription="carousel"
         data-slot="carousel"
         {...props}
       >
         {children}
-      </div>
+      </section>
     </CarouselContext.Provider>
   );
 }
@@ -150,6 +124,7 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel();
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <fieldset> carries UA border/padding and the flex min-width:min-content bug; this is a layout-critical styled container, not a form grouping
     <div
       role="group"
       aria-roledescription="slide"
@@ -224,12 +199,4 @@ function CarouselNext({
   );
 }
 
-export {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  useCarousel,
-};
+export { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious };

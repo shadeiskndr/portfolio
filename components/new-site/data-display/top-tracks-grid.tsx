@@ -2,13 +2,15 @@
 
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import { useCallback } from "react";
 import { SpotifyIcon } from "@/components/icons/simple-icons-spotify";
 import { MusicPlayer } from "@/components/ui/componentry/music-player";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/convex/_generated/api";
 import type { TimeRange } from "@/convex/topTracks";
-import { SpotifyEmbedProvider, useSpotifyEmbed } from "./spotify-embed-player";
+import { useSpotifyEmbed } from "./spotify-embed-context";
+import { SpotifyEmbedProvider } from "./spotify-embed-player";
 
 const TAB_META: { value: TimeRange; label: string; blurb: string }[] = [
   { value: "short_term", label: "Last 4 weeks", blurb: "What's on repeat right now." },
@@ -63,13 +65,15 @@ function TrackDisc({ track }: { track: Track }) {
   const isActive = activeTrackId === track.trackId;
   const isPlaying = isActive && !isPaused;
 
+  const handleToggle = useCallback(() => toggle(track.trackId), [toggle, track.trackId]);
+
   return (
     <li className="flex flex-col items-center gap-3 text-center">
       <button
         aria-label={`${isPlaying ? "Pause" : "Play"} ${track.song} by ${track.artist}`}
         aria-pressed={isPlaying}
         className="group relative cursor-pointer rounded-full outline-none transition-transform duration-200 hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        onClick={() => toggle(track.trackId)}
+        onClick={handleToggle}
         type="button"
       >
         <MusicPlayer

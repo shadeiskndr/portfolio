@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { SVGProps } from "react";
-import { useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 
@@ -65,55 +65,142 @@ export const Turso = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const Supabase = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    fill="none"
-    height="1em"
-    viewBox="0 0 109 113"
-    width="1em"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
-    <title>Supabase logo</title>
-    <path
-      d="M63.71 110.28C60.85 113.89 55.05 111.91 54.98 107.31L53.97 40.06L99.19 40.06C107.38 40.06 111.95 49.52 106.86 55.94L63.71 110.28Z"
-      fill="url(#paint0_linear)"
-    />
-    <path
-      d="M63.71 110.28C60.85 113.89 55.05 111.91 54.98 107.31L53.97 40.06L99.19 40.06C107.38 40.06 111.95 49.52 106.86 55.94L63.71 110.28Z"
-      fill="url(#paint1_linear)"
-      fillOpacity={0.2}
-    />
-    <path
-      d="M45.32 2.07C48.18 -1.53 53.97 0.44 54.04 5.04L54.48 72.29H9.83C1.64 72.29 -2.93 62.83 2.17 56.42L45.32 2.07Z"
-      fill="#3ECF8E"
-    />
-    <defs>
-      <linearGradient
-        gradientUnits="userSpaceOnUse"
-        id="paint0_linear"
-        x1={53.9738}
-        x2={94.1635}
-        y1={54.974}
-        y2={71.8295}
+export const Supabase = (props: SVGProps<SVGSVGElement>) => {
+  const paint0 = useId();
+  const paint1 = useId();
+
+  return (
+    <svg
+      fill="none"
+      height="1em"
+      viewBox="0 0 109 113"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <title>Supabase logo</title>
+      <path
+        d="M63.71 110.28C60.85 113.89 55.05 111.91 54.98 107.31L53.97 40.06L99.19 40.06C107.38 40.06 111.95 49.52 106.86 55.94L63.71 110.28Z"
+        fill={`url(#${paint0})`}
+      />
+      <path
+        d="M63.71 110.28C60.85 113.89 55.05 111.91 54.98 107.31L53.97 40.06L99.19 40.06C107.38 40.06 111.95 49.52 106.86 55.94L63.71 110.28Z"
+        fill={`url(#${paint1})`}
+        fillOpacity={0.2}
+      />
+      <path
+        d="M45.32 2.07C48.18 -1.53 53.97 0.44 54.04 5.04L54.48 72.29H9.83C1.64 72.29 -2.93 62.83 2.17 56.42L45.32 2.07Z"
+        fill="#3ECF8E"
+      />
+      <defs>
+        <linearGradient
+          gradientUnits="userSpaceOnUse"
+          id={paint0}
+          x1={53.9738}
+          x2={94.1635}
+          y1={54.974}
+          y2={71.8295}
+        >
+          <stop stopColor="#249361" />
+          <stop offset={1} stopColor="#3ECF8E" />
+        </linearGradient>
+        <linearGradient
+          gradientUnits="userSpaceOnUse"
+          id={paint1}
+          x1={36.1558}
+          x2={54.4844}
+          y1={30.578}
+          y2={65.0806}
+        >
+          <stop />
+          <stop offset={1} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
+
+function JobRow({
+  role,
+  shouldReduceMotion,
+  onActivate,
+}: {
+  role: Job;
+  shouldReduceMotion: boolean | null;
+  onActivate: (role: Job) => void;
+}) {
+  const handleClick = useCallback(() => onActivate(role), [onActivate, role]);
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onActivate(role);
+      }
+    },
+    [onActivate, role]
+  );
+
+  return (
+    <motion.div
+      className="group relative flex w-full cursor-pointer select-none flex-row items-center gap-4 overflow-hidden border bg-background p-2 shadow-xs md:p-4"
+      {...(shouldReduceMotion ? {} : { layoutId: `workItem-${role.company}` })}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      style={{
+        borderRadius: 8,
+        willChange: shouldReduceMotion ? "auto" : "transform",
+      }}
+      tabIndex={0}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : {
+              type: "spring" as const,
+              duration: 0.25,
+              bounce: 0.1,
+              layout: {
+                duration: 0.25,
+                ease: [0.645, 0.045, 0.355, 1],
+              },
+            }
+      }
+      {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.97 } })}
+    >
+      <motion.div
+        {...(shouldReduceMotion ? {} : { layoutId: `workItemLogo-${role.company}` })}
+        style={{
+          willChange: shouldReduceMotion ? "auto" : "transform",
+          flexShrink: 0,
+        }}
       >
-        <stop stopColor="#249361" />
-        <stop offset={1} stopColor="#3ECF8E" />
-      </linearGradient>
-      <linearGradient
-        gradientUnits="userSpaceOnUse"
-        id="paint1_linear"
-        x1={36.1558}
-        x2={54.4844}
-        y1={30.578}
-        y2={65.0806}
+        {role.logo}
+      </motion.div>
+      <div className="flex w-full flex-col items-start justify-between gap-0.5">
+        <div className="font-medium text-foreground">{role.company}</div>
+        <div className="text-primary-foreground text-xs">
+          {role.title} / {role.salary}
+        </div>
+
+        <div className="flex min-w-0 flex-row flex-wrap gap-2 text-primary-foreground text-xs">
+          {role.remote === "Yes" ? ` ${role.location} ` : null}
+          {role.remote === "No" ? ` ${role.location} ` : null}
+          {role.remote === "Hybrid" ? ` ${role.remote} / ${role.location} ` : null}| {role.job_time}
+        </div>
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
       >
-        <stop />
-        <stop offset={1} stopOpacity={0} />
-      </linearGradient>
-    </defs>
-  </svg>
-);
+        {role.job_description}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function JobListingComponent({
   jobs,
@@ -121,6 +208,14 @@ export default function JobListingComponent({
   onJobClick,
 }: JobListingComponentProps) {
   const [activeItem, setActiveItem] = useState<Job | null>(null);
+
+  const handleActivate = useCallback(
+    (role: Job) => {
+      setActiveItem(role);
+      onJobClick?.(role);
+    },
+    [onJobClick]
+  );
   const ref = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const shouldReduceMotion = useReducedMotion();
   useOnClickOutside(ref, () => setActiveItem(null));
@@ -236,79 +331,12 @@ export default function JobListingComponent({
       <div className={`relative flex items-start p-6 ${className || ""}`}>
         <div className="relative flex w-full flex-col items-center gap-4 px-2">
           {jobs.map((role) => (
-            <motion.div
-              className="group relative flex w-full cursor-pointer select-none flex-row items-center gap-4 overflow-hidden border bg-background p-2 shadow-xs md:p-4"
+            <JobRow
               key={role.company}
-              {...(shouldReduceMotion ? {} : { layoutId: `workItem-${role.company}` })}
-              onClick={() => {
-                setActiveItem(role);
-                if (onJobClick) {
-                  onJobClick(role);
-                }
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  setActiveItem(role);
-                  if (onJobClick) {
-                    onJobClick(role);
-                  }
-                }
-              }}
-              role="button"
-              style={{
-                borderRadius: 8,
-                willChange: shouldReduceMotion ? "auto" : "transform",
-              }}
-              tabIndex={0}
-              transition={
-                shouldReduceMotion
-                  ? { duration: 0 }
-                  : {
-                      type: "spring" as const,
-                      duration: 0.25,
-                      bounce: 0.1,
-                      layout: {
-                        duration: 0.25,
-                        ease: [0.645, 0.045, 0.355, 1],
-                      },
-                    }
-              }
-              {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.97 } })}
-            >
-              <motion.div
-                {...(shouldReduceMotion ? {} : { layoutId: `workItemLogo-${role.company}` })}
-                style={{
-                  willChange: shouldReduceMotion ? "auto" : "transform",
-                  flexShrink: 0,
-                }}
-              >
-                {role.logo}
-              </motion.div>
-              <div className="flex w-full flex-col items-start justify-between gap-0.5">
-                <div className="font-medium text-foreground">{role.company}</div>
-                <div className="text-primary-foreground text-xs">
-                  {role.title} / {role.salary}
-                </div>
-
-                <div className="flex min-w-0 flex-row flex-wrap gap-2 text-primary-foreground text-xs">
-                  {role.remote === "Yes" && ` ${role.location} `}
-                  {role.remote === "No" && ` ${role.location} `}
-                  {role.remote === "Hybrid" && ` ${role.remote} / ${role.location} `}|{" "}
-                  {role.job_time}
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  opacity: 0,
-                  pointerEvents: "none",
-                }}
-              >
-                {role.job_description}
-              </div>
-            </motion.div>
+              role={role}
+              shouldReduceMotion={shouldReduceMotion}
+              onActivate={handleActivate}
+            />
           ))}
         </div>
       </div>

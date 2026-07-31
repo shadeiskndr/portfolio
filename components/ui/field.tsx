@@ -71,6 +71,7 @@ function Field({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <fieldset> carries UA border/padding and the flex min-width:min-content bug; this is a layout-critical styled container, not a form grouping
     <div
       role="group"
       data-slot="field"
@@ -151,14 +152,14 @@ function FieldSeparator({
       {...props}
     >
       <Separator className="absolute inset-0 top-1/2" />
-      {children && (
+      {children ? (
         <span
           className="relative mx-auto block w-fit bg-background px-2 text-muted-foreground"
           data-slot="field-separator-content"
         >
           {children}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { EmbedContext } from "@/components/new-site/data-display/spotify-embed-context";
 
 type PlaybackUpdate = {
   playingURI: string;
@@ -62,20 +55,6 @@ function loadIFrameApi(): Promise<IFrameApi> {
 }
 
 const trackUri = (trackId: string) => `spotify:track:${trackId}`;
-
-type EmbedContextValue = {
-  activeTrackId: string | null;
-  isPaused: boolean;
-  toggle: (trackId: string) => void;
-};
-
-const EmbedContext = createContext<EmbedContextValue>({
-  activeTrackId: null,
-  isPaused: true,
-  toggle: () => undefined,
-});
-
-export const useSpotifyEmbed = () => useContext(EmbedContext);
 
 export function SpotifyEmbedProvider({ children }: { children: React.ReactNode }) {
   const hostRef = useRef<HTMLDivElement>(null);

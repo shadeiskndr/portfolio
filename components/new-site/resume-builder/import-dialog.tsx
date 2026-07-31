@@ -1,7 +1,7 @@
 "use client";
 
 import { FileText, Loader2, Sparkles, Upload } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +46,7 @@ export function ImportDialog({
 
   const canImport = !!file || text.trim().length > 0;
 
-  async function run() {
+  const run = useCallback(async () => {
     setBusy(true);
     try {
       const { source, format } = file
@@ -62,7 +62,18 @@ export function ImportDialog({
     } finally {
       setBusy(false);
     }
-  }
+  }, [file, text, onSubmit]);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] ?? null),
+    []
+  );
+  const handlePickFile = useCallback(() => fileInputRef.current?.click(), []);
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setText(e.target.value),
+    []
+  );
+  const handleCancel = useCallback(() => setOpen(false), []);
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
@@ -88,13 +99,13 @@ export function ImportDialog({
           <input
             accept=".tex,.docx,.txt,text/plain,application/x-tex,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={handleFileChange}
             ref={fileInputRef}
             type="file"
           />
           <button
             className="flex items-center gap-2 rounded-lg border border-foreground/15 border-dashed px-3 py-3 text-left text-muted-foreground text-sm transition-colors hover:border-foreground/30 hover:text-foreground"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handlePickFile}
             type="button"
           >
             <FileText className="size-4 shrink-0" />
@@ -114,20 +125,14 @@ export function ImportDialog({
           <Textarea
             className="min-h-40"
             disabled={!!file}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
             placeholder="Paste your résumé text or LaTeX here…"
             value={text}
           />
         </div>
 
         <div className="flex items-center justify-end gap-2 px-5 py-4">
-          <Button
-            disabled={busy}
-            onClick={() => setOpen(false)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
+          <Button disabled={busy} onClick={handleCancel} size="sm" type="button" variant="ghost">
             Cancel
           </Button>
           <Button disabled={busy || !canImport} onClick={run} size="sm" type="button">

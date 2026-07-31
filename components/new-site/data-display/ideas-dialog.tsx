@@ -27,8 +27,8 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { useTheme } from "@/lib/light-dark-providers";
 import { IDEA_CONNECTIONS, IDEAS, type IdeaColor } from "@/lib/new-site/data";
+import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 type PostItData = {
@@ -71,22 +71,22 @@ function PostItNode({ data, selected }: NodeProps<PostItNodeType>) {
       >
         {data.title}
       </p>
-      {data.body && (
+      {data.body ? (
         <p
           className="mt-2 font-serif text-sm leading-relaxed opacity-75"
           style={{ fontFamily: "var(--font-caveat), ui-serif, Georgia, serif" }}
         >
           {data.body}
         </p>
-      )}
-      {data.author && (
+      ) : null}
+      {data.author ? (
         <p
           className="mt-3 text-right font-serif text-xs opacity-60"
           style={{ fontFamily: "var(--font-caveat), ui-serif, Georgia, serif" }}
         >
           — {data.author}
         </p>
-      )}
+      ) : null}
       <Handle
         type="source"
         position={Position.Bottom}
@@ -191,5 +191,3 @@ export function IdeasDialog({ children }: IdeasDialogProps) {
     </ResponsiveDialog>
   );
 }
-
-export default IdeasDialog;

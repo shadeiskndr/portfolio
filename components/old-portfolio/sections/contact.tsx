@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, Mail, Phone } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import SocialIcons from "@/components/old-portfolio/data-display/social-icons";
 import Tag from "@/components/old-portfolio/data-display/tag";
@@ -21,7 +21,7 @@ const ContactSection = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [copiedValueType, setCopiedValueType] = useState<CopyValue | null>(null);
 
-  const handleCopyClick = async (text: string, type: CopyValue) => {
+  const handleCopyClick = useCallback(async (text: string, type: CopyValue) => {
     try {
       await copyTextToClipboard(text);
       setIsCopied(true);
@@ -36,9 +36,16 @@ const ContactSection = () => {
       setCopiedValueType(null);
       alert("Unable to copy!");
     }
-  };
+  }, []);
+
+  const handleCopyEmail = useCallback(() => handleCopyClick(email, "email"), [handleCopyClick]);
+  const handleCopyPhone = useCallback(
+    () => handleCopyClick(phone.replace(" ", ""), "phone"),
+    [handleCopyClick]
+  );
 
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: stable page-section landmark; NAV_LINKS in lib/data.tsx anchors to this exact id
     <Container id="contact">
       <div className="flex flex-col items-center gap-4">
         <div className="self-center">
@@ -57,7 +64,7 @@ const ContactSection = () => {
             <Typography variant="h2">{email}</Typography>
             <IconButton
               size={width && width < 768 ? "md" : "lg"}
-              onClick={() => handleCopyClick(email, "email")}
+              onClick={handleCopyEmail}
               showTooltip={isCopied && copiedValueType === "email"}
               tooltipText="Copied!"
             >
@@ -69,7 +76,7 @@ const ContactSection = () => {
             <Typography variant="h2">{phone}</Typography>
             <IconButton
               size={width && width < 768 ? "md" : "lg"}
-              onClick={() => handleCopyClick(phone.replace(" ", ""), "phone")}
+              onClick={handleCopyPhone}
               showTooltip={isCopied && copiedValueType === "phone"}
               tooltipText="Copied!"
             >

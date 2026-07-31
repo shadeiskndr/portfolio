@@ -29,7 +29,7 @@ export default function BottomDock() {
         className="mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-1 rounded-2xl border bg-background/80 px-2 py-1.5 shadow-lg backdrop-blur-xl supports-backdrop-filter:bg-background/60"
       >
         <SidebarDrawer />
-        <NavStrip id="dock-nav" />
+        <NavStrip groupId="dock-nav" />
         <div className="shrink-0">
           <ThemeControls variant="dock" />
         </div>

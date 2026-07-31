@@ -602,4 +602,5 @@ function MarqueeEdge(props: MarqueeEdgeProps) {
   );
 }
 
+// biome-ignore lint/style/useComponentExportOnlyModules: MarqueeProps is a type-only export, erased at build time, so it cannot break Fast Refresh
 export { Marquee, MarqueeContent, MarqueeEdge, MarqueeItem, type MarqueeProps };

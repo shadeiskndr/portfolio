@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DrawerNav from "@/components/new-site/layout/drawer-nav";
 import ProfileSheet from "@/components/new-site/layout/profile-sheet";
 import ThemeControls from "@/components/new-site/layout/theme-controls";
@@ -21,6 +21,13 @@ export default function SidebarDrawer() {
     []
   );
 
+  const handleNavigate = useCallback(() => setOpen(false), []);
+
+  const handleOpenProfile = useCallback(() => {
+    setOpen(false);
+    handoff.current = setTimeout(() => setProfileOpen(true), HANDOFF_MS);
+  }, []);
+
   return (
     <>
       <Drawer open={open} onOpenChange={setOpen} direction="left">
@@ -35,13 +42,7 @@ export default function SidebarDrawer() {
         </DrawerTrigger>
         <DrawerContent className="overflow-y-auto data-[vaul-drawer-direction=left]:w-[86%] data-[vaul-drawer-direction=left]:sm:max-w-sm">
           <DrawerTitle className="sr-only">Navigation</DrawerTitle>
-          <DrawerNav
-            onNavigate={() => setOpen(false)}
-            onOpenProfile={() => {
-              setOpen(false);
-              handoff.current = setTimeout(() => setProfileOpen(true), HANDOFF_MS);
-            }}
-          />
+          <DrawerNav onNavigate={handleNavigate} onOpenProfile={handleOpenProfile} />
           <div className="mt-1 flex items-center gap-1 px-4 pb-3">
             <ThemeControls variant="drawer" />
           </div>
