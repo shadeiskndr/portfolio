@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import type React from "react";
 import { type ReactNode, useCallback, useId, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -61,7 +61,7 @@ function TabButton({
       type="button"
     >
       {isActive ? (
-        <motion.span
+        <m.span
           className={indicatorClassName}
           layout
           layoutId={layoutId}

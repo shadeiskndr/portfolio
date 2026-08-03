@@ -27,7 +27,7 @@ import {
   Share2,
   SlidersHorizontal,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -113,7 +113,7 @@ function ToolbarItemButton({
   const handleClick = React.useCallback(() => onSelect(item.id), [onSelect, item.id]);
 
   return (
-    <motion.button
+    <m.button
       animate="animate"
       className={cn(
         "relative flex items-center rounded-none px-3 py-2",
@@ -131,7 +131,7 @@ function ToolbarItemButton({
       <item.icon className={cn(isSelected && "text-white")} size={16} />
       <AnimatePresence initial={false}>
         {isSelected ? (
-          <motion.span
+          <m.span
             animate="animate"
             className="overflow-hidden"
             exit="exit"
@@ -140,10 +140,10 @@ function ToolbarItemButton({
             variants={spanVariants as any}
           >
             {item.title}
-          </motion.span>
+          </m.span>
         ) : null}
       </AnimatePresence>
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -184,7 +184,7 @@ export function Toolbar({
       >
         <AnimatePresence>
           {activeNotification ? (
-            <motion.div
+            <m.div
               animate="animate"
               className="absolute -top-8 left-1/2 z-50 -translate-x-1/2 transform"
               exit="exit"
@@ -195,14 +195,14 @@ export function Toolbar({
               <div className="rounded-full bg-primary px-3 py-1 text-primary-foreground text-xs">
                 {items.find((item) => item.id === activeNotification)?.title} clicked!
               </div>
-              <motion.div
+              <m.div
                 animate="animate"
                 className="absolute -bottom-1 left-1/2 h-0.5 w-full origin-left bg-primary"
                 exit="exit"
                 initial="initial"
                 variants={lineVariants as any}
               />
-            </motion.div>
+            </m.div>
           ) : null}
         </AnimatePresence>
 
@@ -216,7 +216,7 @@ export function Toolbar({
             />
           ))}
 
-          <motion.button
+          <m.button
             className={cn(
               "flex items-center gap-2 px-4 py-2",
               "rounded-xl border shadow-sm transition-all duration-200",
@@ -242,7 +242,7 @@ export function Toolbar({
           >
             {isToggled ? <Edit2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             <span className="font-medium text-sm">{isToggled ? "On" : "Off"}</span>
-          </motion.button>
+          </m.button>
         </div>
       </div>
     </div>

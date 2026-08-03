@@ -6,6 +6,7 @@ import * as React from "react";
 import { AssetImage } from "@/components/asset-image";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { EXPERIENCES, type ExperienceEntry } from "@/lib/new-site/data";
+import { cn } from "@/lib/utils";
 import { AttachmentDialog } from "./attachment-dialog";
 
 function formatDuration(start: Date, end?: Date): string {
@@ -63,19 +64,7 @@ function ExperienceCard({
   itemId: string;
   panelId: string;
 }) {
-  const contentRef = React.useRef<HTMLDivElement>(null);
-  const [contentH, setContentH] = React.useState(0);
-
   const handleToggle = React.useCallback(() => onToggle(index), [onToggle, index]);
-
-  React.useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setContentH(el.scrollHeight));
-    ro.observe(el);
-    setContentH(el.scrollHeight);
-    return () => ro.disconnect();
-  }, []);
 
   return (
     <m.div
@@ -136,46 +125,43 @@ function ExperienceCard({
           <ToggleIcon isOpen={isOpen} />
         </button>
 
-        <m.div
+        <section
           id={panelId}
-          role="region"
           aria-labelledby={itemId}
-          animate={{ height: isOpen ? contentH : 0, opacity: isOpen ? 1 : 0 }}
-          initial={false}
-          transition={{
-            height: { type: "spring", stiffness: 340, damping: 34, mass: 0.9 },
-            opacity: { duration: 0.2, ease: "easeOut" },
-          }}
-          style={{ overflow: "hidden" }}
+          className={cn(
+            "grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out",
+            isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          )}
         >
-          <m.div
-            ref={contentRef}
-            animate={{ y: isOpen ? 0 : -8 }}
-            transition={{ type: "spring", stiffness: 360, damping: 30, mass: 0.8 }}
-            className="px-6 pb-6"
-          >
-            <ul className="flex list-disc flex-col gap-2 pl-4 text-muted-foreground text-sm leading-relaxed">
-              {experience.summary.map((sentence) => (
-                <li key={sentence}>{sentence}</li>
-              ))}
-            </ul>
-            {experience.attachedFileKey ? (
-              <AttachmentDialog
-                fileKey={experience.attachedFileKey}
-                title={experience.company}
-                description={experience.position}
-              >
-                <button
-                  type="button"
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-muted"
+          <div className="min-h-0 overflow-hidden">
+            <m.div
+              animate={{ y: isOpen ? 0 : -8 }}
+              transition={{ type: "spring", stiffness: 360, damping: 30, mass: 0.8 }}
+              className="px-6 pb-6"
+            >
+              <ul className="flex list-disc flex-col gap-2 pl-4 text-muted-foreground text-sm leading-relaxed">
+                {experience.summary.map((sentence) => (
+                  <li key={sentence}>{sentence}</li>
+                ))}
+              </ul>
+              {experience.attachedFileKey ? (
+                <AttachmentDialog
+                  fileKey={experience.attachedFileKey}
+                  title={experience.company}
+                  description={experience.position}
                 >
-                  <Paperclip className="size-3.5" />
-                  View attachment
-                </button>
-              </AttachmentDialog>
-            ) : null}
-          </m.div>
-        </m.div>
+                  <button
+                    type="button"
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-muted"
+                  >
+                    <Paperclip className="size-3.5" />
+                    View attachment
+                  </button>
+                </AttachmentDialog>
+              ) : null}
+            </m.div>
+          </div>
+        </section>
       </SpotlightCard>
     </m.div>
   );

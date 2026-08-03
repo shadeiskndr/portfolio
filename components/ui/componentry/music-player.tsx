@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -21,6 +21,93 @@ const getYoutubeId = (url: string) => {
   );
   return match ? match[1] : null;
 };
+
+function MediaSource({
+  audioRef,
+  autoPlay,
+  iframeRef,
+  onEnded,
+  src,
+  youtubeId,
+}: {
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  autoPlay: boolean;
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  onEnded: () => void;
+  src: string | undefined;
+  youtubeId: string | null | undefined;
+}) {
+  if (youtubeId) {
+    return (
+      <iframe
+        ref={iframeRef}
+        title="Music player"
+        className="hidden"
+        src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&autoplay=${autoPlay ? 1 : 0}&controls=0`}
+        allow="autoplay"
+        // react-doctor-disable-next-line react-doctor/iframe-missing-sandbox
+        sandbox="allow-scripts allow-same-origin allow-presentation"
+      />
+    );
+  }
+  if (!src) return null;
+  return (
+    <audio ref={audioRef} src={src} onEnded={onEnded} className="hidden">
+      <track kind="captions" />
+    </audio>
+  );
+}
+
+function Tonearm({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <m.div
+      className="pointer-events-none absolute top-[-2%] right-[-4%] z-20 h-[15%] w-[60%] origin-top-right"
+      initial={{ rotate: 10 }}
+      animate={{ rotate: isPlaying ? -20 : 10 }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+    >
+      <div className="absolute top-0 right-0 z-10 h-[85%] w-[21%] translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-200 bg-zinc-400 shadow-md dark:border-zinc-800 dark:bg-zinc-600" />
+      <div className="absolute top-0 right-[7%] flex h-[25%] w-[70%] origin-right -rotate-12 items-center justify-start rounded-full bg-zinc-400 shadow-sm dark:bg-zinc-500">
+        <div className="aspect-square h-[180%] -translate-x-1/2 transform rounded-full bg-zinc-800 shadow-md dark:bg-zinc-300" />
+      </div>
+    </m.div>
+  );
+}
+
+function TurntableDisc({ coverArt, isSpinning }: { coverArt: string; isSpinning: boolean }) {
+  return (
+    <div
+      className={cn(
+        "relative h-full w-full animate-spin overflow-hidden rounded-full border-4 border-black/10 bg-black shadow-black/30 shadow-xl sm:border-8 dark:border-white/10"
+      )}
+      style={{
+        animationDuration: "4s",
+        animationPlayState: isSpinning ? "running" : "paused",
+      }}
+    >
+      <div
+        className="absolute inset-0 bg-center bg-cover opacity-90 transition-opacity"
+        style={{ backgroundImage: `url(${coverArt})` }}
+      />
+
+      <div
+        className="absolute inset-0 rounded-full border border-black/20"
+        style={{
+          background:
+            "radial-gradient(circle, transparent 20%, rgba(0,0,0,0.4) 21%, transparent 22%, transparent 35%, rgba(0,0,0,0.5) 36%, transparent 37%, transparent 50%, rgba(0,0,0,0.3) 51%, transparent 52%, transparent 65%, rgba(0,0,0,0.6) 66%, transparent 67%, transparent 80%, rgba(0,0,0,0.4) 81%, transparent 82%)",
+        }}
+      />
+
+      <div
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.2) 100%)",
+        }}
+      />
+    </div>
+  );
+}
 
 export function MusicPlayer({
   className,
@@ -96,24 +183,16 @@ export function MusicPlayer({
 
   return (
     <div className={cn("relative inline-flex flex-col items-center", className)} {...props}>
-      {!isControlled &&
-        (youtubeId ? (
-          <iframe
-            ref={iframeRef}
-            title="Music player"
-            className="hidden"
-            src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&autoplay=${
-              autoPlay ? 1 : 0
-            }&controls=0`}
-            allow="autoplay"
-            // react-doctor-disable-next-line react-doctor/iframe-missing-sandbox
-            sandbox="allow-scripts allow-same-origin allow-presentation"
-          />
-        ) : src ? (
-          <audio ref={audioRef} src={src} onEnded={handleEnded} className="hidden">
-            <track kind="captions" />
-          </audio>
-        ) : null)}
+      {isControlled ? null : (
+        <MediaSource
+          audioRef={audioRef}
+          autoPlay={autoPlay}
+          iframeRef={iframeRef}
+          onEnded={handleEnded}
+          src={src}
+          youtubeId={youtubeId}
+        />
+      )}
 
       {/* biome-ignore lint/a11y/noStaticElementInteractions: hover only pauses the decorative disc spin; the play/pause affordance below carries role/tabIndex when interactive */}
       <div
@@ -134,50 +213,9 @@ export function MusicPlayer({
               title: isPlaying ? "Pause" : "Play",
             })}
       >
-        {!hideTonearm && (
-          <motion.div
-            className="pointer-events-none absolute top-[-2%] right-[-4%] z-20 h-[15%] w-[60%] origin-top-right"
-            initial={{ rotate: 10 }}
-            animate={{ rotate: isPlaying ? -20 : 10 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
-            <div className="absolute top-0 right-0 z-10 h-[85%] w-[21%] translate-x-1/2 -translate-y-1/2 transform rounded-full border border-zinc-200 bg-zinc-400 shadow-md dark:border-zinc-800 dark:bg-zinc-600" />
-            <div className="absolute top-0 right-[7%] flex h-[25%] w-[70%] origin-right -rotate-12 items-center justify-start rounded-full bg-zinc-400 shadow-sm dark:bg-zinc-500">
-              <div className="aspect-square h-[180%] -translate-x-1/2 transform rounded-full bg-zinc-800 shadow-md dark:bg-zinc-300" />
-            </div>
-          </motion.div>
-        )}
+        {hideTonearm ? null : <Tonearm isPlaying={isPlaying} />}
 
-        <div
-          className={cn(
-            "relative h-full w-full animate-spin overflow-hidden rounded-full border-4 border-black/10 bg-black shadow-black/30 shadow-xl sm:border-8 dark:border-white/10"
-          )}
-          style={{
-            animationDuration: "4s",
-            animationPlayState: isSpinning ? "running" : "paused",
-          }}
-        >
-          <div
-            className="absolute inset-0 bg-center bg-cover opacity-90 transition-opacity"
-            style={{ backgroundImage: `url(${coverArt})` }}
-          />
-
-          <div
-            className="absolute inset-0 rounded-full border border-black/20"
-            style={{
-              background:
-                "radial-gradient(circle, transparent 20%, rgba(0,0,0,0.4) 21%, transparent 22%, transparent 35%, rgba(0,0,0,0.5) 36%, transparent 37%, transparent 50%, rgba(0,0,0,0.3) 51%, transparent 52%, transparent 65%, rgba(0,0,0,0.6) 66%, transparent 67%, transparent 80%, rgba(0,0,0,0.4) 81%, transparent 82%)",
-            }}
-          />
-
-          <div
-            className="pointer-events-none absolute inset-0 rounded-full"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.2) 100%)",
-            }}
-          />
-        </div>
+        <TurntableDisc coverArt={coverArt} isSpinning={isSpinning} />
       </div>
     </div>
   );

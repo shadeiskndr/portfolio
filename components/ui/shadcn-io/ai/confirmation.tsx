@@ -88,7 +88,7 @@ export const ConfirmationRequest = ({ children }: ConfirmationRequestProps) => {
     return null;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export interface ConfirmationAcceptedProps {
@@ -105,7 +105,7 @@ export const ConfirmationAccepted = ({ children }: ConfirmationAcceptedProps) =>
     return null;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export interface ConfirmationRejectedProps {
@@ -122,7 +122,7 @@ export const ConfirmationRejected = ({ children }: ConfirmationRejectedProps) =>
     return null;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export type ConfirmationActionsProps = ComponentProps<"div">;

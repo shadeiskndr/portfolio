@@ -6,10 +6,16 @@ import { cn } from "@/lib/utils";
 
 interface ButtonProps extends useRender.ComponentProps<"button"> {}
 
-function Button({ className, render = <button type="button" />, ...props }: ButtonProps) {
+function Button({
+  className,
+  children,
+  render = <button type="button">{children}</button>,
+  ...props
+}: ButtonProps) {
   return useRender({
     render,
     props: {
+      children,
       className: cn(
         "inline-flex items-center justify-center rounded-xl bg-gray-900 px-4 py-1.5 font-medium text-gray-50 transition-colors duration-200 hover:bg-gray-700 active:bg-gray-800",
         className

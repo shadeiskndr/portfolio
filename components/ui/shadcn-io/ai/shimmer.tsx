@@ -1,6 +1,6 @@
 "use client";
 
-import { type MotionStyle, motion } from "motion/react";
+import { type MotionStyle, m } from "motion/react";
 import { type ElementType, type JSX, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,7 @@ const ShimmerComponent = ({
   spread = 2,
 }: TextShimmerProps) => {
   const MotionComponent = useMemo(
-    () => motion.create(Component as keyof JSX.IntrinsicElements),
+    () => m.create(Component as keyof JSX.IntrinsicElements),
     [Component]
   );
 

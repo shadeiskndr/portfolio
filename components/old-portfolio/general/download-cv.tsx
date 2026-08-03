@@ -7,7 +7,7 @@ import { useAsset } from "@/lib/assets-context";
 const DownloadCV = () => {
   const resume = useAsset("resume");
   const handleDownload = useCallback(() => {
-    if (resume) window.open(resume.url, "_blank");
+    if (resume) window.open(resume.url, "_blank", "noopener");
   }, [resume]);
 
   return (

@@ -6,10 +6,12 @@ const VALID_CSS_VAR_NAME = /^[a-z0-9-]+$/i;
 
 function toCSSVars(vars: ThemeCSSVars | undefined, indent = "  "): string {
   if (!vars) return "";
-  return Object.entries(vars)
-    .filter(([k, v]) => typeof v === "string" && v.trim() && VALID_CSS_VAR_NAME.test(k))
-    .map(([k, v]) => `${indent}--${k}: ${v.trim()};`)
-    .join("\n");
+  const declarations: string[] = [];
+  for (const [k, v] of Object.entries(vars)) {
+    if (typeof v !== "string" || !v.trim() || !VALID_CSS_VAR_NAME.test(k)) continue;
+    declarations.push(`${indent}--${k}: ${v.trim()};`);
+  }
+  return declarations.join("\n");
 }
 
 export function buildThemeCSSText(theme: ThemeOption): string {

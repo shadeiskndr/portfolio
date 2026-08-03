@@ -193,8 +193,19 @@ export function useResumeAssistant({
     nextId.current = 0;
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally frozen (see above); a fresh closure would just recreate the handle every render for no benefit.
-  useImperativeHandle(ref, () => ({ startImport, startTailor }), []);
+  const latest = useRef<ResumeAssistantHandle>({ startImport, startTailor });
+  useEffect(() => {
+    latest.current = { startImport, startTailor };
+  });
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      startImport: (source, format, label) => latest.current.startImport(source, format, label),
+      startTailor: (jobDescription) => latest.current.startTailor(jobDescription),
+    }),
+    []
+  );
 
   return { open, setOpen, messages, input, setInput, pending, scrollRef, send, reset };
 }

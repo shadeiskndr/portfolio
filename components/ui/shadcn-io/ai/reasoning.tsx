@@ -1,7 +1,7 @@
 "use client";
 
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
 import { memo, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
@@ -175,11 +175,10 @@ export const ReasoningContent = memo(
     return (
       <AnimatePresence initial={false}>
         {isOpen ? (
-          <motion.div
-            animate={{ height: "auto", opacity: 1 }}
-            className="overflow-hidden"
-            exit={{ height: 0, opacity: 0 }}
-            initial={{ height: 0, opacity: 0 }}
+          <m.div
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -8 }}
             key="reasoning-content"
             transition={
               shouldReduceMotion ? { duration: 0 } : { duration: 0.25, ease: [0.4, 0, 0.2, 1] }
@@ -195,7 +194,7 @@ export const ReasoningContent = memo(
                 {children}
               </Streamdown>
             </div>
-          </motion.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
     );

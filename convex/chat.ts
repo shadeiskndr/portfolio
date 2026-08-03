@@ -227,10 +227,12 @@ async function summarizeOlderTurns(
   if (all.page.length <= KEEP_RECENT_MESSAGES) return null;
   const ordered = all.page.toReversed();
   const older = ordered.slice(0, ordered.length - KEEP_RECENT_MESSAGES);
-  const transcript = older
-    .map((m) => `${m.message?.role === "user" ? "User" : "Assistant"}: ${m.text ?? ""}`.trim())
-    .filter((line) => line.length > 0)
-    .join("\n");
+  const lines: string[] = [];
+  for (const m of older) {
+    const line = `${m.message?.role === "user" ? "User" : "Assistant"}: ${m.text ?? ""}`.trim();
+    if (line.length > 0) lines.push(line);
+  }
+  const transcript = lines.join("\n");
   if (!transcript) return null;
 
   const result = streamText({

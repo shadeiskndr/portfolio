@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 import {
   type ChartConfig,

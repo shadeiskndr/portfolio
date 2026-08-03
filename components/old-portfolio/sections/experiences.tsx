@@ -17,8 +17,8 @@ const ExperienceSection = () => {
         </Typography>
       </div>
 
-      {EXPERIENCES?.map((experience, index) => (
-        <ExperienceDetails {...experience} key={index} />
+      {EXPERIENCES?.map((experience) => (
+        <ExperienceDetails {...experience} key={`${experience.logoAlt}-${experience.position}`} />
       ))}
     </Container>
   );

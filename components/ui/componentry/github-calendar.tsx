@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/convex/_generated/api";
@@ -194,7 +194,7 @@ export function GithubCalendar({
                   <Tooltip key={day.date} disableHoverablePopup>
                     <TooltipTrigger
                       render={
-                        <motion.div
+                        <m.div
                           // react-doctor-disable-next-line react-doctor/no-scale-from-zero
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}

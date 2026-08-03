@@ -4,7 +4,7 @@ import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, m } from "motion/react";
 import Image from "next/image";
-import { useCallback, useId, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 
@@ -23,19 +23,12 @@ export default function PhotoGallery({
   preloadedPhotos: Preloaded<typeof api.photos.list>;
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [openedFromIndex, setOpenedFromIndex] = useState<number | null>(null);
-  const baseId = useId();
   const photos = usePreloadedQuery(preloadedPhotos);
 
-  const handleOpen = useCallback((i: number) => {
-    setOpenedFromIndex(i);
-    setActiveIndex(i);
-  }, []);
+  const handleOpen = useCallback((i: number) => setActiveIndex(i), []);
   const handleClose = useCallback(() => setActiveIndex(null), []);
 
   if (photos.length === 0) return null;
-
-  const layoutIds = photos.map((_, i) => `${baseId}-${i}`);
 
   return (
     <MotionConfig transition={{ type: "spring", stiffness: 225, damping: 25 }}>
@@ -45,7 +38,6 @@ export default function PhotoGallery({
             height={photo.height}
             index={index}
             key={photo.src}
-            layoutId={layoutIds[index] ?? ""}
             onOpen={handleOpen}
             src={photo.src}
             title={photo.title}
@@ -55,7 +47,6 @@ export default function PhotoGallery({
       </div>
       <ImageModal
         activeIndex={activeIndex}
-        morphLayoutId={openedFromIndex !== null ? (layoutIds[openedFromIndex] ?? null) : null}
         onClose={handleClose}
         onNavigate={setActiveIndex}
         photos={photos}
@@ -70,7 +61,6 @@ function GalleryImage({
   width,
   height,
   index,
-  layoutId,
   onOpen,
 }: {
   src: string;
@@ -78,7 +68,6 @@ function GalleryImage({
   width: number;
   height: number;
   index: number;
-  layoutId: string;
   onOpen: (index: number) => void;
 }) {
   const onClick = useCallback(() => onOpen(index), [onOpen, index]);
@@ -94,7 +83,6 @@ function GalleryImage({
       <m.button
         aria-label={`View ${title}`}
         className="block w-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-[filter] duration-300 ease-out group-hover:blur-[3px]"
-        layoutId={layoutId}
         onClick={onClick}
         type="button"
         whileTap={{ scale: 0.98, transition: { duration: 0.15 } }}
@@ -120,8 +108,6 @@ function GalleryImage({
     </m.div>
   );
 }
-
-const focusOnMount = (el: HTMLDivElement | null) => el?.focus();
 
 function ThumbButton({
   photo,
@@ -164,16 +150,15 @@ function ThumbButton({
 function ImageModal({
   activeIndex,
   photos,
-  morphLayoutId,
   onClose,
   onNavigate,
 }: {
   activeIndex: number | null;
   photos: Photo[];
-  morphLayoutId: string | null;
   onClose: () => void;
   onNavigate: (i: number) => void;
 }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const isOpen = activeIndex !== null;
   const activePhoto = activeIndex !== null ? photos[activeIndex] : null;
   const goPrev = useCallback(() => {
@@ -186,142 +171,160 @@ function ImageModal({
   }, [activeIndex, onNavigate, photos.length]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowLeft") goPrev();
+    (e: React.KeyboardEvent<HTMLDialogElement>) => {
+      if (e.key === "ArrowLeft") goPrev();
       else if (e.key === "ArrowRight") goNext();
     },
-    [onClose, goPrev, goNext]
+    [goPrev, goNext]
   );
 
+  const handleCancel = useCallback(
+    (e: React.SyntheticEvent<HTMLDialogElement>) => {
+      e.preventDefault();
+      onClose();
+    },
+    [onClose]
+  );
+
+  const handleExitComplete = useCallback(() => dialogRef.current?.close(), []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (isOpen && dialog && !dialog.open) dialog.showModal();
+  }, [isOpen]);
+
   return (
-    <AnimatePresence>
-      {isOpen ? (
-        <div
-          aria-label={activePhoto?.title ?? "Photo viewer"}
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden outline-none"
-          onKeyDown={handleKeyDown}
-          ref={focusOnMount}
-          role="dialog"
-          tabIndex={-1}
-        >
-          <m.button
-            animate={{ opacity: 1 }}
-            aria-label="Close"
-            className="absolute inset-0 cursor-default bg-background/90 backdrop-blur-sm"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
-            onClick={onClose}
-            tabIndex={-1}
-            type="button"
-          />
+    <dialog
+      aria-label={activePhoto?.title ?? "Photo viewer"}
+      className="fixed inset-0 z-50 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden bg-transparent p-0 text-foreground outline-none backdrop:bg-transparent"
+      onCancel={handleCancel}
+      onKeyDown={handleKeyDown}
+      ref={dialogRef}
+    >
+      <AnimatePresence onExitComplete={handleExitComplete}>
+        {isOpen ? (
+          <div className="flex h-full flex-col overflow-hidden">
+            <m.button
+              animate={{ opacity: 1 }}
+              aria-label="Close"
+              className="absolute inset-0 cursor-default bg-background/90 backdrop-blur-sm"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              onClick={onClose}
+              tabIndex={-1}
+              type="button"
+            />
 
-          <m.button
-            animate={{ opacity: 1, scale: 1, transition: { delay: 0.2 } }}
-            aria-label="Close"
-            className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
-            exit={{ opacity: 0, transition: { duration: 0.05 } }}
-            initial={{ opacity: 0, scale: 0.5 }}
-            onClick={onClose}
-            transition={{ duration: 0.1 }}
-            type="button"
-          >
-            <X className="h-5 w-5" />
-          </m.button>
+            <m.button
+              animate={{ opacity: 1, scale: 1, transition: { delay: 0.2 } }}
+              aria-label="Close"
+              className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
+              exit={{ opacity: 0, transition: { duration: 0.05 } }}
+              initial={{ opacity: 0, scale: 0.5 }}
+              onClick={onClose}
+              transition={{ duration: 0.1 }}
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </m.button>
 
-          <m.button
-            animate={{ opacity: 1, x: 0, transition: { delay: 0.2 } }}
-            aria-label="Previous image"
-            className="absolute top-1/2 left-4 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
-            exit={{ opacity: 0, x: -8, transition: { duration: 0.05 } }}
-            initial={{ opacity: 0, x: -8 }}
-            onClick={goPrev}
-            type="button"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </m.button>
+            <m.button
+              animate={{ opacity: 1, x: 0, transition: { delay: 0.2 } }}
+              aria-label="Previous image"
+              className="absolute top-1/2 left-4 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
+              exit={{ opacity: 0, x: -8, transition: { duration: 0.05 } }}
+              initial={{ opacity: 0, x: -8 }}
+              onClick={goPrev}
+              type="button"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </m.button>
 
-          <m.button
-            animate={{ opacity: 1, x: 0, transition: { delay: 0.2 } }}
-            aria-label="Next image"
-            className="absolute top-1/2 right-4 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
-            exit={{ opacity: 0, x: 8, transition: { duration: 0.05 } }}
-            initial={{ opacity: 0, x: 8 }}
-            onClick={goNext}
-            type="button"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </m.button>
+            <m.button
+              animate={{ opacity: 1, x: 0, transition: { delay: 0.2 } }}
+              aria-label="Next image"
+              className="absolute top-1/2 right-4 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg ring-1 ring-border backdrop-blur-sm hover:bg-background"
+              exit={{ opacity: 0, x: 8, transition: { duration: 0.05 } }}
+              initial={{ opacity: 0, x: 8 }}
+              onClick={goNext}
+              type="button"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </m.button>
 
-          <div className="pointer-events-none relative flex min-h-0 flex-1 items-center justify-center px-16 pt-12 pb-2">
-            {activePhoto ? (
-              <m.div
-                className="pointer-events-auto relative max-h-full max-w-full overflow-hidden rounded-2xl shadow-2xl"
-                {...(morphLayoutId ? { layoutId: morphLayoutId } : {})}
-                style={{
-                  aspectRatio: `${activePhoto.width} / ${activePhoto.height}`,
-                  height: "min(100%, calc((100vh - 240px)))",
-                  width: "auto",
-                }}
-              >
-                <Image
-                  alt={activePhoto.title}
-                  className="object-contain"
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 80vw, 100vw"
-                  src={activePhoto.src}
-                />
-              </m.div>
-            ) : null}
-          </div>
-
-          <m.div
-            animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
-            className="relative z-10 space-y-3 pb-4"
-            exit={{ opacity: 0, y: 20, transition: { duration: 0.1 } }}
-            initial={{ opacity: 0, y: 20 }}
-          >
-            <AnimatePresence mode="wait">
+            <div className="pointer-events-none relative flex min-h-0 flex-1 items-center justify-center px-16 pt-12 pb-2">
               {activePhoto ? (
                 <m.div
-                  animate={{ opacity: 1 }}
-                  className="mx-auto max-w-3xl px-4 text-center"
-                  exit={{ opacity: 0 }}
-                  initial={{ opacity: 0 }}
-                  key={activeIndex}
-                  transition={{ duration: 0.15 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="pointer-events-auto relative max-h-full max-w-full overflow-hidden rounded-2xl shadow-2xl"
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  style={{
+                    aspectRatio: `${activePhoto.width} / ${activePhoto.height}`,
+                    height: "min(100%, calc((100vh - 240px)))",
+                    width: "auto",
+                  }}
                 >
-                  <h3 className="font-medium text-base text-foreground">{activePhoto.title}</h3>
-                  <div className="mt-1 flex items-center justify-center gap-1.5 text-muted-foreground text-xs">
-                    <Calendar className="h-3.5 w-3.5" aria-hidden />
-                    {activePhoto.date}
-                  </div>
-                  {activePhoto.description ? (
-                    <p className="mt-2 text-muted-foreground text-sm">{activePhoto.description}</p>
-                  ) : null}
+                  <Image
+                    alt={activePhoto.title}
+                    className="object-contain"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 80vw, 100vw"
+                    src={activePhoto.src}
+                  />
                 </m.div>
               ) : null}
-            </AnimatePresence>
-
-            <div className="scrollbar-none mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden">
-              {photos.map((photo, i) => {
-                const isActive = i === activeIndex;
-                return (
-                  <ThumbButton
-                    key={photo.src}
-                    photo={photo}
-                    index={i}
-                    isActive={isActive}
-                    onNavigate={onNavigate}
-                  />
-                );
-              })}
             </div>
-          </m.div>
-        </div>
-      ) : null}
-    </AnimatePresence>
+
+            <m.div
+              animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
+              className="relative z-10 space-y-3 pb-4"
+              exit={{ opacity: 0, y: 20, transition: { duration: 0.1 } }}
+              initial={{ opacity: 0, y: 20 }}
+            >
+              <AnimatePresence mode="wait">
+                {activePhoto ? (
+                  <m.div
+                    animate={{ opacity: 1 }}
+                    className="mx-auto max-w-3xl px-4 text-center"
+                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0 }}
+                    key={activeIndex}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <h3 className="font-medium text-base text-foreground">{activePhoto.title}</h3>
+                    <div className="mt-1 flex items-center justify-center gap-1.5 text-muted-foreground text-xs">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden />
+                      {activePhoto.date}
+                    </div>
+                    {activePhoto.description ? (
+                      <p className="mt-2 text-muted-foreground text-sm">
+                        {activePhoto.description}
+                      </p>
+                    ) : null}
+                  </m.div>
+                ) : null}
+              </AnimatePresence>
+
+              <div className="scrollbar-none mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden">
+                {photos.map((photo, i) => {
+                  const isActive = i === activeIndex;
+                  return (
+                    <ThumbButton
+                      key={photo.src}
+                      photo={photo}
+                      index={i}
+                      isActive={isActive}
+                      onNavigate={onNavigate}
+                    />
+                  );
+                })}
+              </div>
+            </m.div>
+          </div>
+        ) : null}
+      </AnimatePresence>
+    </dialog>
   );
 }

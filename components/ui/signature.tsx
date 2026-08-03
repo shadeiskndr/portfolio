@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import * as opentype from "opentype.js";
 import { useId, useMemo, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -96,7 +96,7 @@ function SignatureInner({
   }, [font, loadFailed, text, fontSize, baseline, horizontalPadding]);
 
   return (
-    <motion.svg
+    <m.svg
       key={paths.length}
       width={width}
       height={height}
@@ -110,7 +110,7 @@ function SignatureInner({
       <defs>
         <mask id={maskId} maskUnits="userSpaceOnUse">
           {paths.map((d, i) => (
-            <motion.path
+            <m.path
               // react-doctor-disable-next-line react-doctor/no-array-index-as-key
               key={i}
               d={d}
@@ -138,7 +138,7 @@ function SignatureInner({
       </defs>
 
       {paths.map((d, i) => (
-        <motion.path
+        <m.path
           // react-doctor-disable-next-line react-doctor/no-array-index-as-key
           key={i}
           d={d}
@@ -168,6 +168,6 @@ function SignatureInner({
           <path key={i} d={d} fill={color} />
         ))}
       </g>
-    </motion.svg>
+    </m.svg>
   );
 }

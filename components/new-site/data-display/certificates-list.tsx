@@ -9,6 +9,8 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 import { CERTIFICATES, type Certificate } from "@/lib/new-site/data";
 
+type MorphTransition = NonNullable<React.ComponentProps<typeof m.button>["transition"]>;
+
 function CertButton({
   cert,
   shouldReduceMotion,
@@ -17,7 +19,7 @@ function CertButton({
 }: {
   cert: Certificate;
   shouldReduceMotion: boolean | null;
-  morph: NonNullable<React.ComponentProps<typeof m.button>["transition"]>;
+  morph: MorphTransition;
   onSelect: (cert: Certificate) => void;
 }) {
   const handleClick = useCallback(() => onSelect(cert), [onSelect, cert]);
@@ -81,6 +83,82 @@ function CertLogo({ cert, size }: { cert: Certificate; size: number }) {
   );
 }
 
+function CertOverlay({
+  cert,
+  morph,
+  panelRef,
+  shouldReduceMotion,
+}: {
+  cert: Certificate;
+  morph: MorphTransition;
+  panelRef: React.Ref<HTMLDivElement>;
+  shouldReduceMotion: boolean | null;
+}) {
+  const cardLayout = shouldReduceMotion ? {} : { layoutId: `cert-${cert.name}` };
+  const logoLayout = shouldReduceMotion ? {} : { layoutId: `cert-logo-${cert.name}` };
+  const fadeIn = shouldReduceMotion ? { opacity: 1 } : { opacity: 0 };
+
+  return (
+    <m.div
+      className="fixed inset-0 z-50 grid place-items-center bg-background/60 p-4 backdrop-blur-sm"
+      initial={fadeIn}
+      animate={{ opacity: 1 }}
+      exit={shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+    >
+      <m.div
+        ref={panelRef}
+        {...cardLayout}
+        className="flex w-full max-w-md cursor-default select-none flex-col gap-4 overflow-hidden rounded-2xl border bg-card p-5 shadow-lg"
+        transition={morph}
+      >
+        <div className="flex items-start gap-3">
+          <m.div {...logoLayout} style={{ flexShrink: 0 }}>
+            <CertLogo cert={cert} size={48} />
+          </m.div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-sm leading-snug">{cert.name}</h3>
+            <p className="mt-0.5 text-muted-foreground text-xs">{cert.issuer}</p>
+          </div>
+        </div>
+
+        {cert.imageKey ? (
+          <div className="flex items-center justify-center rounded-lg bg-muted/30 p-4">
+            <AssetImage
+              assetKey={cert.imageKey}
+              alt={`${cert.name} certificate`}
+              sizes="220px"
+              priority
+              className="h-auto w-full max-w-55 rounded-md shadow-md"
+            />
+          </div>
+        ) : null}
+
+        <m.p
+          className="text-muted-foreground text-sm leading-relaxed"
+          initial={fadeIn}
+          animate={{ opacity: 1 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2, delay: 0.05 }}
+        >
+          {cert.description}
+        </m.p>
+
+        {cert.url ? (
+          <a
+            href={cert.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-muted"
+          >
+            Verify credential
+            <ExternalLink className="size-3.5" />
+          </a>
+        ) : null}
+      </m.div>
+    </m.div>
+  );
+}
+
 export default function CertificatesList() {
   const [active, setActive] = useState<Certificate | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -109,67 +187,13 @@ export default function CertificatesList() {
     <>
       <AnimatePresence>
         {active ? (
-          <m.div
+          <CertOverlay
             key="cert-overlay"
-            className="fixed inset-0 z-50 grid place-items-center bg-background/60 p-4 backdrop-blur-sm"
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
-          >
-            <m.div
-              ref={ref}
-              {...(shouldReduceMotion ? {} : { layoutId: `cert-${active.name}` })}
-              className="flex w-full max-w-md cursor-default select-none flex-col gap-4 overflow-hidden rounded-2xl border bg-card p-5 shadow-lg"
-              transition={morph}
-            >
-              <div className="flex items-start gap-3">
-                <m.div
-                  {...(shouldReduceMotion ? {} : { layoutId: `cert-logo-${active.name}` })}
-                  style={{ flexShrink: 0 }}
-                >
-                  <CertLogo cert={active} size={48} />
-                </m.div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-sm leading-snug">{active.name}</h3>
-                  <p className="mt-0.5 text-muted-foreground text-xs">{active.issuer}</p>
-                </div>
-              </div>
-
-              {active.imageKey ? (
-                <div className="flex items-center justify-center rounded-lg bg-muted/30 p-4">
-                  <AssetImage
-                    assetKey={active.imageKey}
-                    alt={`${active.name} certificate`}
-                    sizes="220px"
-                    priority
-                    className="h-auto w-full max-w-55 rounded-md shadow-md"
-                  />
-                </div>
-              ) : null}
-
-              <m.p
-                className="text-muted-foreground text-sm leading-relaxed"
-                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2, delay: 0.05 }}
-              >
-                {active.description}
-              </m.p>
-
-              {active.url ? (
-                <a
-                  href={active.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-muted"
-                >
-                  Verify credential
-                  <ExternalLink className="size-3.5" />
-                </a>
-              ) : null}
-            </m.div>
-          </m.div>
+            cert={active}
+            morph={morph}
+            panelRef={ref}
+            shouldReduceMotion={shouldReduceMotion}
+          />
         ) : null}
       </AnimatePresence>
 

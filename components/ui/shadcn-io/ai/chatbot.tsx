@@ -264,6 +264,18 @@ const models = [
   },
 ];
 
+const MODEL_CHEFS = ["OpenAI", "Anthropic", "Google"];
+
+const modelsByChef = new Map<string, typeof models>();
+for (const model of models) {
+  const group = modelsByChef.get(model.chef);
+  if (group) {
+    group.push(model);
+  } else {
+    modelsByChef.set(model.chef, [model]);
+  }
+}
+
 const suggestions = [
   "What are the latest trends in AI?",
   "How does machine learning work?",
@@ -573,24 +585,22 @@ export function ChatbotDemo() {
                     <ModelSelectorInput placeholder="Search models..." />
                     <ModelSelectorList>
                       <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                      {["OpenAI", "Anthropic", "Google"].map((chef) => (
+                      {MODEL_CHEFS.map((chef) => (
                         <ModelSelectorGroup heading={chef} key={chef}>
-                          {models
-                            .filter((m) => m.chef === chef)
-                            .map((m) => (
-                              <ModelOption key={m.id} model={m} onSelect={handleSelectModel}>
-                                <ModelSelectorLogoGroup>
-                                  {m.providers.map((provider) => (
-                                    <ModelSelectorLogo key={provider} provider={provider} />
-                                  ))}
-                                </ModelSelectorLogoGroup>
-                                {model === m.id ? (
-                                  <CheckIcon className="ml-auto size-4" />
-                                ) : (
-                                  <div className="ml-auto size-4" />
-                                )}
-                              </ModelOption>
-                            ))}
+                          {modelsByChef.get(chef)?.map((m) => (
+                            <ModelOption key={m.id} model={m} onSelect={handleSelectModel}>
+                              <ModelSelectorLogoGroup>
+                                {m.providers.map((provider) => (
+                                  <ModelSelectorLogo key={provider} provider={provider} />
+                                ))}
+                              </ModelSelectorLogoGroup>
+                              {model === m.id ? (
+                                <CheckIcon className="ml-auto size-4" />
+                              ) : (
+                                <div className="ml-auto size-4" />
+                              )}
+                            </ModelOption>
+                          ))}
                         </ModelSelectorGroup>
                       ))}
                     </ModelSelectorList>

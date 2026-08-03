@@ -1,9 +1,8 @@
 "use client";
 
-import { EditorView } from "@codemirror/view";
 import { langs } from "@uiw/codemirror-extensions-langs";
 import { githubDark, githubLight } from "@uiw/codemirror-themes-all";
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/theme-context";

@@ -18,8 +18,8 @@ const CertificatesSection = () => {
       </div>
 
       <div className="flex gap-12 max-md:flex-col md:max-lg:flex-wrap">
-        {CERTIFICATES?.map((certificate, index) => (
-          <CertificateDetails key={index} {...certificate} />
+        {CERTIFICATES?.map((certificate) => (
+          <CertificateDetails key={certificate.certificateName} {...certificate} />
         ))}
       </div>
     </Container>

@@ -18,6 +18,7 @@ export function useOnClickOutside<T extends HTMLElement = HTMLElement>(
     savedHandler.current = handler;
   });
 
+  // react-doctor-disable-next-line react-doctor/effect-needs-cleanup
   React.useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent | FocusEvent) => {
       const target = event.target as Node;

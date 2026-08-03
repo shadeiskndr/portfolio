@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -31,22 +31,10 @@ function AccordionItem({
   itemId: string;
   panelId: string;
 }) {
-  const contentRef = React.useRef<HTMLDivElement>(null);
-  const [contentH, setContentH] = React.useState(0);
-
   const handleToggle = React.useCallback(() => onToggle(index), [onToggle, index]);
 
-  React.useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setContentH(el.scrollHeight));
-    ro.observe(el);
-    setContentH(el.scrollHeight);
-    return () => ro.disconnect();
-  }, []);
-
   return (
-    <motion.div
+    <m.div
       layout
       className={cn(
         "overflow-hidden rounded-[30px] bg-surface text-foreground shadow-xs",
@@ -69,7 +57,7 @@ function AccordionItem({
           {item.question}
         </span>
 
-        <motion.span
+        <m.span
           aria-hidden="true"
           initial={false}
           animate={{
@@ -93,41 +81,35 @@ function AccordionItem({
               />
             </svg>
           )}
-        </motion.span>
+        </m.span>
       </button>
 
-      <motion.div
+      <section
         id={panelId}
-        role="region"
         aria-labelledby={itemId}
-        animate={{
-          height: isOpen ? contentH : 0,
-          opacity: isOpen ? 1 : 0,
-        }}
-        initial={false}
-        transition={{
-          height: { type: "spring", stiffness: 340, damping: 34, mass: 0.9 },
-          opacity: { duration: 0.2, ease: "easeOut" },
-        }}
-        style={{ overflow: "hidden" }}
+        className={cn(
+          "grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out",
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
       >
-        <motion.div
-          ref={contentRef}
-          animate={{ y: isOpen ? 0 : -8 }}
-          transition={{
-            type: "spring",
-            stiffness: 360,
-            damping: 30,
-            mass: 0.8,
-          }}
-          className="px-7 pb-7"
-        >
-          <p className="font-base text-foreground/75 text-lg leading-8 tracking-normal">
-            {item.answer}
-          </p>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+        <div className="min-h-0 overflow-hidden">
+          <m.div
+            animate={{ y: isOpen ? 0 : -8 }}
+            transition={{
+              type: "spring",
+              stiffness: 360,
+              damping: 30,
+              mass: 0.8,
+            }}
+            className="px-7 pb-7"
+          >
+            <p className="font-base text-foreground/75 text-lg leading-8 tracking-normal">
+              {item.answer}
+            </p>
+          </m.div>
+        </div>
+      </section>
+    </m.div>
   );
 }
 

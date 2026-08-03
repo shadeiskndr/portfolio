@@ -9,10 +9,11 @@ import Card from "@/components/old-portfolio/layout/card";
 import { useAsset } from "@/lib/assets-context";
 import type { ExperienceDetails as ExperienceDetailsProps } from "@/lib/types";
 
-const dateFormatOptions: Intl.DateTimeFormatOptions = {
+const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   month: "short",
-};
+  timeZone: "UTC",
+});
 
 const ExperienceDetails = ({
   logoKey,
@@ -27,7 +28,7 @@ const ExperienceDetails = ({
 }: ExperienceDetailsProps) => {
   const attachment = useAsset(attachedFileKey);
   const handleOpenAttachment = useCallback(() => {
-    if (attachment) window.open(attachment.url, "_blank");
+    if (attachment) window.open(attachment.url, "_blank", "noopener");
   }, [attachment]);
 
   return (
@@ -54,8 +55,8 @@ const ExperienceDetails = ({
           {position}
         </Typography>
         <ul className="flex list-disc flex-col gap-2 md:gap-1">
-          {summary?.map((sentence, index) => (
-            <Typography component="li" key={index} className="text-foreground">
+          {summary?.map((sentence) => (
+            <Typography component="li" key={sentence} className="text-foreground">
               {sentence}
             </Typography>
           ))}
@@ -63,12 +64,8 @@ const ExperienceDetails = ({
       </div>
       <div className="max-md:order-2 md:w-1/4">
         <Typography className="text-muted-foreground md:text-right">
-          {new Intl.DateTimeFormat("en-US", dateFormatOptions).format(startDate)} -{" "}
-          {currentlyWorkHere
-            ? "Present"
-            : endDate
-              ? new Intl.DateTimeFormat("en-US", dateFormatOptions).format(endDate)
-              : "NA"}
+          {DATE_FORMATTER.format(startDate)} -{" "}
+          {currentlyWorkHere ? "Present" : endDate ? DATE_FORMATTER.format(endDate) : "NA"}
         </Typography>
       </div>
       {attachment && (

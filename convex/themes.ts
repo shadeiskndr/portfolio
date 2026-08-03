@@ -45,22 +45,20 @@ function sanitize(input: Record<string, string> | undefined): ThemeCSSVars {
 }
 
 function normalize(items: TweakcnItem[]): RemoteThemeOption[] {
-  return items
-    .filter((item) => item.type === "registry:style" && item.cssVars)
-    .map((item): RemoteThemeOption => {
-      const theme = sanitize(item.cssVars?.theme);
-      return {
-        id: item.name,
-        label: item.title ?? item.name,
-        source: "tweakcn",
-        cssVars: {
-          light: { ...theme, ...sanitize(item.cssVars?.light) },
-          dark: { ...theme, ...sanitize(item.cssVars?.dark) },
-        },
-      };
-    })
-    .filter((t) => Object.keys(t.cssVars.light).length > 0)
-    .sort((a, b) => a.label.localeCompare(b.label));
+  const options: RemoteThemeOption[] = [];
+  for (const item of items) {
+    if (item.type !== "registry:style" || !item.cssVars) continue;
+    const theme = sanitize(item.cssVars.theme);
+    const light = { ...theme, ...sanitize(item.cssVars.light) };
+    if (Object.keys(light).length === 0) continue;
+    options.push({
+      id: item.name,
+      label: item.title ?? item.name,
+      source: "tweakcn",
+      cssVars: { light, dark: { ...theme, ...sanitize(item.cssVars.dark) } },
+    });
+  }
+  return options.sort((a, b) => a.label.localeCompare(b.label));
 }
 
 export const refreshTweakcnThemes = internalAction({

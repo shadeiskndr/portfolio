@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import
 import { Brush, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { useResizeObserver } from "@/hooks/use-resize-observer";

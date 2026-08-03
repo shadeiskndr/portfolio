@@ -4,7 +4,6 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { unifiedMergeView } from "@codemirror/merge";
 import type { Extension } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
 import { langs } from "@uiw/codemirror-extensions-langs";
 import {
   basicDark,
@@ -52,7 +51,7 @@ import {
   xcodeDark,
   xcodeLight,
 } from "@uiw/codemirror-themes-all";
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { useAction, useQuery } from "convex/react";
 import {
   Columns2,
@@ -388,6 +387,197 @@ function nextParentPath(level: number, parentPath: boolean[], isLast: boolean): 
   return next;
 }
 
+function CommitDiffHeader({
+  commit,
+  fileCount,
+  onToggleViewMode,
+  onToggleWrap,
+  resolvedTheme,
+  setThemeKey,
+  themeKey,
+  viewMode,
+  wrapEnabled,
+}: {
+  commit: Commit;
+  fileCount: number | null;
+  onToggleViewMode: () => void;
+  onToggleWrap: () => void;
+  resolvedTheme: string;
+  setThemeKey: (key: string) => void;
+  themeKey: string;
+  viewMode: "split" | "unified";
+  wrapEnabled: boolean;
+}) {
+  const isSplit = viewMode === "split";
+
+  return (
+    <ResponsiveDialogHeader className="space-y-1 border-b pt-2 pr-10 pb-2 pl-4 text-left">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-1">
+          <ResponsiveDialogTitle className="truncate text-sm">
+            {commit.subject}
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription className="flex items-center gap-2 font-mono text-muted-foreground text-xs">
+            <span>{commit.shortSha}</span>
+            <span aria-hidden>·</span>
+            <span>{COMMIT_DATE_FORMAT.format(new Date(commit.authorDate))}</span>
+            {fileCount === null ? null : (
+              <>
+                <span aria-hidden>·</span>
+                <span>
+                  {fileCount} file{fileCount === 1 ? "" : "s"}
+                </span>
+              </>
+            )}
+          </ResponsiveDialogDescription>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onToggleViewMode}
+                  aria-pressed={isSplit}
+                  aria-label={isSplit ? "Switch to unified view" : "Switch to split view"}
+                >
+                  {isSplit ? <Columns2 /> : <Rows2 />}
+                </Button>
+              }
+            />
+            <TooltipContent>{isSplit ? "Split view" : "Unified view"}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onToggleWrap}
+                  aria-pressed={wrapEnabled}
+                  aria-label={wrapEnabled ? "Disable text wrapping" : "Enable text wrapping"}
+                  className={cn(wrapEnabled && "bg-muted text-foreground")}
+                >
+                  <WrapText />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              {wrapEnabled ? "Disable text wrapping" : "Enable text wrapping"}
+            </TooltipContent>
+          </Tooltip>
+          <CmThemePicker themeKey={themeKey} onChange={setThemeKey} resolvedTheme={resolvedTheme} />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  nativeButton={false}
+                  aria-label="View commit on GitHub"
+                  render={
+                    <a href={commit.url} target="_blank" rel="noreferrer">
+                      <ExternalLink />
+                    </a>
+                  }
+                />
+              }
+            />
+            <TooltipContent>View on GitHub</TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    </ResponsiveDialogHeader>
+  );
+}
+
+type CachedFileList = NonNullable<
+  ReturnType<typeof useQuery<typeof api.commits.getCachedFileList>>
+>;
+
+function FileListPane({
+  commitSha,
+  effectivePath,
+  files,
+  listError,
+  onSelect,
+}: {
+  commitSha: string;
+  effectivePath: string | null;
+  files: FileEntry[] | null;
+  listError: string | null;
+  onSelect: (path: string) => void;
+}) {
+  if (listError) {
+    return <p className="px-3 py-4 text-destructive text-xs">{listError}</p>;
+  }
+  if (!files) {
+    return <FileListSkeleton />;
+  }
+  if (files.length === 0) {
+    return <p className="px-3 py-4 text-muted-foreground text-xs">No file changes.</p>;
+  }
+  return (
+    <FileTreeSidebar
+      commitSha={commitSha}
+      effectivePath={effectivePath}
+      files={files}
+      onSelect={onSelect}
+    />
+  );
+}
+
+function SelectedFileBar({ file }: { file: FileEntry }) {
+  const renamed = file.prevPath && file.prevPath !== file.path;
+
+  return (
+    <div className="flex items-center gap-2 border-b bg-muted/30 px-3 py-1.5 font-mono text-muted-foreground text-xs">
+      <span className={cn(STATUS_COLOR[file.status] ?? "text-muted-foreground")}>
+        {file.status}
+      </span>
+      <span className="truncate" title={file.path}>
+        {renamed ? `${file.prevPath} → ${file.path}` : file.path}
+      </span>
+    </div>
+  );
+}
+
+function DiffPane({
+  cmTheme,
+  commitSha,
+  fileList,
+  selectedFile,
+  viewMode,
+  wrapEnabled,
+}: {
+  cmTheme: Extension;
+  commitSha: string;
+  fileList: CachedFileList | null;
+  selectedFile: FileEntry | null;
+  viewMode: "split" | "unified";
+  wrapEnabled: boolean;
+}) {
+  if (!(selectedFile && fileList)) {
+    return (
+      <p className="px-4 py-8 text-center text-muted-foreground text-sm">
+        {fileList ? "Select a file" : "Loading…"}
+      </p>
+    );
+  }
+  return (
+    <FileDiff
+      key={`${commitSha}:${selectedFile.path}`}
+      commitSha={commitSha}
+      file={selectedFile}
+      parentSha={fileList.parentSha}
+      cmTheme={cmTheme}
+      viewMode={viewMode}
+      wrapEnabled={wrapEnabled}
+    />
+  );
+}
+
 export function CommitDiffBody({ commit }: { commit: Commit }) {
   const fetchCommitFiles = useAction(api.commits.fetchCommitFiles);
   const { resolvedTheme } = useTheme();
@@ -437,140 +627,40 @@ export function CommitDiffBody({ commit }: { commit: Commit }) {
 
   return (
     <>
-      <ResponsiveDialogHeader className="space-y-1 border-b pt-2 pr-10 pb-2 pl-4 text-left">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-1">
-            <ResponsiveDialogTitle className="truncate text-sm">
-              {commit.subject}
-            </ResponsiveDialogTitle>
-            <ResponsiveDialogDescription className="flex items-center gap-2 font-mono text-muted-foreground text-xs">
-              <span>{commit.shortSha}</span>
-              <span aria-hidden>·</span>
-              <span>{COMMIT_DATE_FORMAT.format(new Date(commit.authorDate))}</span>
-              {fileList ? (
-                <>
-                  <span aria-hidden>·</span>
-                  <span>
-                    {fileList.files.length} file{fileList.files.length === 1 ? "" : "s"}
-                  </span>
-                </>
-              ) : null}
-            </ResponsiveDialogDescription>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={handleToggleViewMode}
-                    aria-pressed={viewMode === "split"}
-                    aria-label={
-                      viewMode === "split" ? "Switch to unified view" : "Switch to split view"
-                    }
-                  >
-                    {viewMode === "split" ? <Columns2 /> : <Rows2 />}
-                  </Button>
-                }
-              />
-              <TooltipContent>
-                {viewMode === "split" ? "Split view" : "Unified view"}
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={handleToggleWrap}
-                    aria-pressed={wrapEnabled}
-                    aria-label={wrapEnabled ? "Disable text wrapping" : "Enable text wrapping"}
-                    className={cn(wrapEnabled && "bg-muted text-foreground")}
-                  >
-                    <WrapText />
-                  </Button>
-                }
-              />
-              <TooltipContent>
-                {wrapEnabled ? "Disable text wrapping" : "Enable text wrapping"}
-              </TooltipContent>
-            </Tooltip>
-            <CmThemePicker
-              themeKey={themeKey}
-              onChange={setThemeKey}
-              resolvedTheme={resolvedTheme}
-            />
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    nativeButton={false}
-                    aria-label="View commit on GitHub"
-                    render={
-                      <a href={commit.url} target="_blank" rel="noreferrer">
-                        <ExternalLink />
-                      </a>
-                    }
-                  />
-                }
-              />
-              <TooltipContent>View on GitHub</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      </ResponsiveDialogHeader>
+      <CommitDiffHeader
+        commit={commit}
+        fileCount={fileList?.files.length ?? null}
+        onToggleViewMode={handleToggleViewMode}
+        onToggleWrap={handleToggleWrap}
+        resolvedTheme={resolvedTheme}
+        setThemeKey={setThemeKey}
+        themeKey={themeKey}
+        viewMode={viewMode}
+        wrapEnabled={wrapEnabled}
+      />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <aside className="flex max-h-[40vh] shrink-0 flex-col overflow-hidden border-b md:max-h-none md:w-64 md:border-r md:border-b-0 lg:w-72">
-          {listError ? (
-            <p className="px-3 py-4 text-destructive text-xs">{listError}</p>
-          ) : !fileList ? (
-            <FileListSkeleton />
-          ) : fileList.files.length === 0 ? (
-            <p className="px-3 py-4 text-muted-foreground text-xs">No file changes.</p>
-          ) : (
-            <FileTreeSidebar
-              commitSha={commit.sha}
-              effectivePath={effectivePath}
-              files={fileList.files}
-              onSelect={setSelectedPath}
-            />
-          )}
+          <FileListPane
+            commitSha={commit.sha}
+            effectivePath={effectivePath}
+            files={fileList?.files ?? null}
+            listError={listError}
+            onSelect={setSelectedPath}
+          />
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {selectedFile ? (
-            <div className="flex items-center gap-2 border-b bg-muted/30 px-3 py-1.5 font-mono text-muted-foreground text-xs">
-              <span className={cn(STATUS_COLOR[selectedFile.status] ?? "text-muted-foreground")}>
-                {selectedFile.status}
-              </span>
-              <span className="truncate" title={selectedFile.path}>
-                {selectedFile.prevPath && selectedFile.prevPath !== selectedFile.path
-                  ? `${selectedFile.prevPath} → ${selectedFile.path}`
-                  : selectedFile.path}
-              </span>
-            </div>
-          ) : null}
+          {selectedFile ? <SelectedFileBar file={selectedFile} /> : null}
           <div className="min-h-0 min-w-0 flex-1 overflow-auto">
-            {!selectedFile ? (
-              <p className="px-4 py-8 text-center text-muted-foreground text-sm">
-                {fileList ? "Select a file" : "Loading…"}
-              </p>
-            ) : !fileList ? null : (
-              <FileDiff
-                key={`${commit.sha}:${selectedFile.path}`}
-                commitSha={commit.sha}
-                file={selectedFile}
-                parentSha={fileList.parentSha}
-                cmTheme={cmTheme}
-                viewMode={viewMode}
-                wrapEnabled={wrapEnabled}
-              />
-            )}
+            <DiffPane
+              cmTheme={cmTheme}
+              commitSha={commit.sha}
+              fileList={fileList ?? null}
+              selectedFile={selectedFile}
+              viewMode={viewMode}
+              wrapEnabled={wrapEnabled}
+            />
           </div>
         </div>
       </div>

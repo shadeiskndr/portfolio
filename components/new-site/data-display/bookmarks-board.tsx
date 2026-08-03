@@ -257,8 +257,16 @@ function BookmarkCard({ bookmark, variant }: { bookmark: ResolvedBookmark; varia
 
 function Favicon({ faviconUrl }: { faviconUrl: string | null }) {
   if (faviconUrl) {
-    // biome-ignore lint/performance/noImgElement: favicons are byte-capped data URIs at 14–32px; next/image can't optimize a data URI (see doctor.config.jsonc)
-    return <img alt="" src={faviconUrl} className="size-3.5 shrink-0 rounded-sm" />;
+    return (
+      <Image
+        alt=""
+        src={faviconUrl}
+        width={14}
+        height={14}
+        unoptimized
+        className="size-3.5 shrink-0 rounded-sm"
+      />
+    );
   }
   return <Globe className="size-3.5 shrink-0 opacity-60" aria-hidden />;
 }
@@ -267,8 +275,14 @@ function PreviewFallback({ domain, faviconUrl }: { domain: string; faviconUrl: s
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-linear-to-br from-muted to-muted/40">
       {faviconUrl ? (
-        // biome-ignore lint/performance/noImgElement: favicons are byte-capped data URIs at 14–32px; next/image can't optimize a data URI (see doctor.config.jsonc)
-        <img alt="" src={faviconUrl} className="size-8 rounded-md" />
+        <Image
+          alt=""
+          src={faviconUrl}
+          width={32}
+          height={32}
+          unoptimized
+          className="size-8 rounded-md"
+        />
       ) : (
         <span className="font-semibold font-serif text-3xl text-muted-foreground/70">
           {domain.charAt(0).toUpperCase()}

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { SpotlightCard } from "@/components/ui/componentry/spotlight-card";
 import { useEventCallback } from "@/hooks/use-event-callback";
@@ -50,7 +50,7 @@ function StackedCard({ item, index, activeIndex, totalCards }: StackedCardProps)
   const isActive = index === activeIndex;
 
   return (
-    <motion.div
+    <m.div
       animate={{
         y,
         scale,
@@ -81,7 +81,7 @@ function StackedCard({ item, index, activeIndex, totalCards }: StackedCardProps)
       >
         {item.content}
       </SpotlightCard>
-    </motion.div>
+    </m.div>
   );
 }
 

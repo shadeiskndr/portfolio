@@ -160,18 +160,22 @@ export const MessageBranchContent = ({ children, ...props }: MessageBranchConten
     }
   }, [children, branches, setBranches]);
 
-  return childrenArray.map((branch, index) => (
-    <div
-      className={cn(
-        "grid gap-2 overflow-hidden [&>div]:pb-0",
-        index === currentBranch ? "block" : "hidden"
-      )}
-      key={branch.key}
-      {...props}
-    >
-      {branch}
-    </div>
-  ));
+  return (
+    <>
+      {childrenArray.map((branch, index) => (
+        <div
+          className={cn(
+            "grid gap-2 overflow-hidden [&>div]:pb-0",
+            index === currentBranch ? "block" : "hidden"
+          )}
+          key={branch.key}
+          {...props}
+        >
+          {branch}
+        </div>
+      ))}
+    </>
+  );
 };
 
 export type MessageBranchSelectorProps = HTMLAttributes<HTMLDivElement> & {

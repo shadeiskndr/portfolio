@@ -2,7 +2,7 @@
 
 Guidance for coding agents working in this repository.
 
-`shahathir.me` — personal portfolio. Next.js 16 canary (App Router) + React 19, self-hosted Convex backend, Bun, Tailwind v4, Biome.
+`shahathir.me` — personal portfolio. Next.js 16 (App Router) + React 19, self-hosted Convex backend, Bun, Tailwind v4, Biome.
 
 ## Commands
 
@@ -23,7 +23,7 @@ Content/data scripts (each shells out to `bunx convex run`): `add-asset.ts`, `ad
 ## Conventions
 
 - **Source files carry no comments.** `bun run strip-comments:write` enforces this across tracked `.ts/.tsx/.js/.jsx`; it keeps only directives (`biome-ignore`, `@ts-expect-error`, …), legal headers, and `TODO/FIXME/HACK/@deprecated`. Write self-explanatory code instead. Config files are the exception and *are* documented in prose.
-- **react-doctor suppressions belong in `doctor.config.jsonc`, with a comment explaining why.** That file is the record of every intentional rule violation — read it before "fixing" something it already justifies.
+- **react-doctor scores 100 and `doctor.config.jsonc` is only there for deslop's dead-code blind spots** (`unused-file` / `unused-export` over `convex/**`, the lib modules only Convex reaches, and the vendored registry). Every other intentional violation is an inline `react-doctor-disable-next-line react-doctor/<rule>` with a reason above it — don't add rule entries to the config. Suppress only when the rule is a confirmed false positive or the fix is structurally impossible (e.g. `prefer-dynamic-import` on `recharts`: its chart parents introspect child component types, so the children can't be wrapped in `next/dynamic`); otherwise fix the code.
 - **Convex lint rules live in `biome-plugins/*.grit`**, ported from `@convex-dev/eslint-plugin` and registered in `biome.json` under `overrides` for `convex/**`. Don't install the upstream package: Biome can't load ESLint plugins, and `typescript-eslint` rejects TypeScript 7. GritQL is syntax-only with no autofix; each file's header notes what it ports and where it diverges. `no-schema-import-cycle` and `import-wrong-runtime` aren't ported — they need a cross-file module graph.
 - Biome: 100 cols, 2-space indent, double quotes, semicolons. `useSortedClasses` auto-sorts Tailwind classes in `className`/`clsx`/`cva`/`cn`/`twMerge`.
 - **The `react` and `next` lint domains are on at `"all"`, with no path-based overrides.** Intentional violations are inline `biome-ignore` comments with a reason, never a new `overrides` entry. Two consequences worth knowing: a component file may not export non-components (hooks and `cva` variants live in sibling `*-context.ts` / `*-variants.ts` modules — Next route-segment exports are allowed via `allowExportNames`), and JSX props may not take inline functions (hoist to `useCallback`, or push the binding into a child component when it closes over a `.map` item).

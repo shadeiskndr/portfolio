@@ -64,8 +64,8 @@ const Header = () => {
         </Link>
         <div className="hidden items-center gap-6 lg:flex">
           <ul className="flex list-none items-center gap-6">
-            {mainLinks.map((link, index) => (
-              <li key={index}>
+            {mainLinks.map((link) => (
+              <li key={link.href}>
                 <Link href={link.href} className="text-foreground hover:text-muted-foreground">
                   {link.label}
                 </Link>
@@ -118,8 +118,8 @@ const Header = () => {
             </DrawerTitle>
             <div className="border-b p-4">
               <ul className="flex list-none flex-col gap-4">
-                {NAV_LINKS.map((link, index) => (
-                  <li key={index}>
+                {NAV_LINKS.map((link) => (
+                  <li key={link.href}>
                     <Link
                       href={link.href}
                       onClick={handleMobileLinkClick}

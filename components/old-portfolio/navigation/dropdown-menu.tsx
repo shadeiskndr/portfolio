@@ -29,9 +29,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ label, links }) => {
         }
       />
       <DropdownMenuContent>
-        {links.map((link, index) => (
+        {links.map((link) => (
           <DropdownMenuItem
-            key={index}
+            key={link.href}
             render={
               <Link href={link.href} className="text-foreground hover:text-muted-foreground">
                 {link.label}

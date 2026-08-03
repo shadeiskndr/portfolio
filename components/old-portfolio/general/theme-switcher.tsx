@@ -1,9 +1,10 @@
 "use client";
 
 import { MoonStar, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import IconButton from "@/components/old-portfolio/general/icon-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { useTheme } from "@/lib/theme-context";
 
 const ThemeSwitcher = () => {
@@ -14,9 +15,7 @@ const ThemeSwitcher = () => {
     setThemeWithTransition(theme === "dark" ? "light" : "dark");
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useMountEffect(() => setMounted(true));
 
   if (!mounted) {
     return (

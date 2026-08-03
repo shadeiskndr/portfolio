@@ -18,8 +18,8 @@ const TestimonialsSection = () => {
       </div>
 
       <div className="flex gap-12 max-md:flex-col md:max-lg:flex-wrap">
-        {TESTIMONIALS?.map((testimonial, index) => (
-          <TestimonialDetails key={index} {...testimonial} />
+        {TESTIMONIALS?.map((testimonial) => (
+          <TestimonialDetails key={testimonial.personName} {...testimonial} />
         ))}
       </div>
     </Container>

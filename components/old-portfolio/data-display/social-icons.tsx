@@ -17,8 +17,8 @@ const SocialIconButton = ({ socialLink }: { socialLink: (typeof SOCIAL_LINKS)[nu
 const SocialIcons = () => {
   return (
     <div className="flex gap-1">
-      {SOCIAL_LINKS.map((socialLink, index) => (
-        <SocialIconButton key={index} socialLink={socialLink} />
+      {SOCIAL_LINKS.map((socialLink) => (
+        <SocialIconButton key={socialLink.url} socialLink={socialLink} />
       ))}
     </div>
   );

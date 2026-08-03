@@ -55,17 +55,20 @@ export async function getAllPosts(category: PostCategory): Promise<PostMeta[]> {
     return [];
   }
 
-  const posts = await Promise.all(
-    entries
-      .filter((name) => name.endsWith(".mdx"))
-      .map(async (name) => readMdxFile(category, name.replace(/\.mdx$/, "")))
-  );
+  const pending: Promise<Post | null>[] = [];
+  for (const name of entries) {
+    if (!name.endsWith(".mdx")) continue;
+    pending.push(readMdxFile(category, name.replace(/\.mdx$/, "")));
+  }
 
-  return posts
-    .filter((p): p is Post => p !== null)
-    .filter((p) => (process.env["NODE_ENV"] === "production" ? !p.draft : true))
-    .sort((a, b) => (a.date < b.date ? 1 : -1))
-    .map(({ content: _content, ...meta }) => meta);
+  const hideDrafts = process.env["NODE_ENV"] === "production";
+  const metas: PostMeta[] = [];
+  for (const post of await Promise.all(pending)) {
+    if (post === null || (hideDrafts && post.draft)) continue;
+    const { content: _content, ...meta } = post;
+    metas.push(meta);
+  }
+  return metas.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 export async function getPostBySlug(category: PostCategory, slug: string): Promise<Post | null> {
@@ -76,7 +79,11 @@ export async function getAllSlugs(category: PostCategory): Promise<string[]> {
   const dir = path.join(CONTENT_DIR, category);
   try {
     const entries = await fs.readdir(dir);
-    return entries.filter((n) => n.endsWith(".mdx")).map((n) => n.replace(/\.mdx$/, ""));
+    const slugs: string[] = [];
+    for (const name of entries) {
+      if (name.endsWith(".mdx")) slugs.push(name.replace(/\.mdx$/, ""));
+    }
+    return slugs;
   } catch {
     return [];
   }

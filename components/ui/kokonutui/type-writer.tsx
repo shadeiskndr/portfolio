@@ -10,7 +10,7 @@
  * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
@@ -159,7 +159,7 @@ export default function TypewriterTitle({
     };
   });
 
-  const Wrapper = inline ? motion.span : motion.div;
+  const Wrapper = inline ? m.span : m.div;
   const content = (
     <Wrapper
       animate={{ opacity: 1 }}
@@ -175,7 +175,7 @@ export default function TypewriterTitle({
       <span className={inline ? "min-w-[0.5em]" : "inline-block min-h-[1.2em] min-w-[0.5em]"}>
         {displayText}
       </span>
-      <motion.span
+      <m.span
         animate={{
           opacity: [1, 1, 0, 0],
         }}

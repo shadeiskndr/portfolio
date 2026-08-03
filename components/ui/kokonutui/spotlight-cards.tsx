@@ -12,7 +12,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import { Cloud, Code, Cpu, Globe, Lock, Zap } from "lucide-react";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { m, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -112,7 +112,7 @@ function Card({ item, dimmed, onHoverChange }: CardProps) {
   }, [normX, normY, glowOpacity, onHoverChange]);
 
   return (
-    <motion.div
+    <m.div
       animate={{
         scale: dimmed ? 0.96 : 1,
         opacity: dimmed ? 0.5 : 1,
@@ -143,7 +143,7 @@ function Card({ item, dimmed, onHoverChange }: CardProps) {
         }}
       />
 
-      <motion.div
+      <m.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-2xl"
         style={{
@@ -183,7 +183,7 @@ function Card({ item, dimmed, onHoverChange }: CardProps) {
           background: `linear-gradient(to right, ${item.color}80, transparent)`,
         }}
       />
-    </motion.div>
+    </m.div>
   );
 }
 

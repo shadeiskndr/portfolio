@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface LoaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -47,7 +47,7 @@ export default function Loader({
       className={cn("flex flex-col items-center justify-center gap-8 p-8", className)}
       {...props}
     >
-      <motion.div
+      <m.div
         animate={{
           scale: [1, 1.02, 1],
         }}
@@ -58,7 +58,7 @@ export default function Loader({
           ease: [0.4, 0, 0.6, 1],
         }}
       >
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, 360],
           }}
@@ -78,7 +78,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, 360],
           }}
@@ -98,7 +98,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, -360],
           }}
@@ -118,7 +118,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, 360],
           }}
@@ -138,7 +138,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, 360],
           }}
@@ -158,7 +158,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, 360],
           }}
@@ -178,7 +178,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, -360],
           }}
@@ -198,7 +198,7 @@ export default function Loader({
           }}
         />
 
-        <motion.div
+        <m.div
           animate={{
             rotate: [0, 360],
           }}
@@ -217,9 +217,9 @@ export default function Loader({
             ease: "linear",
           }}
         />
-      </motion.div>
+      </m.div>
 
-      <motion.div
+      <m.div
         animate={{
           opacity: 1,
           y: 0,
@@ -232,7 +232,7 @@ export default function Loader({
           ease: [0.4, 0, 0.2, 1],
         }}
       >
-        <motion.h1
+        <m.h1
           animate={{
             opacity: 1,
             y: 0,
@@ -248,7 +248,7 @@ export default function Loader({
             ease: [0.4, 0, 0.2, 1],
           }}
         >
-          <motion.span
+          <m.span
             animate={{
               opacity: [0.9, 0.7, 0.9],
             }}
@@ -259,10 +259,10 @@ export default function Loader({
             }}
           >
             {title}
-          </motion.span>
-        </motion.h1>
+          </m.span>
+        </m.h1>
 
-        <motion.p
+        <m.p
           animate={{
             opacity: 1,
             y: 0,
@@ -278,7 +278,7 @@ export default function Loader({
             ease: [0.4, 0, 0.2, 1],
           }}
         >
-          <motion.span
+          <m.span
             animate={{
               opacity: [0.6, 0.4, 0.6],
             }}
@@ -289,9 +289,9 @@ export default function Loader({
             }}
           >
             {subtitle}
-          </motion.span>
-        </motion.p>
-      </motion.div>
+          </m.span>
+        </m.p>
+      </m.div>
     </div>
   );
 }

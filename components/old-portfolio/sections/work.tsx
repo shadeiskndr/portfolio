@@ -19,7 +19,7 @@ const WorkSection = () => {
 
       {PROJECTS?.map((project, index) => (
         <ProjectDetails
-          key={index}
+          key={project.name}
           {...project}
           layoutType={index % 2 === 0 ? "default" : "reverse"}
         />

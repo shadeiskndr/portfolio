@@ -52,8 +52,8 @@ const ProjectDetails = ({
         </Typography>
         <Typography className="text-foreground">{description}</Typography>
         <div className="flex flex-wrap gap-2">
-          {technologies?.map((technology, index) => (
-            <Badge key={index} variant={"outline"}>
+          {technologies?.map((technology) => (
+            <Badge key={technology} variant={"outline"}>
               {technology}
             </Badge>
           ))}

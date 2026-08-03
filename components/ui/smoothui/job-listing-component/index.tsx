@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import type { SVGProps } from "react";
 import { useCallback, useId, useRef, useState } from "react";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -141,7 +141,7 @@ function JobRow({
   );
 
   return (
-    <motion.div
+    <m.div
       className="group relative flex w-full cursor-pointer select-none flex-row items-center gap-4 overflow-hidden border bg-background p-2 shadow-xs md:p-4"
       {...(shouldReduceMotion ? {} : { layoutId: `workItem-${role.company}` })}
       onClick={handleClick}
@@ -167,7 +167,7 @@ function JobRow({
       }
       {...(shouldReduceMotion ? {} : { whileTap: { scale: 0.97 } })}
     >
-      <motion.div
+      <m.div
         {...(shouldReduceMotion ? {} : { layoutId: `workItemLogo-${role.company}` })}
         style={{
           willChange: shouldReduceMotion ? "auto" : "transform",
@@ -175,7 +175,7 @@ function JobRow({
         }}
       >
         {role.logo}
-      </motion.div>
+      </m.div>
       <div className="flex w-full flex-col items-start justify-between gap-0.5">
         <div className="font-medium text-foreground">{role.company}</div>
         <div className="text-primary-foreground text-xs">
@@ -198,7 +198,113 @@ function JobRow({
       >
         {role.job_description}
       </div>
-    </motion.div>
+    </m.div>
+  );
+}
+
+function JobOverlayBackdrop({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
+  return (
+    <m.div
+      animate={{ opacity: 1 }}
+      className="pointer-events-none absolute inset-0 z-10 bg-smooth-1000/10 bg-blend-luminosity backdrop-blur-xl"
+      exit={shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+      transition={
+        shouldReduceMotion ? { duration: 0 } : { duration: 0.2, ease: [0.215, 0.61, 0.355, 1] }
+      }
+    />
+  );
+}
+
+function JobOverlayCard({
+  job,
+  panelRef,
+  shouldReduceMotion,
+}: {
+  job: Job;
+  panelRef: React.RefObject<HTMLDivElement>;
+  shouldReduceMotion: boolean | null;
+}) {
+  const cardLayout = shouldReduceMotion ? {} : { layoutId: `workItem-${job.company}` };
+  const logoLayout = shouldReduceMotion ? {} : { layoutId: `workItemLogo-${job.company}` };
+  const morph = shouldReduceMotion
+    ? { duration: 0 }
+    : {
+        type: "spring" as const,
+        duration: 0.25,
+        bounce: 0.1,
+        layout: { duration: 0.25, ease: [0.645, 0.045, 0.355, 1] as const },
+      };
+  const bodyFade = shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.215, 0.61, 0.355, 1] as const, delay: 0.05 };
+  const locationLabel = job.remote === "Hybrid" ? `${job.remote} / ${job.location}` : job.location;
+
+  return (
+    <m.div
+      className="flex h-fit w-[90%] max-w-2xl cursor-pointer select-none flex-col items-start gap-4 overflow-hidden border bg-background p-4 shadow-xs"
+      {...cardLayout}
+      ref={panelRef}
+      style={{ borderRadius: 12 }}
+      transition={morph}
+    >
+      <div className="relative flex w-full items-center gap-4">
+        <m.div {...logoLayout} style={{ flexShrink: 0 }}>
+          {job.logo}
+        </m.div>
+        <div className="flex min-w-0 grow items-center justify-between">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex w-full flex-row justify-between gap-0.5">
+              <div className="font-medium text-foreground text-sm">{job.company}</div>
+            </div>
+            <p className="text-primary-foreground text-sm">
+              {job.title} / {job.salary}
+            </p>
+            <div className="flex min-w-0 flex-row flex-wrap gap-2 text-primary-foreground text-xs">
+              {` ${locationLabel} `}| {job.job_time}
+            </div>
+          </div>
+        </div>
+      </div>
+      <m.p
+        animate={{ opacity: 1 }}
+        className="text-primary-foreground text-sm"
+        exit={shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
+        initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+        transition={bodyFade}
+      >
+        {job.job_description}
+      </m.p>
+    </m.div>
+  );
+}
+
+function JobOverlay({
+  activeItem,
+  panelRef,
+  shouldReduceMotion,
+}: {
+  activeItem: Job | null;
+  panelRef: React.RefObject<HTMLDivElement>;
+  shouldReduceMotion: boolean | null;
+}) {
+  return (
+    <>
+      <AnimatePresence>
+        {activeItem ? <JobOverlayBackdrop shouldReduceMotion={shouldReduceMotion} /> : null}
+      </AnimatePresence>
+      <AnimatePresence>
+        {activeItem ? (
+          <div className="group absolute inset-0 z-10 grid place-items-center">
+            <JobOverlayCard
+              job={activeItem}
+              panelRef={panelRef}
+              shouldReduceMotion={shouldReduceMotion}
+            />
+          </div>
+        ) : null}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -233,101 +339,7 @@ export default function JobListingComponent({
 
   return (
     <>
-      <AnimatePresence>
-        {activeItem ? (
-          <motion.div
-            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1 }}
-            className="pointer-events-none absolute inset-0 z-10 bg-smooth-1000/10 bg-blend-luminosity backdrop-blur-xl"
-            exit={shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-            transition={
-              shouldReduceMotion
-                ? { duration: 0 }
-                : { duration: 0.2, ease: [0.215, 0.61, 0.355, 1] }
-            }
-          />
-        ) : null}
-      </AnimatePresence>
-      <AnimatePresence>
-        {activeItem ? (
-          <div className="group absolute inset-0 z-10 grid place-items-center">
-            <motion.div
-              className="flex h-fit w-[90%] max-w-2xl cursor-pointer select-none flex-col items-start gap-4 overflow-hidden border bg-background p-4 shadow-xs"
-              {...(shouldReduceMotion ? {} : { layoutId: `workItem-${activeItem.company}` })}
-              ref={ref}
-              style={{
-                borderRadius: 12,
-                willChange: shouldReduceMotion ? "auto" : "transform",
-              }}
-              transition={
-                shouldReduceMotion
-                  ? { duration: 0 }
-                  : {
-                      type: "spring" as const,
-                      duration: 0.25,
-                      bounce: 0.1,
-                      layout: {
-                        duration: 0.25,
-                        ease: [0.645, 0.045, 0.355, 1],
-                      },
-                    }
-              }
-            >
-              <div className="relative flex w-full items-center gap-4">
-                <motion.div
-                  {...(shouldReduceMotion
-                    ? {}
-                    : { layoutId: `workItemLogo-${activeItem.company}` })}
-                  style={{
-                    willChange: shouldReduceMotion ? "auto" : "transform",
-                    flexShrink: 0,
-                  }}
-                >
-                  {activeItem.logo}
-                </motion.div>
-                <div className="flex min-w-0 grow items-center justify-between">
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <div className="flex w-full flex-row justify-between gap-0.5">
-                      <div className="font-medium text-foreground text-sm">
-                        {activeItem.company}
-                      </div>
-                    </div>
-                    <p className="text-primary-foreground text-sm">
-                      {activeItem.title} / {activeItem.salary}
-                    </p>
-                    <div className="flex min-w-0 flex-row flex-wrap gap-2 text-primary-foreground text-xs">
-                      {activeItem.remote === "Yes" && ` ${activeItem.location} `}
-                      {activeItem.remote === "No" && ` ${activeItem.location} `}
-                      {activeItem.remote === "Hybrid" &&
-                        ` ${activeItem.remote} / ${activeItem.location} `}
-                      | {activeItem.job_time}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <motion.p
-                animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1 }}
-                className="text-primary-foreground text-sm"
-                exit={
-                  shouldReduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }
-                }
-                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                transition={
-                  shouldReduceMotion
-                    ? { duration: 0 }
-                    : {
-                        duration: 0.2,
-                        ease: [0.215, 0.61, 0.355, 1],
-                        delay: 0.05,
-                      }
-                }
-              >
-                {activeItem.job_description}
-              </motion.p>
-            </motion.div>
-          </div>
-        ) : null}
-      </AnimatePresence>
+      <JobOverlay activeItem={activeItem} panelRef={ref} shouldReduceMotion={shouldReduceMotion} />
       <div className={`relative flex items-start p-6 ${className || ""}`}>
         <div className="relative flex w-full flex-col items-center gap-4 px-2">
           {jobs.map((role) => (

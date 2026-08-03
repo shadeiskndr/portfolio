@@ -170,41 +170,23 @@ export default function ChangelogList() {
                     {group.commits.length}
                   </Badge>
                 </div>
-                {/* biome-ignore lint/a11y/useSemanticElements: needs <div> to nest m.div children for height animation */}
-                <div role="list" className="divide-y overflow-hidden rounded-lg border bg-muted/20">
+                <ul className="divide-y overflow-hidden rounded-lg border bg-muted/20">
                   {initial.map((commit) => (
                     <CommitRow key={commit.sha} commit={commit} onOpen={setOpenCommit} />
                   ))}
                   <AnimatePresence initial={false}>
-                    {isExpanded ? (
-                      <m.div
-                        key="extras"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-                        className="overflow-hidden"
-                      >
-                        <div className="divide-y">
-                          {extras.map((commit, i) => (
-                            <m.div
-                              key={commit.sha}
-                              role="listitem"
-                              initial={{ opacity: 0, y: -4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{
-                                duration: 0.2,
-                                delay: Math.min(i * 0.02, 0.25),
-                              }}
-                            >
-                              <CommitRowAnchor commit={commit} onOpen={setOpenCommit} />
-                            </m.div>
-                          ))}
-                        </div>
-                      </m.div>
-                    ) : null}
+                    {isExpanded
+                      ? extras.map((commit, i) => (
+                          <ExtraCommitRow
+                            key={commit.sha}
+                            commit={commit}
+                            index={i}
+                            onOpen={setOpenCommit}
+                          />
+                        ))
+                      : null}
                   </AnimatePresence>
-                </div>
+                </ul>
                 {hasExtras && !isSearching ? (
                   <button
                     type="button"
@@ -226,10 +208,30 @@ export default function ChangelogList() {
 
 function CommitRow({ commit, onOpen }: { commit: Commit; onOpen: (commit: Commit) => void }) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: paired with role="list" parent in ChangelogList
-    <div role="listitem">
+    <li>
       <CommitRowAnchor commit={commit} onOpen={onOpen} />
-    </div>
+    </li>
+  );
+}
+
+function ExtraCommitRow({
+  commit,
+  index,
+  onOpen,
+}: {
+  commit: Commit;
+  index: number;
+  onOpen: (commit: Commit) => void;
+}) {
+  return (
+    <m.li
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.25) }}
+    >
+      <CommitRowAnchor commit={commit} onOpen={onOpen} />
+    </m.li>
   );
 }
 
@@ -244,7 +246,7 @@ function CommitRowAnchor({ commit, onOpen }: { commit: Commit; onOpen: (commit: 
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-1.5 left-0 w-0.5 origin-center scale-y-0 rounded-r-full bg-foreground/70 transition-transform duration-150 group-hover/row:scale-y-100"
+        className="pointer-events-none absolute inset-y-1.5 left-0 w-0.5 origin-center scale-y-50 rounded-r-full bg-foreground/70 opacity-0 transition-[transform,opacity] duration-150 group-hover/row:scale-y-100 group-hover/row:opacity-100"
       />
       <span
         className={cn(
