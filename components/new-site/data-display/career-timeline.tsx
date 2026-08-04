@@ -1,8 +1,10 @@
 import { AssetImage } from "@/components/asset-image";
 import { CAREER_TIMELINE } from "@/lib/new-site/data";
 
+const BUILD_TIME = new Date(process.env["NEXT_PUBLIC_BUILD_TIME"] ?? 0);
+
 function formatDuration(start: Date, end?: Date): string {
-  const endDate = end ?? new Date();
+  const endDate = end ?? BUILD_TIME;
   const months =
     (endDate.getFullYear() - start.getFullYear()) * 12 + (endDate.getMonth() - start.getMonth());
   const years = Math.floor(months / 12);

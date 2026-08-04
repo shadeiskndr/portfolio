@@ -1,4 +1,3 @@
-import { preloadQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import { Caveat, Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
@@ -6,9 +5,9 @@ import Script from "next/script";
 import "@/app/globals.css";
 import { HideDevIndicator } from "@/components/dev/hide-dev-indicator";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { api } from "@/convex/_generated/api";
 import { buildThemeCSSText, THEME_VARS_STYLE_ID } from "@/lib/apply-theme-css-vars";
 import { AssetsProvider } from "@/lib/assets-provider";
+import { getAssets } from "@/lib/assets-server";
 import { ColorThemeProvider } from "@/lib/color-provider";
 import { DEFAULT_COLOR_THEME } from "@/lib/color-themes";
 import { ConvexClientProvider } from "@/lib/convex-client-provider";
@@ -76,7 +75,7 @@ export const metadata: Metadata = {
 const umamiWebsiteId = process.env["UMAMI_WEBSITE_ID"];
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const preloadedAssets = await preloadQuery(api.assets.list, {});
+  const assets = await getAssets();
   return (
     <html
       lang="en"
@@ -108,7 +107,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased">
         {process.env["NODE_ENV"] === "development" ? <HideDevIndicator /> : null}
         <ConvexClientProvider>
-          <AssetsProvider preloaded={preloadedAssets}>
+          <AssetsProvider assets={assets}>
             <QueryProvider>
               <ColorThemeProvider defaultTheme="default" storageKey="app-color-theme">
                 <Providers>

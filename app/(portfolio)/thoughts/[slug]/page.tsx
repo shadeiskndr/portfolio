@@ -1,9 +1,12 @@
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote-client/rsc";
+import { Suspense } from "react";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import { mdxComponents } from "@/components/new-site/content/mdx-components";
 import { PostHeader } from "@/components/new-site/content/post-header";
+import PostSkeleton from "@/components/new-site/content/post-skeleton";
 import { JsonLd } from "@/components/new-site/json-ld";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { Signature } from "@/components/ui/signature";
@@ -39,13 +42,35 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function ThoughtPostPage({ params }: { params: Promise<{ slug: string }> }) {
+async function PostBody({ slug }: { slug: string }) {
+  "use cache";
+  cacheLife("max");
+  const post = await getPostBySlug("thoughts", slug);
+  if (!post) return null;
+
+  return (
+    <div className="prose-content">
+      <MDXRemote
+        source={post.content}
+        components={mdxComponents}
+        options={{
+          mdxOptions: {
+            remarkPlugins: [remarkGfm],
+            rehypePlugins: [rehypeSlug],
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+async function PostContent({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPostBySlug("thoughts", slug);
   if (!post) notFound();
 
   return (
-    <article className="mx-auto max-w-2xl">
+    <>
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -71,22 +96,21 @@ export default async function ThoughtPostPage({ params }: { params: Promise<{ sl
       />
       <PostHeader date={post.date} title={post.title} summary={post.summary} />
       <BlurFade delay={0.2}>
-        <div className="prose-content">
-          <MDXRemote
-            source={post.content}
-            components={mdxComponents}
-            options={{
-              mdxOptions: {
-                remarkPlugins: [remarkGfm],
-                rehypePlugins: [rehypeSlug],
-              },
-            }}
-          />
-        </div>
+        <PostBody slug={slug} />
       </BlurFade>
       <BlurFade delay={0.3}>
         <Signature text="shahathir" fontSize={14} className="mt-10 text-foreground/70" inView />
       </BlurFade>
+    </>
+  );
+}
+
+export default function ThoughtPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <article className="mx-auto max-w-2xl">
+      <Suspense fallback={<PostSkeleton />}>
+        <PostContent params={params} />
+      </Suspense>
     </article>
   );
 }

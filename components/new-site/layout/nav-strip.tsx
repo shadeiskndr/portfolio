@@ -75,6 +75,7 @@ export default function NavStrip({
               <li key={link.href} data-active={active}>
                 <NextLink
                   href={link.href}
+                  prefetch
                   aria-current={active ? "page" : undefined}
                   onClick={handleLinkClick}
                   className={cn(

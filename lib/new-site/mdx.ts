@@ -3,6 +3,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { cacheLife } from "next/cache";
 
 export type PostCategory = "thoughts" | "til" | "readings";
 
@@ -25,7 +26,11 @@ export type Post = PostMeta & {
 
 const CONTENT_DIR = path.join(process.cwd(), "content");
 
+const HIDE_DRAFTS = process.env["NODE_ENV"] === "production";
+
 async function readMdxFile(category: PostCategory, slug: string): Promise<Post | null> {
+  "use cache";
+  cacheLife("max");
   const filePath = path.join(CONTENT_DIR, category, `${slug}.mdx`);
   try {
     const raw = await fs.readFile(filePath, "utf-8");
@@ -47,6 +52,8 @@ async function readMdxFile(category: PostCategory, slug: string): Promise<Post |
 }
 
 export async function getAllPosts(category: PostCategory): Promise<PostMeta[]> {
+  "use cache";
+  cacheLife("max");
   const dir = path.join(CONTENT_DIR, category);
   let entries: string[];
   try {
@@ -61,10 +68,9 @@ export async function getAllPosts(category: PostCategory): Promise<PostMeta[]> {
     pending.push(readMdxFile(category, name.replace(/\.mdx$/, "")));
   }
 
-  const hideDrafts = process.env["NODE_ENV"] === "production";
   const metas: PostMeta[] = [];
   for (const post of await Promise.all(pending)) {
-    if (post === null || (hideDrafts && post.draft)) continue;
+    if (post === null || (HIDE_DRAFTS && post.draft)) continue;
     const { content: _content, ...meta } = post;
     metas.push(meta);
   }
@@ -72,10 +78,12 @@ export async function getAllPosts(category: PostCategory): Promise<PostMeta[]> {
 }
 
 export async function getPostBySlug(category: PostCategory, slug: string): Promise<Post | null> {
-  return readMdxFile(category, slug);
+  return await readMdxFile(category, slug);
 }
 
 export async function getAllSlugs(category: PostCategory): Promise<string[]> {
+  "use cache";
+  cacheLife("max");
   const dir = path.join(CONTENT_DIR, category);
   try {
     const entries = await fs.readdir(dir);

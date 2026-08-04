@@ -6,6 +6,8 @@ import SpotifyCard from "@/components/new-site/data-display/spotify-card";
 import ToolsGrid from "@/components/new-site/data-display/tools-grid";
 import Link from "@/components/new-site/link";
 
+const BUILD_YEAR = process.env["NEXT_PUBLIC_BUILD_YEAR"];
+
 export default function Sidebar() {
   return (
     <aside className="flex min-h-full flex-col gap-6 p-5">
@@ -27,7 +29,7 @@ export default function Sidebar() {
 function Footer() {
   return (
     <footer className="space-y-1 text-center">
-      <p className="text-muted-foreground text-xs">{new Date().getFullYear()} © shahathir.me</p>
+      <p className="text-muted-foreground text-xs">{BUILD_YEAR} © shahathir.me</p>
       <p className="text-muted-foreground/70 text-xs">
         <Link href="/changelog">Changelogs</Link>
         {" · "}

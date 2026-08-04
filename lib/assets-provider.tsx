@@ -1,19 +1,16 @@
 "use client";
 
-import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { useMemo } from "react";
-import type { api } from "@/convex/_generated/api";
 import { AssetsContext, type ResolvedAsset } from "@/lib/assets-context";
+import type { AssetRow } from "@/lib/assets-server";
 
 export function AssetsProvider({
-  preloaded,
+  assets,
   children,
 }: {
-  preloaded: Preloaded<typeof api.assets.list>;
+  assets: AssetRow[];
   children: React.ReactNode;
 }) {
-  const assets = usePreloadedQuery(preloaded);
-
   const map = useMemo(() => {
     const m = new Map<string, ResolvedAsset>();
     for (const a of assets) {

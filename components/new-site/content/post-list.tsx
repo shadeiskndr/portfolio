@@ -28,6 +28,7 @@ export default function PostList({
         <li key={post.slug}>
           <NextLink
             href={`${basePath}/${post.slug}`}
+            prefetch
             className="group flex flex-col gap-1 py-4 transition-colors hover:bg-muted/30"
           >
             <div className="flex items-baseline justify-between gap-4">

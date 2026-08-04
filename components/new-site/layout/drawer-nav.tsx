@@ -48,6 +48,7 @@ export default function DrawerNav({
             >
               <NextLink
                 href={link.href}
+                prefetch
                 aria-current={active ? "page" : undefined}
                 onClick={handleNavigate}
                 className={cn(

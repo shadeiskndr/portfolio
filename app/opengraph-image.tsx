@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { cacheLife } from "next/cache";
 import { ImageResponse } from "next/og";
 import { SITE_NAME } from "@/lib/site";
 
@@ -7,12 +8,27 @@ export const alt = SITE_NAME;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function OpengraphImage() {
+async function loadFontBytes(): Promise<[Uint8Array, Uint8Array]> {
+  "use cache";
+  cacheLife("max");
   const publicDir = path.join(process.cwd(), "public");
   const [lastoria, liberation] = await Promise.all([
     readFile(path.join(publicDir, "LastoriaBoldRegular.otf")),
     readFile(path.join(publicDir, "pdfjs", "standard_fonts", "LiberationSans-Regular.ttf")),
   ]);
+  return [new Uint8Array(lastoria), new Uint8Array(liberation)];
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(copy).set(bytes);
+  return copy;
+}
+
+export default async function OpengraphImage() {
+  const [lastoriaBytes, liberationBytes] = await loadFontBytes();
+  const lastoria = toArrayBuffer(lastoriaBytes);
+  const liberation = toArrayBuffer(liberationBytes);
 
   return new ImageResponse(
     <div
