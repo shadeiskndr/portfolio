@@ -1,11 +1,11 @@
 "use client";
 
-import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, m } from "motion/react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { api } from "@/convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 
 type Photo = {
@@ -17,13 +17,10 @@ type Photo = {
   height: number;
 };
 
-export default function PhotoGallery({
-  preloadedPhotos,
-}: {
-  preloadedPhotos: Preloaded<typeof api.photos.list>;
-}) {
+export default function PhotoGallery({ initialPhotos }: { initialPhotos: Photo[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const photos = usePreloadedQuery(preloadedPhotos);
+  const live = useQuery(api.photos.list, {});
+  const photos = live ?? initialPhotos;
 
   const handleOpen = useCallback((i: number) => setActiveIndex(i), []);
   const handleClose = useCallback(() => setActiveIndex(null), []);
