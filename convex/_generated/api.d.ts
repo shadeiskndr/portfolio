@@ -23,6 +23,7 @@ import type * as http_sse from "../http/sse.js";
 import type * as models from "../models.js";
 import type * as photos from "../photos.js";
 import type * as rag from "../rag.js";
+import type * as rateLimits from "../rateLimits.js";
 import type * as resume from "../resume.js";
 import type * as resumeChat from "../resumeChat.js";
 import type * as resumeImport from "../resumeImport.js";
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   models: typeof models;
   photos: typeof photos;
   rag: typeof rag;
+  rateLimits: typeof rateLimits;
   resume: typeof resume;
   resumeChat: typeof resumeChat;
   resumeImport: typeof resumeImport;
@@ -96,4 +98,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
 };

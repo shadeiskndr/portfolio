@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { DEFAULT_MODEL } from "../lib/chat/models";
 import { getChatModel } from "../lib/chat/provider";
 import { internal } from "./_generated/api";
-import { type ActionCtx, action } from "./_generated/server";
+import { type ActionCtx, internalAction } from "./_generated/server";
 
 const MAX_TEXT = 4000;
 const MAX_JD = 8000;
@@ -56,7 +56,7 @@ async function resolveModel(
   );
 }
 
-export const tailorToJob = action({
+export const tailorToJob = internalAction({
   args: {
     summary: v.string(),
     competencies: v.array(v.string()),

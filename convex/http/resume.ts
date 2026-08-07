@@ -1,8 +1,7 @@
 import { stepCountIs, streamText } from "ai";
 import type { HttpRouter } from "convex/server";
 import type { ResumeData } from "../../lib/resume/schema";
-import { api } from "../_generated/api";
-import { httpAction } from "../_generated/server";
+import { internal } from "../_generated/api";
 import {
   buildResumeTools,
   importReviewPrompt,
@@ -16,109 +15,97 @@ import {
 import { badRequest, readJson, sseResponse, sseRoute } from "./sse";
 
 export function registerResumeRoutes(http: HttpRouter) {
-  sseRoute(
-    http,
-    "/resume-chat",
-    httpAction(async (ctx, request) => {
-      const body = await readJson<{
-        messages?: { role: "user" | "assistant"; content: string }[];
-        resume?: ResumeData;
-        modelId?: string;
-      }>(request);
-      if (!body) return badRequest("bad request");
-      const { messages, resume } = body;
-      if (!Array.isArray(messages) || !resume) {
-        return badRequest("missing messages or resume");
-      }
+  sseRoute(http, "/resume-chat", async (ctx, request) => {
+    const body = await readJson<{
+      messages?: { role: "user" | "assistant"; content: string }[];
+      resume?: ResumeData;
+      modelId?: string;
+    }>(request);
+    if (!body) return badRequest("bad request");
+    const { messages, resume } = body;
+    if (!Array.isArray(messages) || !resume) {
+      return badRequest("missing messages or resume");
+    }
+
+    const model = await resolveResumeModel(ctx, body.modelId);
+    const edits: ResumeEdit[] = [];
+    const result = streamText({
+      model,
+      system: RESUME_SYSTEM(resume),
+      messages: messages.slice(-20),
+      tools: buildResumeTools(edits),
+      stopWhen: stepCountIs(8),
+      temperature: 0.4,
+    });
+
+    return sseResponse("stream failed", async (send) => {
+      for await (const delta of result.textStream) send({ type: "text", delta });
+      send({ type: "edits", edits });
+    });
+  });
+
+  sseRoute(http, "/resume-import", async (ctx, request) => {
+    const body = await readJson<{
+      source?: string;
+      format?: "tex" | "docx" | "text";
+      modelId?: string;
+    }>(request);
+    if (!body) return badRequest("bad request");
+    const { source, format } = body;
+    if (typeof source !== "string" || !source.trim() || !format) {
+      return badRequest("missing source or format");
+    }
+
+    return sseResponse("import failed", async (send) => {
+      const { resume, method } = await ctx.runAction(internal.resumeImport.extractResume, {
+        source,
+        format,
+      });
+      send({ type: "resume", resume, method });
 
       const model = await resolveResumeModel(ctx, body.modelId);
-      const edits: ResumeEdit[] = [];
       const result = streamText({
         model,
-        system: RESUME_SYSTEM(resume),
-        messages: messages.slice(-20),
-        tools: buildResumeTools(edits),
-        stopWhen: stepCountIs(8),
+        system: RESUME_IMPORT_REVIEW_SYSTEM,
+        prompt: importReviewPrompt(resume, method),
         temperature: 0.4,
       });
+      for await (const delta of result.textStream) send({ type: "text", delta });
+    });
+  });
 
-      return sseResponse("stream failed", async (send) => {
-        for await (const delta of result.textStream) send({ type: "text", delta });
-        send({ type: "edits", edits });
+  sseRoute(http, "/resume-tailor", async (ctx, request) => {
+    const body = await readJson<{
+      jobDescription?: string;
+      resume?: ResumeData;
+      modelId?: string;
+    }>(request);
+    if (!body) return badRequest("bad request");
+    const { jobDescription, resume } = body;
+    if (typeof jobDescription !== "string" || !jobDescription.trim() || !resume) {
+      return badRequest("missing jobDescription or resume");
+    }
+
+    return sseResponse("tailor failed", async (send) => {
+      const tailored = await ctx.runAction(internal.resume.tailorToJob, {
+        summary: resume.summary,
+        competencies: resume.competencies,
+        jobDescription,
       });
-    })
-  );
+      const edits: ResumeEdit[] = [
+        { type: "summary", text: tailored.summary },
+        { type: "competencies", items: tailored.competencies },
+      ];
+      send({ type: "edits", edits });
 
-  sseRoute(
-    http,
-    "/resume-import",
-    httpAction(async (ctx, request) => {
-      const body = await readJson<{
-        source?: string;
-        format?: "tex" | "docx" | "text";
-        modelId?: string;
-      }>(request);
-      if (!body) return badRequest("bad request");
-      const { source, format } = body;
-      if (typeof source !== "string" || !source.trim() || !format) {
-        return badRequest("missing source or format");
-      }
-
-      return sseResponse("import failed", async (send) => {
-        const { resume, method } = await ctx.runAction(api.resumeImport.extractResume, {
-          source,
-          format,
-        });
-        send({ type: "resume", resume, method });
-
-        const model = await resolveResumeModel(ctx, body.modelId);
-        const result = streamText({
-          model,
-          system: RESUME_IMPORT_REVIEW_SYSTEM,
-          prompt: importReviewPrompt(resume, method),
-          temperature: 0.4,
-        });
-        for await (const delta of result.textStream) send({ type: "text", delta });
+      const model = await resolveResumeModel(ctx, body.modelId);
+      const result = streamText({
+        model,
+        system: RESUME_TAILOR_EXPLAIN_SYSTEM,
+        prompt: tailorExplainPrompt(jobDescription, tailored),
+        temperature: 0.4,
       });
-    })
-  );
-
-  sseRoute(
-    http,
-    "/resume-tailor",
-    httpAction(async (ctx, request) => {
-      const body = await readJson<{
-        jobDescription?: string;
-        resume?: ResumeData;
-        modelId?: string;
-      }>(request);
-      if (!body) return badRequest("bad request");
-      const { jobDescription, resume } = body;
-      if (typeof jobDescription !== "string" || !jobDescription.trim() || !resume) {
-        return badRequest("missing jobDescription or resume");
-      }
-
-      return sseResponse("tailor failed", async (send) => {
-        const tailored = await ctx.runAction(api.resume.tailorToJob, {
-          summary: resume.summary,
-          competencies: resume.competencies,
-          jobDescription,
-        });
-        const edits: ResumeEdit[] = [
-          { type: "summary", text: tailored.summary },
-          { type: "competencies", items: tailored.competencies },
-        ];
-        send({ type: "edits", edits });
-
-        const model = await resolveResumeModel(ctx, body.modelId);
-        const result = streamText({
-          model,
-          system: RESUME_TAILOR_EXPLAIN_SYSTEM,
-          prompt: tailorExplainPrompt(jobDescription, tailored),
-          temperature: 0.4,
-        });
-        for await (const delta of result.textStream) send({ type: "text", delta });
-      });
-    })
-  );
+      for await (const delta of result.textStream) send({ type: "text", delta });
+    });
+  });
 }

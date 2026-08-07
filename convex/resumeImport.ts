@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { parseTex } from "../lib/resume/parse-tex";
 import type { ResumeData, SystemGroup } from "../lib/resume/schema";
 import { resumeSchema } from "../lib/resume/schema";
-import { action } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { resolveResumeModel } from "./resumeChat";
 
 const MAX_SOURCE = 60_000;
@@ -66,7 +66,7 @@ function dedupeSkillGroups(r: ResumeData): ResumeData {
   return { ...r, competencies, systems: r.systems.filter((g) => !isSkillGroup(g)) };
 }
 
-export const extractResume = action({
+export const extractResume = internalAction({
   args: {
     source: v.string(),
     format: v.union(v.literal("tex"), v.literal("docx"), v.literal("text")),

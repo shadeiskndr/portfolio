@@ -5,7 +5,7 @@ import { DEFAULT_MODEL } from "../lib/chat/models";
 import { getChatModel } from "../lib/chat/provider";
 import type { ResumeData } from "../lib/resume/schema";
 import { internal } from "./_generated/api";
-import { type ActionCtx, action } from "./_generated/server";
+import { type ActionCtx, internalAction } from "./_generated/server";
 
 export type ResumeEdit =
   | { type: "summary"; text: string }
@@ -592,7 +592,7 @@ export async function resolveResumeModel(
   );
 }
 
-export const chat = action({
+export const chat = internalAction({
   args: {
     messages: v.array(
       v.object({

@@ -12,6 +12,7 @@ import {
   isToolUIPart,
   type ToolUIPart,
 } from "ai";
+import { ConvexError } from "convex/values";
 import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 import { useMutation, useQuery } from "convex/react";
@@ -471,7 +472,8 @@ function ChatSession({
         ...(modelId !== undefined && { modelId }),
       })
         .catch((error: unknown) => {
-          toast.error(error instanceof Error ? error.message : "Chat request failed");
+          const reason = error instanceof ConvexError ? error.data : null;
+          toast.error(typeof reason === "string" ? reason : "Chat request failed");
         })
         .finally(() => setPending(false));
       onSent();

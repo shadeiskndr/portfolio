@@ -7,6 +7,7 @@ import {
   env,
   internalAction,
   internalMutation,
+  internalQuery,
   query,
 } from "./_generated/server";
 
@@ -140,7 +141,8 @@ export const backfillFromGitHub = internalAction({
         { headers }
       );
       if (!res.ok) {
-        throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
+        console.error(`GitHub commits API ${res.status}`, await res.text());
+        throw new Error(`GitHub API ${res.status}`);
       }
       const batch = (await res.json()) as GitHubCommit[];
       if (batch.length === 0) break;
@@ -237,11 +239,13 @@ function isRateLimited(res: Response): boolean {
 function rateLimitError(res: Response): Error {
   const reset = res.headers.get("x-ratelimit-reset");
   const resetAt = reset ? new Date(Number(reset) * 1000).toLocaleTimeString() : "later";
-  const authed = !!env.GITHUB_PERSONAL_ACCESS_TOKEN;
-  const hint = authed
-    ? ""
-    : " (set GITHUB_PERSONAL_ACCESS_TOKEN in Convex env to raise the 60/hr unauth limit to 5000/hr)";
-  return new Error(`GitHub rate limit hit — try again at ${resetAt}${hint}`);
+  if (!env.GITHUB_PERSONAL_ACCESS_TOKEN) {
+    console.error(
+      "GitHub rate limit hit unauthenticated — set GITHUB_PERSONAL_ACCESS_TOKEN in Convex env " +
+        "to raise the 60/hr limit to 5000/hr"
+    );
+  }
+  return new Error(`GitHub rate limit hit — try again at ${resetAt}`);
 }
 
 function ghRepo(): { owner: string; repo: string } {
@@ -323,6 +327,17 @@ type GhCommitResponse = {
   files?: GhFileEntry[];
 };
 
+export const isKnownCommit = internalQuery({
+  args: { sha: v.string() },
+  handler: async (ctx, { sha }) => {
+    const row = await ctx.db
+      .query("commits")
+      .withIndex("by_sha", (q) => q.eq("sha", sha))
+      .unique();
+    return row !== null;
+  },
+});
+
 export const fetchCommitFiles = action({
   args: { sha: v.string() },
   handler: async (ctx, { sha }): Promise<CommitFileList> => {
@@ -331,13 +346,17 @@ export const fetchCommitFiles = action({
     });
     if (cached) return { parentSha: cached.parentSha, files: cached.files };
 
+    const known: boolean = await ctx.runQuery(internal.commits.isKnownCommit, { sha });
+    if (!known) throw new Error("Unknown commit");
+
     const { owner, repo } = ghRepo();
     const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${sha}`, {
       headers: ghHeaders(JSON_HEADERS),
     });
     if (isRateLimited(res)) throw rateLimitError(res);
     if (!res.ok) {
-      throw new Error(`GitHub commit API ${res.status}: ${await res.text()}`);
+      console.error(`GitHub commit API ${res.status} for ${sha}`, await res.text());
+      throw new Error(`GitHub commit API ${res.status}`);
     }
     const data = (await res.json()) as GhCommitResponse;
 
@@ -389,7 +408,8 @@ async function fetchBlobAtRef(
   }
   if (isRateLimited(res)) throw rateLimitError(res);
   if (!res.ok) {
-    throw new Error(`GitHub blob ${res.status} for ${ref}:${path}: ${await res.text()}`);
+    console.error(`GitHub blob ${res.status} for ${ref}:${path}`, await res.text());
+    throw new Error(`GitHub blob ${res.status}`);
   }
   const buf = await res.arrayBuffer();
   if (buf.byteLength > MAX_BLOB_BYTES) {
@@ -404,34 +424,35 @@ async function fetchBlobAtRef(
 }
 
 export const fetchFileBlobs = action({
-  args: {
-    sha: v.string(),
-    parentSha: v.string(),
-    path: v.string(),
-    prevPath: v.optional(v.string()),
-    status: v.string(),
-  },
+  args: { sha: v.string(), path: v.string() },
   handler: async (
     ctx,
-    { sha, parentSha, path, prevPath, status }
+    { sha, path }
   ): Promise<{
     before: string;
     after: string;
     beforeTruncated: boolean;
     afterTruncated: boolean;
   }> => {
-    const { owner, repo } = ghRepo();
-    const beforePath = prevPath ?? path;
+    const cached: CommitFileList | null = await ctx.runQuery(api.commits.getCachedFileList, {
+      sha,
+    });
+    if (!cached) throw new Error("Unknown commit");
+    const entry = cached.files.find((f) => f.path === path);
+    if (!entry) throw new Error("Unknown file");
 
-    const wantBefore = status !== "added";
-    const wantAfter = status !== "removed";
+    const { owner, repo } = ghRepo();
+    const beforePath = entry.prevPath ?? entry.path;
+
+    const wantBefore = entry.status !== "added";
+    const wantAfter = entry.status !== "removed";
 
     const [before, after] = await Promise.all([
       wantBefore
-        ? fetchBlobAtRef(ctx, owner, repo, parentSha, beforePath)
+        ? fetchBlobAtRef(ctx, owner, repo, cached.parentSha, beforePath)
         : Promise.resolve({ content: "", truncated: false }),
       wantAfter
-        ? fetchBlobAtRef(ctx, owner, repo, sha, path)
+        ? fetchBlobAtRef(ctx, owner, repo, sha, entry.path)
         : Promise.resolve({ content: "", truncated: false }),
     ]);
 

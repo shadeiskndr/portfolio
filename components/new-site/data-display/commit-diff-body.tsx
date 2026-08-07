@@ -700,13 +700,7 @@ function FileDiff({
   );
 
   useMountEffect(() => {
-    fetchFileBlobs({
-      sha: commitSha,
-      parentSha,
-      path: file.path,
-      ...(file.prevPath !== undefined && { prevPath: file.prevPath }),
-      status: file.status,
-    }).catch((e: unknown) => {
+    fetchFileBlobs({ sha: commitSha, path: file.path }).catch((e: unknown) => {
       setBlobError(e instanceof Error ? e.message : "Failed to load file");
     });
   });

@@ -1,29 +1,58 @@
 import type { HttpRouter } from "convex/server";
-import { httpAction } from "../_generated/server";
+import { SITE_URL } from "../../lib/site";
+import { type ActionCtx, httpAction } from "../_generated/server";
+import { enforceResumeLimits } from "../rateLimits";
 
-const RESUME_CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const ALLOWED_ORIGINS = new Set([SITE_URL, "http://localhost:3000", "http://localhost:3200"]);
 
 const SSE_HEADERS = {
   "Content-Type": "text/event-stream; charset=utf-8",
   "Cache-Control": "no-cache, no-transform",
-  ...RESUME_CORS,
 };
 
-type SseHandler = ReturnType<typeof httpAction>;
+function corsHeaders(origin: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    Vary: "Origin",
+  };
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
 
-export function sseRoute(http: HttpRouter, path: string, post: SseHandler) {
+function withHeaders(response: Response, headers: Record<string, string>): Response {
+  const out = new Response(response.body, response);
+  for (const [key, value] of Object.entries(headers)) out.headers.set(key, value);
+  return out;
+}
+
+export type SsePost = (ctx: ActionCtx, request: Request) => Promise<Response>;
+
+export function sseRoute(http: HttpRouter, path: string, post: SsePost) {
   http.route({
     path,
     method: "OPTIONS",
-    handler: httpAction(() =>
-      Promise.resolve(new Response(null, { status: 204, headers: RESUME_CORS }))
+    handler: httpAction((_ctx, request) =>
+      Promise.resolve(
+        new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin")) })
+      )
     ),
   });
-  http.route({ path, method: "POST", handler: post });
+  http.route({
+    path,
+    method: "POST",
+    handler: httpAction(async (ctx, request) => {
+      const origin = request.headers.get("Origin");
+      const headers = corsHeaders(origin);
+      if (origin && !ALLOWED_ORIGINS.has(origin)) {
+        return withHeaders(new Response("forbidden origin", { status: 403 }), headers);
+      }
+      const limited = await enforceResumeLimits(ctx, request);
+      return withHeaders(limited ?? (await post(ctx, request)), headers);
+    }),
+  });
 }
 
 export type SseSend = (frame: unknown) => void;
@@ -40,7 +69,8 @@ export function sseResponse(
       try {
         await produce(send);
       } catch (e) {
-        send({ type: "error", error: e instanceof Error ? e.message : errorLabel });
+        console.error(errorLabel, e);
+        send({ type: "error", error: errorLabel });
       } finally {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
@@ -59,5 +89,5 @@ export async function readJson<T>(request: Request): Promise<T | undefined> {
 }
 
 export function badRequest(message: string): Response {
-  return new Response(message, { status: 400, headers: RESUME_CORS });
+  return new Response(message, { status: 400 });
 }

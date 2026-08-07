@@ -16,6 +16,7 @@ import {
 import { chatAgent, chatModelArgs } from "./agent";
 import { listModels, resolveModelRow, toChatModel } from "./models";
 import { retrievePortfolioContext } from "./rag";
+import { enforceChatLimits } from "./rateLimits";
 
 const COMPACT_AT_TOKENS = 96_000;
 const KEEP_RECENT_MESSAGES = 6;
@@ -143,6 +144,8 @@ export const send = mutation({
     reasoning: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await enforceChatLimits(ctx, args.clientId);
+
     const row = await resolveModelRow(ctx, args.modelId);
     const modelId = row?.modelId ?? DEFAULT_MODEL.id;
     const reasoning = args.reasoning ?? DEFAULT_REASONING;
