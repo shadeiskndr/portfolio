@@ -3,7 +3,7 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-crons.interval("poll spotify", { minutes: 1 }, internal.spotify.pollSpotify);
+crons.interval("spotify poll watchdog", { minutes: 15 }, internal.spotify.ensurePolling, {});
 
 crons.interval(
   "refresh spotify top tracks",

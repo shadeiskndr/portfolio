@@ -26,6 +26,15 @@ export default defineSchema({
     attempts: v.number(),
   }).index("by_endpoint", ["endpoint"]),
 
+  spotifyPoll: defineTable({
+    fetchedAt: v.optional(v.number()),
+    recentCheckedAt: v.optional(v.number()),
+    idleAttempts: v.number(),
+    lastViewerAt: v.optional(v.number()),
+    nextPollAt: v.optional(v.number()),
+    nextPollId: v.optional(v.id("_scheduled_functions")),
+  }),
+
   topTracks: defineTable({
     timeRange: v.union(v.literal("short_term"), v.literal("medium_term"), v.literal("long_term")),
     rank: v.number(),

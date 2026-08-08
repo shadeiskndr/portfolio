@@ -9,10 +9,13 @@ import { Marquee, MarqueeContent, MarqueeEdge, MarqueeItem } from "@/components/
 import { api } from "@/convex/_generated/api";
 import { PERSONAL } from "@/lib/new-site/data";
 import { cn } from "@/lib/utils";
+import { useSpotifyHeartbeat } from "./use-spotify-heartbeat";
 
 export default function SpotifyCard() {
   const status = useQuery(api.spotify.getNowPlaying);
   const [hovered, setHovered] = useState(false);
+
+  useSpotifyHeartbeat();
 
   const hasTrack = Boolean(status?.song);
   const albumArt = status?.albumArtUrl ?? "";
